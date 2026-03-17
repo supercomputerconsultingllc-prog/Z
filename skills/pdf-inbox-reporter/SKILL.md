@@ -51,7 +51,7 @@ A concise 1-3 paragraph summary of the document.
 
 ## Extraction script
 
-Use `scripts/extract_pdf_text.py` first.
+Use `scripts/extract_pdf_text.py` first for one PDF.
 
 Example:
 
@@ -59,7 +59,19 @@ Example:
 python3 skills/pdf-inbox-reporter/scripts/extract_pdf_text.py workspace/inbox/file.pdf
 ```
 
-The script prints JSON with:
+For batch mode, run:
+
+```bash
+python3 skills/pdf-inbox-reporter/scripts/summarize_inbox_pdfs.py
+```
+
+If `pypdf` is not yet available, bootstrap the vendored copy with:
+
+```bash
+python3 skills/pdf-inbox-reporter/scripts/install_pypdf_vendor.py
+```
+
+The extraction script prints JSON with:
 
 - `pdf_path`
 - `page_count`

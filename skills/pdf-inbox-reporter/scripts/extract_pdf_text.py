@@ -3,6 +3,12 @@ import json
 import sys
 from pathlib import Path
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+SKILL_DIR = SCRIPT_DIR.parent
+VENDOR_DIR = SKILL_DIR / 'vendor'
+if VENDOR_DIR.exists():
+    sys.path.insert(0, str(VENDOR_DIR))
+
 
 def extract_with_pypdf(pdf_path: Path):
     try:

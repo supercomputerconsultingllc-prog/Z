@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Workspace Image Viewer</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { font-family: system-ui, sans-serif; margin: 0; background: #111827; color: #e5e7eb; }
+    header { padding: 20px; border-bottom: 1px solid #374151; position: sticky; top: 0; background: #111827; }
+    main { padding: 20px; }
+    .hint { color: #9ca3af; font-size: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 20px; }
+    .card { background: #1f2937; border: 1px solid #374151; border-radius: 14px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+    .thumb { width: 100%; height: 220px; object-fit: contain; background: #0b1220; display: block; }
+    .meta { padding: 12px 14px 16px; }
+    .path { word-break: break-all; color: #93c5fd; font-size: 13px; }
+    .name { font-weight: 700; margin-bottom: 8px; }
+    .empty { padding: 24px; border: 1px dashed #4b5563; border-radius: 12px; color: #9ca3af; }
+    a { color: inherit; text-decoration: none; }
+    button { background: #2563eb; color: white; border: 0; border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 style="margin:0 0 8px">Workspace Image Viewer</h1>
+    <div class="hint">Open this file in the OpenClaw browser. It lists recent images from the browser capture folder and workspace reports.</div>
+    <div style="margin-top:12px"><button onclick="location.reload()">Refresh</button></div>
+  </header>
+  <main>
+    <div id="app">Loading images…</div>
+  </main>
+  <script>
+    const images = [
+      {
+        name: '602a4efe-10a0-4628-bba0-ded84ab0fbd1.jpg',
+        path: 'file:///home/ai/.openclaw/media/browser/602a4efe-10a0-4628-bba0-ded84ab0fbd1.jpg',
+        source: 'browser capture'
+      }
+    ];
+
+    const app = document.getElementById('app');
+    if (!images.length) {
+      app.innerHTML = '<div class="empty">No images found yet.</div>';
+    } else {
+      const grid = document.createElement('div');
+      grid.className = 'grid';
+      for (const img of images) {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <a href="${img.path}" target="_blank" rel="noreferrer">
+            <img class="thumb" src="${img.path}" alt="${img.name}">
+          </a>
+          <div class="meta">
+            <div class="name">${img.name}</div>
+            <div class="hint">${img.source}</div>
+            <div class="path">${img.path}</div>
+          </div>
+        `;
+        grid.appendChild(card);
+      }
+      app.innerHTML = '';
+      app.appendChild(grid);
+    }
+  </script>
+</body>
+</html>

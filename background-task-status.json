@@ -1,0 +1,23 @@
+{
+  "state": "running",
+  "task": "scc-next-batch",
+  "project": "Supercomputer Consulting",
+  "updated_at": "2026-03-18T01:06:00-07:00",
+  "human_time": "2026-03-18 01:06 PDT",
+  "last_completed_commit": "f5a3dce",
+  "current_focus": [
+    "lead generation playbook",
+    "discovery call script",
+    "intake form copy",
+    "buyer target lists",
+    "outreach cadence"
+  ],
+  "artifacts_expected": [
+    "scc-lead-generation-playbook.md",
+    "scc-discovery-call-script.md",
+    "scc-intake-form-and-qualification.md"
+  ],
+  "status_file": "BACKGROUND_TASK_STATUS.md",
+  "log_file": "BACKGROUND_TASK_LOG.md",
+  "done_file": "BACKGROUND_TASK_DONE.md"
+}

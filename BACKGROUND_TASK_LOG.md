@@ -3,12 +3,6 @@
 ## 2026-03-18 00:57 PDT
 Started background build for Supercomputer Consulting sales and marketing assets.
 
-Scope:
-- founder bio templates
-- authority articles
-- one-page overview
-- lead-generation/supporting assets
-
 ## 2026-03-18 01:01 PDT
 Created visible status file: `BACKGROUND_TASK_STATUS.md`
 
@@ -24,3 +18,19 @@ Created files:
 
 Committed to git:
 - `93ded3b` — Add sales assets for Supercomputer Consulting
+
+## 2026-03-18 01:06 PDT
+Started next batch and added machine-readable status file: `background-task-status.json`
+
+Committed to git:
+- `e49b31c` — Add machine-readable background status
+
+## 2026-03-18 01:14 PDT
+Started 5-worker overnight build for Supercomputer Consulting.
+
+Worker lanes:
+- A: website copy and positioning
+- B: outbound sales system
+- C: authority content and SEO
+- D: case studies and proof assets
+- E: market targeting and offer strategy

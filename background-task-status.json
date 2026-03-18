@@ -1,35 +1,40 @@
 {
-  "state": "running",
+  "state": "done",
   "task": "scc-5-worker-build",
   "project": "Supercomputer Consulting",
-  "updated_at": "2026-03-18T01:14:00-07:00",
-  "human_time": "2026-03-18 01:14 PDT",
-  "last_completed_commit": "e49b31c",
+  "updated_at": "2026-03-18T01:20:00-07:00",
+  "human_time": "2026-03-18 01:20 PDT",
+  "last_completed_commit": "43250fc",
   "workers": [
     {
       "id": "A",
       "focus": "website-copy-and-positioning",
-      "status": "launching"
+      "status": "done",
+      "commit": "5098f5a"
     },
     {
       "id": "B",
       "focus": "outbound-sales-system",
-      "status": "launching"
+      "status": "done",
+      "commit": "43250fc"
     },
     {
       "id": "C",
       "focus": "authority-content-and-seo",
-      "status": "launching"
+      "status": "done",
+      "commit": "05b2c57"
     },
     {
       "id": "D",
       "focus": "case-studies-and-proof-assets",
-      "status": "launching"
+      "status": "done",
+      "commit": "d963963"
     },
     {
       "id": "E",
       "focus": "market-targeting-and-offer-strategy",
-      "status": "launching"
+      "status": "done",
+      "commit": "4b60619"
     }
   ],
   "artifacts_expected": [

@@ -40,23 +40,29 @@ Drafts should:
 - acknowledge receipt when appropriate
 - ask clarifying questions when needed
 - stay concise and professional
+- keep the current working reply formatting style
 - never use em dashes
 
 ## 3) Sending policy
-Default behavior: **draft first, never auto-send without confirmation** unless the reply is extremely obvious and low-risk.
+Default behavior: **draft for all human emails**.
 
-Potentially obvious low-risk categories:
+Auto-send is allowed only when all of the following are true:
+- the sender is a known human
+- the reply is low-risk and straightforward
+- the reply does not involve personal details
+- the reply does not require careful judgment, negotiation, or sensitive tone handling
+
+Potentially acceptable low-risk categories:
 - simple acknowledgement
 - scheduling confirmation / follow-up
 - brief clarification request
 - lightweight routing / "got it, will review" messages
 
-Even for low-risk cases, prefer confirmation before sending whenever practical.
-
 Do **not** auto-send when:
 - legal, financial, contractual, or compliance issues appear
+- personal details are involved
 - the message is ambiguous
-- the sender is high-stakes / new / sensitive
+- the sender is unknown, high-stakes, or sensitive
 - tone or negotiation matters
 - the assistant lacks enough context
 - the reply would benefit from human review

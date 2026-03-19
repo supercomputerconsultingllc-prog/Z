@@ -49,9 +49,10 @@ Default behavior: **draft for all human emails**.
 Auto-send is allowed only when all of the following are true:
 - the sender appears to be an individual human
 - the email is analyzed as likely human-written rather than AI-generated, bulk-written, or heavily templated
-- the reply is low-risk and straightforward
+- if there is uncertainty about whether it is human-written, draft only and do not auto-send
+- the reply is low-risk or medium-risk, but not high-risk
 - the reply does not involve personal details
-- the reply does not require careful judgment, negotiation, or sensitive tone handling
+- the reply does not require sensitive judgment, negotiation, or unusually delicate tone handling
 
 Potentially acceptable low-risk categories:
 - simple acknowledgement
@@ -59,12 +60,18 @@ Potentially acceptable low-risk categories:
 - brief clarification request
 - lightweight routing / "got it, will review" messages
 
+Potentially acceptable medium-risk categories:
+- straightforward follow-up answers with clear context
+- basic factual responses that do not expose personal details
+- simple coordination messages where tone stakes are moderate but manageable
+
 Do **not** auto-send when:
 - legal, financial, contractual, or compliance issues appear
 - personal details are involved
 - the message is ambiguous
 - the sender is unknown, high-stakes, or sensitive
-- tone or negotiation matters
+- the email may be AI-written, bulk-written, or heavily templated
+- tone or negotiation matters in a sensitive way
 - the assistant lacks enough context
 - the reply would benefit from human review
 

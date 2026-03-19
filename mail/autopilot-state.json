@@ -1,4 +1,32 @@
 {
-  "lastProcessedIds": [],
-  "lastThreadActions": {}
+  "lastProcessedIds": [
+    "19d04a52f6d4707f",
+    "19d04ad01271c546",
+    "19d04c0991b35023",
+    "19d045546a88d422",
+    "19d04b3aef1814ea",
+    "19d04ce472c13412"
+  ],
+  "lastThreadActions": {
+    "19d04c0991b35023": {
+      "lastAction": "auto-replied"
+    },
+    "19d04b3aef1814ea": {
+      "lastAction": "auto-replied"
+    },
+    "19d04ad01271c546": {
+      "lastAction": "auto-replied"
+    },
+    "19d04a52f6d4707f": {
+      "lastAction": "auto-replied"
+    },
+    "19d045546a88d422": {
+      "lastAction": "auto-replied"
+    },
+    "19d04ce472c13412": {
+      "state": "waiting-on-them",
+      "lastAction": "auto-replied",
+      "lastInboundSubject": "Opportunity"
+    }
+  }
 }

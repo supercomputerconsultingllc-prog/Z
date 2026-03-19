@@ -13,20 +13,26 @@ TMP=$(mktemp)
 trap 'rm -f "$TMP"' EXIT
 
 gog gmail search 'is:unread newer_than:1d' --account "$ACCOUNT" --max 5 > "$TMP"
+export TMPFILE="$TMP"
+export WATCHED_ACCOUNT="${ACCOUNT,,}"
+export STATE_FILE
 
 python3 - <<'PY'
-import json, os, re, subprocess, sys
+import json, os, re, subprocess
 from pathlib import Path
 
-state_path = Path('/home/ai/.openclaw/workspace/mail/autopilot-state.json')
+state_path = Path(os.environ['STATE_FILE'])
+watched_account = os.environ['WATCHED_ACCOUNT']
+
 if state_path.exists():
     state = json.loads(state_path.read_text())
 else:
     state = {"lastProcessedIds": [], "lastThreadActions": {}}
+
 processed = set(state.get('lastProcessedIds', []))
 thread_actions = state.get('lastThreadActions', {})
 
-search_path = Path(os.environ.get('TMPFILE', ''))
+search_path = Path(os.environ['TMPFILE'])
 lines = search_path.read_text().splitlines()
 rows = []
 for line in lines:
@@ -36,45 +42,67 @@ for line in lines:
 
 sent_any = False
 new_processed = list(processed)
-
 keywords = ['consulting','lead','aws','amazon','data center','colocation','hpc','ai cluster','cooling','power','capacity','migration','design review','due diligence']
 blocked = ['no-reply@','noreply@','newsletter','unsubscribe','promotion']
+personal_markers = ['ssn','social security','dob','date of birth','home address','bank','routing number','account number']
 
 for row in rows:
-    m = re.match(r'^(\S+)\s+\S+\s+\S+\s+(.+?)\s{2,}(.+?)\s{2,}(.*?)\s{2,}(.*?)\s*$', row)
     msg_id = row.split()[0]
     if msg_id in processed:
         continue
-    get = subprocess.run(['gog','gmail','get',msg_id,'--account','SupercomputerConsultingLLC@gmail.com'], capture_output=True, text=True)
+
+    get = subprocess.run(
+        ['gog', 'gmail', 'get', msg_id, '--account', watched_account],
+        capture_output=True, text=True
+    )
     if get.returncode != 0:
         continue
+
     text = get.stdout
     def field(name):
         mm = re.search(rf'^{name}\t?(.*)$', text, re.M)
         return mm.group(1).strip() if mm else ''
+
     thread_id = field('thread_id') or msg_id
+    labels = field('label_ids')
     sender = field('from')
     subject = field('subject')
-    body = text.split('\n\n',1)[1].strip() if '\n\n' in text else ''
+    body = text.split('\n\n', 1)[1].strip() if '\n\n' in text else ''
+
     low = (subject + '\n' + body).lower()
-    if any(b in low or b in sender.lower() for b in blocked):
+    sender_low = sender.lower()
+    labels_low = labels.lower()
+    thread_state = thread_actions.get(thread_id, {})
+
+    # Ignore our own outbound mail and anything already waiting on the other person.
+    if watched_account in sender_low:
         new_processed.append(msg_id)
         continue
-    if thread_id in thread_actions:
+    if 'sent' in labels_low:
         new_processed.append(msg_id)
         continue
+    if thread_state.get('state') == 'waiting-on-them':
+        new_processed.append(msg_id)
+        continue
+
+    if any(b in low or b in sender_low for b in blocked):
+        new_processed.append(msg_id)
+        continue
+
     business = any(k in low for k in keywords)
-    personal_details = any(k in low for k in ['ssn','social security','dob','date of birth','home address','bank','routing number','account number'])
-    if personal_details:
+    personal_details = any(k in low for k in personal_markers)
+    if personal_details or not business:
         new_processed.append(msg_id)
         continue
-    if not business:
-        new_processed.append(msg_id)
-        continue
+
     name_match = re.search(r'^(.*?)\s*<', sender)
     name = name_match.group(1).strip('" ') if name_match else 'there'
     if name.lower() in {'', 'no-reply'}:
         name = 'there'
+
+    recipient_match = re.search(r'<([^>]+)>', sender)
+    recipient = recipient_match.group(1) if recipient_match else sender.strip()
+
     reply = (
         f"Hi {name},\n\n"
         "Thanks for reaching out. I am interested.\n\n"
@@ -82,17 +110,24 @@ for row in rows:
         "Best,\n"
         "Supercomputer Consulting"
     )
+
     send = subprocess.run([
-        'gog','send',
-        '--account','SupercomputerConsultingLLC@gmail.com',
-        '--reply-to-message-id',msg_id,
-        '--to', re.search(r'<([^>]+)>', sender).group(1) if '<' in sender else sender,
+        'gog', 'send',
+        '--account', watched_account,
+        '--reply-to-message-id', msg_id,
+        '--to', recipient,
         '--subject', f'Re: {subject}',
         '--body', reply,
     ], capture_output=True, text=True)
+
     if send.returncode == 0:
         sent_any = True
-        thread_actions[thread_id] = {'lastAction': 'auto-replied'}
+        thread_actions[thread_id] = {
+            'state': 'waiting-on-them',
+            'lastAction': 'auto-replied',
+            'lastInboundSubject': subject,
+        }
+
     new_processed.append(msg_id)
 
 state['lastProcessedIds'] = new_processed[-200:]

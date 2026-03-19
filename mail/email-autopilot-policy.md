@@ -47,7 +47,8 @@ Drafts should:
 Default behavior: **draft for all human emails**.
 
 Auto-send is allowed only when all of the following are true:
-- the sender is a known human
+- the sender appears to be an individual human
+- the email is analyzed as likely human-written rather than AI-generated, bulk-written, or heavily templated
 - the reply is low-risk and straightforward
 - the reply does not involve personal details
 - the reply does not require careful judgment, negotiation, or sensitive tone handling

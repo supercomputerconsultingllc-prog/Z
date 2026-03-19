@@ -206,6 +206,7 @@ Every 2 minutes:
 - surface urgent or opportunity emails quickly
 - summarize important items into chat when delivery is available
 - always draft replies for summarized human emails
+- use thread state and follow-up timing rules before sending
 - auto-send when allowed by policy
 - stay quiet when nothing meaningful is present
 

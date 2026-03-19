@@ -159,6 +159,7 @@ Then:
 
 ## 9) Contact memory
 Maintain lightweight continuity in `mail/contact-memory.md`.
+Use `/home/ai/.openclaw/workspace/mail/thread-followup-memory.md` to avoid repetitive thread behavior and to track whether a follow-up is actually due.
 
 Track when useful:
 - name
@@ -246,3 +247,4 @@ Use consistent default response patterns for:
 - close-the-loop reply
 
 Templates should remain natural and should be adapted to the specific email.
+pted to the specific email.

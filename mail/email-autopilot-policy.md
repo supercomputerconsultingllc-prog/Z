@@ -61,6 +61,7 @@ For business-relevant emails, classify into one of these:
 - irrelevant / non-opportunity
 
 Lead-stage tagging should be written into CRM-lite notes when useful.
+Use `/home/ai/.openclaw/workspace/mail/opportunity-scoring-rubric.md` to help decide how strong the opportunity is.
 
 ## 4) Reply objectives
 For consulting-related emails, each draft should pick one primary objective:

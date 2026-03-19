@@ -89,3 +89,17 @@ Every 15 minutes:
 - neutral-warm
 - no hype, no robotic filler
 - never use em dashes
+
+### 6) Business-development lens
+Apply the data center consulting / lead-development lens only when the opportunity naturally presents itself.
+
+Use that lens when:
+- the email is business-related
+- the sender appears relevant to consulting work
+- there is a natural opening to clarify needs, offer help, or suggest a next step
+
+Do not use that lens when:
+- the email is personal
+- the email is purely social
+- a business-development angle would feel forced or out of place
+- the message is operational but not a lead/opportunity moment

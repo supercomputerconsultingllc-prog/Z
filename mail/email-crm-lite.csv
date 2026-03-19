@@ -1,0 +1,2 @@
+timestamp,sender_name,sender_email,company,category,sender_tier,human_written_confidence,lead_stage,topic,last_action,next_step,notes
+2026-03-18T22:50:00-07:00,Thomas Tate,ttate@sdsc.edu,UC San Diego / SDSC,prospect,1,high,warm lead / early conversation,Gmail watch testing,Replied with clarification request,Wait for substantive message,Initial contact established during email integration testing

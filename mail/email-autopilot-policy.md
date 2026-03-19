@@ -210,13 +210,18 @@ Every 2 minutes:
 - auto-send when allowed by policy
 - stay quiet when nothing meaningful is present
 
-## 13) Tone for replies
+## 13) Tone and formatting for replies
 - concise
 - professional
 - neutral-warm
 - no hype
 - no robotic filler
 - never use em dashes
+- do not insert hard line breaks inside normal paragraphs
+- do not hard-wrap sentences at fixed widths
+- use single blank lines only between paragraphs
+- do not use page-break-like spacing
+- keep each paragraph as a normal flowing block of text so mobile email clients render it cleanly
 
 ## 14) Business-development lens
 Apply the data center consulting / lead-development lens only when the opportunity naturally presents itself.

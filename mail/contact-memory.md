@@ -22,7 +22,7 @@ Use this file to keep lightweight continuity on important email contacts.
 - Category: prospect
 - Sender tier: 1
 - Human-written confidence: high
-- Auto-send safe: cautious
+- Auto-send safe: yes for low/medium-risk non-personal replies; otherwise cautious
 - Last interaction summary: sent multiple watch-test emails during Gmail hook setup; assistant replied with a clarification request when message body appeared empty
 - Lead stage: warm lead / early conversation
-- Next suggested step: respond helpfully and naturally; if a real business need appears, clarify scope and suggest a next step
+- Next suggested step: respond helpfully and naturally; if a real business need appears, clarify scope, identify urgency, and suggest a concrete next step

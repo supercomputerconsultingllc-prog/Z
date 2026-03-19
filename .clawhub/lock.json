@@ -8,6 +8,14 @@
     "m365cli": {
       "version": "1.0.7",
       "installedAt": 1773930661645
+    },
+    "outlook-email": {
+      "version": "0.1.0",
+      "installedAt": 1773930902072
+    },
+    "outlook-calendar": {
+      "version": "1.0.2",
+      "installedAt": 1773930913660
     }
   }
 }

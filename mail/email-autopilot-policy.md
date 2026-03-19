@@ -33,17 +33,25 @@ For each new actionable human email:
 - note urgency and whether a reply is likely needed
 
 ### 2) Draft replies
-Create a draft-style suggested reply when:
-- the sender asks a question
-- a response is expected
-- scheduling / acknowledgement / clarification would help
+Always create a draft-style suggested reply for every summarized human email.
 
-### 3) Auto-reply only when low-risk
-Safe auto-reply categories:
+Drafts should:
+- answer the message if possible
+- acknowledge receipt when appropriate
+- ask clarifying questions when needed
+- stay concise and professional
+- never use em dashes
+
+## 3) Sending policy
+Default behavior: **draft first, never auto-send without confirmation** unless the reply is extremely obvious and low-risk.
+
+Potentially obvious low-risk categories:
 - simple acknowledgement
 - scheduling confirmation / follow-up
 - brief clarification request
-- lightweight routing / “got it, will review” messages
+- lightweight routing / "got it, will review" messages
+
+Even for low-risk cases, prefer confirmation before sending whenever practical.
 
 Do **not** auto-send when:
 - legal, financial, contractual, or compliance issues appear
@@ -51,6 +59,7 @@ Do **not** auto-send when:
 - the sender is high-stakes / new / sensitive
 - tone or negotiation matters
 - the assistant lacks enough context
+- the reply would benefit from human review
 
 ### 4) Fallback behavior
 Every 15 minutes:
@@ -65,3 +74,4 @@ Every 15 minutes:
 - professional
 - neutral-warm
 - no hype, no robotic filler
+- never use em dashes

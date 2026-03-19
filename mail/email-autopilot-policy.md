@@ -11,7 +11,22 @@ Mailbox: `SupercomputerConsultingLLC@gmail.com`
 ## Operating rules
 
 ### 1) Summaries
-For each new actionable email:
+Only summarize inbox mail that appears to be from a real human.
+
+Prefer messages that look like:
+- direct person-to-person email
+- an individual sender name + email
+- conversational/reply-style content
+- messages in `INBOX`
+
+Do not surface or summarize:
+- newsletters
+- promotions / marketing blasts
+- bulk notifications
+- automated digests
+- obvious no-reply system mail unless it is operationally important
+
+For each new actionable human email:
 - identify sender
 - identify subject
 - summarize the ask in 1-3 bullets

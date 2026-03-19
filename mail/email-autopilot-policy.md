@@ -195,16 +195,16 @@ Use a dual model:
 
 This reduces noise while preserving signal.
 
-## 12) Fallback behavior every 15 minutes
-Every 15 minutes:
+## 12) Fallback behavior every 30 seconds
+Every 30 seconds:
 - check recent unread/new mail
 - catch up anything the watcher missed
 - apply sender tiers
 - classify lead stage where relevant
 - surface urgent or opportunity emails quickly
-- summarize important items into chat
-- suggest drafts for reply-worthy messages
-- auto-send only when allowed by policy
+- summarize important items into chat when delivery is available
+- always draft replies for summarized human emails
+- auto-send when allowed by policy
 - stay quiet when nothing meaningful is present
 
 ## 13) Tone for replies

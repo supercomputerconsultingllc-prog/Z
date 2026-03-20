@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import json
 from pathlib import Path
 
 WORKSPACE = Path('/home/ai/.openclaw/workspace')
@@ -26,9 +27,21 @@ CHECKS = {
     ],
 }
 
+JSON_CHECKS = [
+    WORKSPACE / 'capabilities.json',
+]
+
+
+def validate_json(path: Path) -> tuple[bool, str | None]:
+    try:
+        json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, json.JSONDecodeError) as exc:
+        return False, str(exc)
+    return True, None
+
 
 def main():
-    missing = []
+    failures = []
     print('# Self Check')
     print()
     for area, paths in CHECKS.items():
@@ -38,16 +51,29 @@ def main():
             marker = 'OK' if ok else 'MISSING'
             print(f'- [{marker}] {path.relative_to(WORKSPACE)}')
             if not ok:
-                missing.append(str(path.relative_to(WORKSPACE)))
+                failures.append(f'missing: {path.relative_to(WORKSPACE)}')
         print()
 
-    if missing:
-        print('Missing files detected:')
-        for item in missing:
+    print('## structured data')
+    for path in JSON_CHECKS:
+        if not path.exists():
+            print(f'- [SKIP] {path.relative_to(WORKSPACE)} (missing, already reported above)')
+            continue
+        ok, detail = validate_json(path)
+        marker = 'OK' if ok else 'INVALID'
+        print(f'- [{marker}] {path.relative_to(WORKSPACE)}')
+        if detail and not ok:
+            print(f'  - {detail}')
+            failures.append(f'invalid json: {path.relative_to(WORKSPACE)}')
+    print()
+
+    if failures:
+        print('Self-check failures detected:')
+        for item in failures:
             print(f'- {item}')
         raise SystemExit(1)
 
-    print('All core self-check items present.')
+    print('All core self-check items present and valid.')
 
 
 if __name__ == '__main__':

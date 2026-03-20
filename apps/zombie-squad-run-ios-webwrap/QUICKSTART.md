@@ -16,6 +16,7 @@ npm install
 npm run release:check
 npm run prepare:web
 npm run release:prep
+npm run check:assets
 npm run preflight
 npm run cap:init:notes
 ```

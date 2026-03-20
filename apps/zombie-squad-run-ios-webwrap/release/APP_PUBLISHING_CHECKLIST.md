@@ -5,8 +5,9 @@
 - [ ] `npm install` ran successfully
 - [ ] `npm run release:prep` ran successfully
 - [ ] game reviewed in local browser
-- [ ] app icon created
-- [ ] screenshots planned
+- [ ] app icon created and placed at `release/store-assets/assets/icon/app-icon-1024.png`
+- [ ] 5 screenshots exported to `release/store-assets/assets/screenshots/iphone/`
+- [ ] `npm run check:assets` passes
 
 ## Cloud iOS build prep
 - [ ] GitHub repo created

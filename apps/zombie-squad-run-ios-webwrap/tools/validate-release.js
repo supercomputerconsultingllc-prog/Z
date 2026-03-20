@@ -12,7 +12,10 @@ const required = [
   'release/LAUNCH_PLAN.md',
   'release/REPO_PUBLISH_CHECKLIST.md',
   'release/LAUNCH_DAY_CHECKLIST.md',
-  'release/store-assets/README.md'
+  'release/store-assets/README.md',
+  'release/store-assets/ASSET_REQUIREMENTS.json',
+  'release/store-assets/assets/README.md',
+  'tools/check-assets.js'
 ];
 
 let failed = false;

@@ -1,0 +1,46 @@
+{
+  "icon": {
+    "path": "release/store-assets/assets/icon/app-icon-1024.png",
+    "required": true,
+    "description": "1024x1024 App Store icon master"
+  },
+  "screenshots": [
+    {
+      "path": "release/store-assets/assets/screenshots/iphone/01-title-screen.png",
+      "required": true,
+      "description": "Screenshot 1, title screen"
+    },
+    {
+      "path": "release/store-assets/assets/screenshots/iphone/02-mid-run-action.png",
+      "required": true,
+      "description": "Screenshot 2, mid-run action"
+    },
+    {
+      "path": "release/store-assets/assets/screenshots/iphone/03-wall-encounter.png",
+      "required": true,
+      "description": "Screenshot 3, wall encounter"
+    },
+    {
+      "path": "release/store-assets/assets/screenshots/iphone/04-upgrade-shop.png",
+      "required": true,
+      "description": "Screenshot 4, upgrade shop"
+    },
+    {
+      "path": "release/store-assets/assets/screenshots/iphone/05-revive-or-high-wave.png",
+      "required": true,
+      "description": "Screenshot 5, revive or high-wave"
+    }
+  ],
+  "optional": [
+    {
+      "path": "release/store-assets/assets/promo/promo-banner.png",
+      "required": false,
+      "description": "Optional promo banner"
+    },
+    {
+      "path": "release/store-assets/assets/video/gameplay-trailer.mp4",
+      "required": false,
+      "description": "Optional gameplay trailer"
+    }
+  ]
+}

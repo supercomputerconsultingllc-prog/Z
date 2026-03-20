@@ -22,6 +22,8 @@ Create personalized drafts from a CSV list without sending anything automaticall
 - `campaign_send_bundle.md` - human-readable queued-send bundle
 - `campaign_send_bundle.csv` - machine-readable queued-send bundle
 - `campaign_append_send_history.py` - append completed-send records to the history ledger
+- `campaign_state_summary.py` - generate a compact summary of campaign state
+- `campaign_state_summary.md` - generated campaign summary snapshot
 
 ## Default workflow
 1. Fill in `campaign_contacts_template.csv` or copy it to a real campaign CSV.

@@ -48,6 +48,14 @@ Open:
 python3 /home/ai/.openclaw/workspace/mail/campaign_append_send_history.py name@example.com "Quick question about Example Co" spring-outreach sent "manual test entry"
 ```
 
+## 9) Generate campaign state summary
+```bash
+python3 /home/ai/.openclaw/workspace/mail/campaign_state_summary.py
+```
+
+Open:
+- `/home/ai/.openclaw/workspace/mail/campaign_state_summary.md`
+
 ## Safety notes
 - Draft generation respects suppression rules and send limits.
 - Queueing does not send email.

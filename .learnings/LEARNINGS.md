@@ -367,3 +367,26 @@ Whenever you add a ledger file for an operational workflow, also add the smalles
 - Tags: ledger, helper, campaign, auditability
 
 ---
+
+## [LRN-20260320-017] best_practice
+
+**Logged**: 2026-03-20T07:48:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+Campaign tooling benefits from its own compact state summary, not just per-file helpers.
+
+### Details
+The campaign system had multiple useful files and helpers, but no single compact status view. Adding a summary script makes it easier to inspect campaign health quickly without reading several files separately.
+
+### Suggested Action
+For multi-file workflows, add a summary view once the file count and helper count start to grow.
+
+### Metadata
+- Source: conversation
+- Related Files: mail/campaign_state_summary.py, mail/campaign_state_summary.md
+- Tags: campaign, summary, reporting, workflow
+
+---

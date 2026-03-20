@@ -16,6 +16,26 @@
     "outlook-calendar": {
       "version": "1.0.2",
       "installedAt": 1773930913660
+    },
+    "m365-pnp-cli": {
+      "version": "1.0.1",
+      "installedAt": 1773931981733
+    },
+    "gog": {
+      "version": "1.0.0",
+      "installedAt": 1773977668615
+    },
+    "mcporter": {
+      "version": "1.0.0",
+      "installedAt": 1773977701235
+    },
+    "tmux": {
+      "version": "1.0.0",
+      "installedAt": 1773977709229
+    },
+    "weather": {
+      "version": "1.0.0",
+      "installedAt": 1773977715641
     }
   }
 }

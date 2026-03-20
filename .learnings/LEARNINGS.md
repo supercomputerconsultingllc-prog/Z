@@ -966,6 +966,29 @@ Use explicit replacement markers for late-stage release placeholders so they are
 
 ---
 
+## [LRN-20260320-046] best_practice
+
+**Logged**: 2026-03-20T12:11:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+Once placeholder validation exists, add a dedicated replacement checklist so the user has one obvious place to resolve remaining blockers.
+
+### Details
+After making placeholders explicit and machine-checkable, the next useful step was a human-readable checklist that names each required replacement and the main files involved. That reduces last-mile confusion.
+
+### Suggested Action
+Pair placeholder validation with a replacement checklist for the final config pass.
+
+### Metadata
+- Source: conversation
+- Related Files: apps/zombie-squad-run-ios-webwrap/release/REPLACE_VALUES_CHECKLIST.md, apps/zombie-squad-run-ios-webwrap/tools/check-placeholders.js
+- Tags: placeholders, checklist, release, usability, final-pass
+
+---
+
 ## [LRN-20260320-028] best_practice
 
 **Logged**: 2026-03-20T08:10:00-07:00

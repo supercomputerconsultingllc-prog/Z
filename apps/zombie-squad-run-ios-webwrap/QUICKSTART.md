@@ -27,6 +27,7 @@ npm run cap:init:notes
 - `release/APP_PUBLISHING_CHECKLIST.md`
 - `release/CLOUD_BUILD_ENV_TEMPLATE.md`
 - `release/FINAL_SUBMISSION_BUNDLE.md`
+- `release/REPLACE_VALUES_CHECKLIST.md`
 - `release/REPO_PUBLISH_CHECKLIST.md`
 - `release/LAUNCH_DAY_CHECKLIST.md`
 - `release/LAUNCH_PLAN.md`

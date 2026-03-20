@@ -9,6 +9,10 @@
     "validate:release": "node tools/validate-release.js",
     "check:placeholders": "node tools/check-placeholders.js",
     "check:assets": "node tools/check-assets.js",
+    "generate:icon": "node tools/generate-icon.js",
+    "capture:screenshots": "node tools/capture-screenshots.js",
+    "build:hosted-pages": "node tools/build-hosted-pages.js",
+    "assets:starter-pack": "node tools/generate-icon.js && node tools/capture-screenshots.js && node tools/build-hosted-pages.js",
     "preflight": "node tools/validate-release.js && node tools/check-assets.js && node tools/print-next-steps.js",
     "release:check": "node tools/full-release-check.js",
     "cap:init:notes": "node tools/print-next-steps.js"

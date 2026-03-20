@@ -24,4 +24,4 @@
 - final iOS packaging and cloud build execution
 
 ## Recommended next step
-Complete the final store asset pack in the Windows iOS web-wrap scaffold, especially the 1024 icon and the 5 required iPhone screenshots, then run the asset check before cloud build.
+Run the starter asset pipeline in the Windows iOS web-wrap scaffold to generate the 1024 icon, the 5 required iPhone screenshots, and hosted support/privacy pages, then review and replace any placeholders before cloud build.

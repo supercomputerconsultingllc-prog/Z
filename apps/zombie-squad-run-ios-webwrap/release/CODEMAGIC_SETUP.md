@@ -3,7 +3,7 @@
 ## Before you start
 - Apple Developer account active
 - GitHub repo created
-- support/privacy URLs ready or placeholder pages hosted
+- support/privacy URLs ready, or run `npm run build:hosted-pages` and publish `release/hosted-pages/` to a static host like GitHub Pages before final submission
 
 ## High-level steps
 1. Create a Codemagic account.
@@ -18,7 +18,9 @@
 - release checklist
 - App Store copy draft
 - privacy draft
-- support placeholder
+- support draft
+- generated icon and screenshots from `npm run assets:starter-pack`
+- generated hosted pages in `release/hosted-pages/`
 
 ## What to upload/configure in Codemagic
 - bundle identifier

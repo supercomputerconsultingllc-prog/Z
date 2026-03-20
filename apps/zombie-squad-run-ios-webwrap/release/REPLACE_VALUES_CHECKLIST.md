@@ -22,8 +22,10 @@ Use your cloud build provider secret store for sensitive values.
 
 ## Suggested order
 1. Choose final app ID
-2. Host support page
-3. Host privacy page
-4. Configure cloud build secrets
-5. Run `npm run check:placeholders`
-6. Run `npm run release:check`
+2. Run `npm run build:hosted-pages`
+3. Host `release/hosted-pages/support/` and `release/hosted-pages/privacy/`
+4. Put the real hosted URLs into `release/store-assets/app-store-metadata.json`
+5. Configure cloud build secrets
+6. Run `npm run check:placeholders`
+7. Run `npm run assets:starter-pack`
+8. Run `npm run release:check`

@@ -21,6 +21,7 @@
 
 ## Launch prep
 - [ ] pricing chosen
+- [ ] `npm run build:hosted-pages` ran successfully
 - [ ] support URL live
 - [ ] privacy policy URL live
 - [ ] screenshots uploaded

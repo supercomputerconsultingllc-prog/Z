@@ -16,6 +16,10 @@ npm install
 npm run release:check
 npm run prepare:web
 npm run release:prep
+npm run generate:icon
+npm run capture:screenshots
+npm run build:hosted-pages
+npm run assets:starter-pack
 npm run check:assets
 npm run preflight
 npm run cap:init:notes

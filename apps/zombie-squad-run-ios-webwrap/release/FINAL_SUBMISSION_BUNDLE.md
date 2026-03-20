@@ -5,10 +5,11 @@
 - App Store copy drafts
 - support URL
 - privacy policy URL
-- screenshots
+- generated or polished screenshots
 - icon asset
 - launch pricing decision
 - cloud build signing configuration
+- hosted support/privacy page source in `release/hosted-pages/`
 
 ## Minimum final review
 1. Confirm metadata matches the current build.

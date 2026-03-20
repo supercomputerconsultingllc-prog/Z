@@ -19,6 +19,10 @@ You said the constraint is Windows only. Native iOS builds still require Apple t
 - `npm run release:prep` - prepares web assets and release bundle
 - `npm run validate:release` - checks required release scaffold files
 - `npm run check:placeholders` - flags obvious placeholder values still present in shipping docs/config
+- `npm run generate:icon` - creates a bold starter 1024x1024 app icon PNG
+- `npm run capture:screenshots` - exports 5 iPhone screenshots from built-in game scene presets using headless Chrome
+- `npm run build:hosted-pages` - generates support and privacy pages ready for lightweight static hosting
+- `npm run assets:starter-pack` - generates the icon, screenshots, and hosted pages in one pass
 - `npm run check:assets` - verifies the required icon and iPhone screenshot files are present
 - `npm run preflight` - runs release validation, checks required store assets, and prints next-step guidance
 - `npm run release:check` - runs validation, checks placeholders, prepares assets, verifies required store assets, builds the release bundle, and prints next steps
@@ -32,6 +36,8 @@ You said the constraint is Windows only. Native iOS builds still require Apple t
 - `codemagic.yaml` - Codemagic starter workflow
 - `release/assets-checklist/` - icon and screenshot planning pack
 - `release/store-assets/` - listing copy, icon brief, and page templates
+- `release/hosted-pages/` - generated static support and privacy pages ready to publish
+- `release/HOSTED_PAGES_QUICKSTART.md` - fast path for publishing support and privacy URLs
 - `release/LAUNCH_PLAN.md` - paid vs free launch recommendation
 - `release/CLOUD_BUILD_ENV_TEMPLATE.md` - cloud build environment variable template
 - `release/FINAL_SUBMISSION_BUNDLE.md` - final handoff/submission summary

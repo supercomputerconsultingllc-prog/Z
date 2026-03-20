@@ -15,7 +15,10 @@ const required = [
   'release/store-assets/README.md',
   'release/store-assets/ASSET_REQUIREMENTS.json',
   'release/store-assets/assets/README.md',
-  'tools/check-assets.js'
+  'tools/check-assets.js',
+  'tools/generate-icon.js',
+  'tools/capture-screenshots.js',
+  'tools/build-hosted-pages.js'
 ];
 
 let failed = false;

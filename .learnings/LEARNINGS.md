@@ -160,3 +160,26 @@ Use bounded improvement helpers that surface one next action, plus explicit stop
 - Tags: autonomy, bounded-loop, process, safety
 
 ---
+
+## [LRN-20260320-008] best_practice
+
+**Logged**: 2026-03-20T07:39:00-07:00
+**Priority**: medium
+**Status**: pending
+**Area**: docs
+
+### Summary
+When capability catalogs are hand-maintained, add a refresh script so the machine-readable registry can be regenerated reliably.
+
+### Details
+After adding a persistent capability catalog, the next weak point was drift between real workspace skills and `capabilities.json`. A refresh helper reduces manual update mistakes and pairs naturally with the audit script.
+
+### Suggested Action
+Keep both a refresh step and an audit step for capability metadata so changes can be regenerated and then verified.
+
+### Metadata
+- Source: conversation
+- Related Files: scripts/refresh_capabilities.py, scripts/audit_capabilities.py, capabilities.json
+- Tags: capability-audit, refresh, automation, hardening
+
+---

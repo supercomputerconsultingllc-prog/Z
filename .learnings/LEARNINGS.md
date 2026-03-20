@@ -413,3 +413,26 @@ When operational state is already structured, derive next-action summaries from 
 - Tags: next-actions, refresh, business-ops, automation
 
 ---
+
+## [LRN-20260320-019] best_practice
+
+**Logged**: 2026-03-20T07:50:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+If the system grows across multiple helper layers, add a self-check so core capabilities can be verified quickly.
+
+### Details
+The workspace now includes capability metadata, improvement tooling, campaign tooling, and business-ops tooling. A lightweight self-check script makes it easier to confirm that key files still exist and that the core operating layers are intact.
+
+### Suggested Action
+Add a simple self-check once the workspace has multiple interdependent helper layers.
+
+### Metadata
+- Source: conversation
+- Related Files: scripts/self_check.py, CAPABILITIES.md
+- Tags: self-check, reliability, assistant, maintenance
+
+---

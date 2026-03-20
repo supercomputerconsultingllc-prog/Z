@@ -88,6 +88,7 @@ These are available to use even if not copied into `workspace/skills`.
 ## Local helper scripts added
 - `scripts/audit_capabilities.py` - compare workspace skills against `capabilities.json`
 - `scripts/refresh_capabilities.py` - rebuild `capabilities.json` from current workspace skills and known static tool inventory
+- `scripts/self_check.py` - verify that core assistant, campaign, and business-ops files are present
 - `scripts/next_improvement_prompt.py` - generate one bounded next-improvement prompt from current workspace state
 - `scripts/run_bounded_improvement.sh` - print the bounded self-review prompt and stop
 - `mail/campaign_generate_drafts.py` - generate approval-first outbound drafts from CSV

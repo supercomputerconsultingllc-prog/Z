@@ -7,6 +7,11 @@ WORKSPACE = Path('/home/ai/.openclaw/workspace')
 LEARNINGS = WORKSPACE / '.learnings' / 'LEARNINGS.md'
 GAPS = WORKSPACE / 'CAPABILITY_GAPS.md'
 CAPS = WORKSPACE / 'CAPABILITIES.md'
+NOISE_MARKERS = (
+    '-secrets.',
+    'autopilot-state.json',
+    'workspace-state.json',
+)
 
 
 def tail_sections(path: Path, lines: int = 80) -> str:
@@ -16,7 +21,12 @@ def tail_sections(path: Path, lines: int = 80) -> str:
     return '\n'.join(text[-lines:]).strip()
 
 
-def git_status_lines(limit: int = 20) -> list[str]:
+def is_noise_status_line(line: str) -> bool:
+    return any(marker in line for marker in NOISE_MARKERS)
+
+
+
+def git_status_lines(limit: int = 20) -> tuple[list[str], int]:
     try:
         result = subprocess.run(
             ['git', 'status', '--short'],
@@ -26,10 +36,12 @@ def git_status_lines(limit: int = 20) -> list[str]:
             text=True,
         )
     except (subprocess.CalledProcessError, FileNotFoundError):
-        return []
+        return [], 0
 
     lines = [line.rstrip() for line in result.stdout.splitlines() if line.strip()]
-    return lines[:limit]
+    filtered = [line for line in lines if not is_noise_status_line(line)]
+    hidden_count = len(lines) - len(filtered)
+    return filtered[:limit], hidden_count
 
 
 def build_focus_order(status_lines: list[str]) -> list[str]:
@@ -59,7 +71,7 @@ def build_focus_order(status_lines: list[str]) -> list[str]:
 
 
 def main():
-    status_lines = git_status_lines()
+    status_lines, hidden_status_count = git_status_lines()
     payload = {
         'goal': 'Make one small, concrete, reversible improvement, then stop.',
         'rules': [
@@ -71,6 +83,8 @@ def main():
             'If nothing meaningful stands out, stop instead of churning.'
         ],
         'working_tree_status': status_lines,
+        'hidden_status_count': hidden_status_count,
+        'working_tree_status_note': 'Secret or state-file changes are hidden to keep the prompt focused on reusable improvements.',
         'suggested_focus_order': build_focus_order(status_lines),
         'recent_learnings_tail': tail_sections(LEARNINGS, 60),
         'capability_gaps_tail': tail_sections(GAPS, 80),

@@ -18,6 +18,7 @@ You said the constraint is Windows only. Native iOS builds still require Apple t
 - `npm run prepare:web` - copies game assets into the Capacitor web folder
 - `npm run release:prep` - prepares web assets and release bundle
 - `npm run validate:release` - checks required release scaffold files
+- `npm run preflight` - runs release validation and prints next-step guidance
 - `npm run cap:init:notes` - prints the next-step guidance
 
 ## Quickstart

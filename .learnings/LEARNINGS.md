@@ -759,6 +759,29 @@ When preparing a product for release, bundle gameplay improvements, packaging re
 
 ---
 
+## [LRN-20260320-037] best_practice
+
+**Logged**: 2026-03-20T11:05:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+When a release scaffold has validation plus guidance scripts, add a one-command preflight step for the common check path.
+
+### Details
+The Windows-friendly iOS scaffold already had release validation and next-step guidance as separate scripts. Adding a `preflight` command reduces friction and makes the most common sanity-check path easier to remember.
+
+### Suggested Action
+Bundle validation and next-step output into a single preflight command once both helpers exist.
+
+### Metadata
+- Source: conversation
+- Related Files: apps/zombie-squad-run-ios-webwrap/package.json, apps/zombie-squad-run-ios-webwrap/README.md, apps/zombie-squad-run-ios-webwrap/QUICKSTART.md
+- Tags: preflight, release, windows, ios, usability
+
+---
+
 ## [LRN-20260320-028] best_practice
 
 **Logged**: 2026-03-20T08:10:00-07:00

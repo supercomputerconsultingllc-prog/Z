@@ -7,6 +7,7 @@
     "prepare:web": "node tools/prepare-web.js",
     "release:prep": "node tools/prepare-web.js && node tools/make-release-bundle.js",
     "validate:release": "node tools/validate-release.js",
+    "preflight": "node tools/validate-release.js && node tools/print-next-steps.js",
     "cap:init:notes": "node tools/print-next-steps.js"
   },
   "dependencies": {

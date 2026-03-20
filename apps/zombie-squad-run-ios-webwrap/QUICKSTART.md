@@ -15,6 +15,7 @@
 npm install
 npm run prepare:web
 npm run release:prep
+npm run preflight
 npm run cap:init:notes
 ```
 

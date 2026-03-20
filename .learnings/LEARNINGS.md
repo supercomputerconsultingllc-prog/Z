@@ -321,3 +321,26 @@ When building lightweight operational systems, provide both a detailed human-rea
 - Tags: business-ops, summary, dashboard, usability
 
 ---
+
+## [LRN-20260320-015] correction
+
+**Logged**: 2026-03-20T07:46:00-07:00
+**Priority**: medium
+**Status**: pending
+**Area**: docs
+
+### Summary
+Queueing workflows should be idempotent, and queued contacts should be exportable into a clean review bundle.
+
+### Details
+While looking for new missing capabilities, the approval queue already contained a duplicate contact entry. The fix was to make queue insertion idempotent by checking existing queue headers before appending, and to add an exporter that turns queued contacts into clean markdown and CSV send bundles for later review.
+
+### Suggested Action
+When adding queue-based workflows, ensure repeat runs do not duplicate queue entries and provide a clean export step for downstream review.
+
+### Metadata
+- Source: conversation
+- Related Files: mail/campaign_queue_approved.py, mail/campaign_export_queued.py, mail/campaign_send_bundle.md, mail/campaign_send_bundle.csv
+- Tags: queueing, idempotency, export, campaign
+
+---

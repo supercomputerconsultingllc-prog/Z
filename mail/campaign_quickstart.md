@@ -34,6 +34,15 @@ python3 /home/ai/.openclaw/workspace/mail/campaign_dedupe_check.py
 Open:
 - `/home/ai/.openclaw/workspace/mail/campaign_dedupe_report.md`
 
+## 7) Export queued contacts for later send review
+```bash
+python3 /home/ai/.openclaw/workspace/mail/campaign_export_queued.py
+```
+
+Open:
+- `/home/ai/.openclaw/workspace/mail/campaign_send_bundle.md`
+- `/home/ai/.openclaw/workspace/mail/campaign_send_bundle.csv`
+
 ## Safety notes
 - Draft generation respects suppression rules and send limits.
 - Queueing does not send email.

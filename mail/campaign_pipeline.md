@@ -18,6 +18,9 @@ Create personalized drafts from a CSV list without sending anything automaticall
 - `campaign_send_history.csv` - ledger for recording future sends
 - `campaign_dedupe_check.py` - detect duplicate contacts by email
 - `campaign_dedupe_report.md` - duplicate-contact report output
+- `campaign_export_queued.py` - export queued contacts into review-ready send bundles
+- `campaign_send_bundle.md` - human-readable queued-send bundle
+- `campaign_send_bundle.csv` - machine-readable queued-send bundle
 
 ## Default workflow
 1. Fill in `campaign_contacts_template.csv` or copy it to a real campaign CSV.

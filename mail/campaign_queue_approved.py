@@ -28,10 +28,22 @@ def load_limits() -> dict:
     return json.loads(LIMITS.read_text(encoding='utf-8'))
 
 
+def existing_queue_emails() -> set[str]:
+    if not QUEUE.exists():
+        return set()
+    emails = set()
+    for line in QUEUE.read_text(encoding='utf-8').splitlines():
+        line = line.strip()
+        if line.startswith('## '):
+            emails.add(clean(line[3:]).lower())
+    return emails
+
+
 def main():
     suppressed = load_suppressed()
     limits = load_limits()
     max_queue = int(limits.get('maxApprovedToQueuePerRun', 10))
+    queued_already = existing_queue_emails()
 
     with CONTACTS.open(newline='', encoding='utf-8') as f:
         rows = list(csv.DictReader(f))
@@ -54,8 +66,10 @@ def main():
             continue
         if status == 'approved':
             row['status'] = 'queued'
-            queued.append(row)
             changed = True
+            if email not in queued_already:
+                queued.append(row)
+                queued_already.add(email)
 
     if changed:
         with CONTACTS.open('w', newline='', encoding='utf-8') as f:

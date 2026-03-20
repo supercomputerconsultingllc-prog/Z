@@ -16,8 +16,3 @@ Move approved drafts here before any sending workflow is considered.
 - Status: queued
 - Company: Example Co
 - Contact: Alex Smith
-
-## name@example.com
-- Status: queued
-- Company: Example Co
-- Contact: Alex Smith

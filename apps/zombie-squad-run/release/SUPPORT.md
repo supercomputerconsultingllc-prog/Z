@@ -3,8 +3,8 @@
 Zombie Squad Run support covers gameplay help, bug reports, account-less local progress questions, and business inquiries.
 
 ## Contact
-- Support email: support@example.com
-- Website: https://example.com
+- Use the published support page linked from the App Store listing for release support.
+- If a direct contact email is added before launch, update this page and the hosted support page in the iOS web-wrap release bundle.
 
 ## What to include in a support request
 - device model

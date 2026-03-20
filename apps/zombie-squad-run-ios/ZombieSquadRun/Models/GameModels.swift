@@ -41,7 +41,7 @@ struct RunStats {
 
 struct ReleaseConfig {
     let appName = "Zombie Squad Run"
-    let bundleId = "com.yourcompany.zombiesquadrun"
+    let bundleId = "com.zombiesquadrun.game"
     let version = "1.0"
     let build = "1"
 }

@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kids Color Pop</title>
+  <style>
+    :root {
+      --bg1: #fff7ed;
+      --bg2: #ecfeff;
+      --ink: #1f2937;
+      --card: rgba(255,255,255,.88);
+      --accent: #f59e0b;
+      --good: #16a34a;
+      --bad: #dc2626;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(135deg, var(--bg1), var(--bg2));
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .app {
+      width: min(960px, 100%);
+      background: var(--card);
+      backdrop-filter: blur(8px);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.12);
+      overflow: hidden;
+    }
+    .top {
+      padding: 20px 24px 10px;
+      text-align: center;
+    }
+    h1 { margin: 0; font-size: clamp(28px, 4vw, 44px); }
+    .subtitle { margin: 8px 0 0; color: #4b5563; font-size: 18px; }
+    .hud {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      padding: 18px 24px;
+    }
+    .pill {
+      background: white;
+      border-radius: 18px;
+      padding: 14px;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0,0,0,.06);
+      font-weight: 700;
+    }
+    .target-wrap {
+      padding: 10px 24px 4px;
+      text-align: center;
+    }
+    .target {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: 8px solid rgba(255,255,255,.9);
+      box-shadow: 0 12px 28px rgba(0,0,0,.10);
+      margin: 10px auto 18px;
+    }
+    .prompt {
+      font-size: clamp(22px, 3vw, 34px);
+      font-weight: 900;
+      margin: 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(90px, 1fr));
+      gap: 16px;
+      padding: 20px 24px 28px;
+    }
+    .color-btn {
+      border: 0;
+      border-radius: 22px;
+      min-height: 110px;
+      cursor: pointer;
+      color: white;
+      font-size: 24px;
+      font-weight: 900;
+      box-shadow: 0 12px 24px rgba(0,0,0,.12);
+      transition: transform .08s ease, box-shadow .08s ease;
+    }
+    .color-btn:active {
+      transform: scale(.97);
+      box-shadow: 0 8px 16px rgba(0,0,0,.14);
+    }
+    .footer {
+      text-align: center;
+      padding: 0 24px 24px;
+    }
+    .message {
+      min-height: 34px;
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+    .controls {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .control-btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 20px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #111827;
+      color: white;
+    }
+    @media (max-width: 640px) {
+      .hud { grid-template-columns: repeat(2, 1fr); }
+      .grid { grid-template-columns: repeat(2, 1fr); }
+      .target { width: 120px; height: 120px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="top">
+      <h1>Kids Color Pop</h1>
+      <p class="subtitle">Tap the color that matches the circle!</p>
+    </section>
+
+    <section class="hud">
+      <div class="pill">Score: <span id="score">0</span></div>
+      <div class="pill">Stars: <span id="stars">⭐</span></div>
+      <div class="pill">Round: <span id="round">1</span></div>
+      <div class="pill">Best: <span id="best">0</span></div>
+    </section>
+
+    <section class="target-wrap">
+      <p class="prompt">Find this color:</p>
+      <div id="target" class="target"></div>
+    </section>
+
+    <section id="grid" class="grid"></section>
+
+    <section class="footer">
+      <div id="message" class="message"></div>
+      <div class="controls">
+        <button class="control-btn" id="restartBtn">New Game</button>
+        <button class="control-btn" id="soundBtn">Sound: On</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const COLORS = [
+      { name: 'Red', hex: '#ef4444', emoji: '🍎' },
+      { name: 'Blue', hex: '#3b82f6', emoji: '🐟' },
+      { name: 'Green', hex: '#22c55e', emoji: '🐸' },
+      { name: 'Yellow', hex: '#facc15', emoji: '🌞' },
+      { name: 'Purple', hex: '#a855f7', emoji: '🦄' },
+      { name: 'Orange', hex: '#fb923c', emoji: '🧡' },
+      { name: 'Pink', hex: '#ec4899', emoji: '🎀' },
+      { name: 'Teal', hex: '#14b8a6', emoji: '🐬' },
+      { name: 'Brown', hex: '#92400e', emoji: '🧸' }
+    ];
+
+    const scoreEl = document.getElementById('score');
+    const starsEl = document.getElementById('stars');
+    const roundEl = document.getElementById('round');
+    const bestEl = document.getElementById('best');
+    const targetEl = document.getElementById('target');
+    const gridEl = document.getElementById('grid');
+    const messageEl = document.getElementById('message');
+    const restartBtn = document.getElementById('restartBtn');
+    const soundBtn = document.getElementById('soundBtn');
+
+    let score = 0;
+    let round = 1;
+    let best = Number(localStorage.getItem('kids-color-pop-best') || 0);
+    let soundOn = true;
+    let answer = null;
+
+    bestEl.textContent = best;
+
+    function shuffle(arr) {
+      return [...arr].sort(() => Math.random() - 0.5);
+    }
+
+    function speak(text) {
+      if (!soundOn || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.rate = 0.95;
+      utter.pitch = 1.15;
+      speechSynthesis.speak(utter);
+    }
+
+    function setMessage(text, color = '#111827') {
+      messageEl.textContent = text;
+      messageEl.style.color = color;
+    }
+
+    function updateHud() {
+      scoreEl.textContent = score;
+      roundEl.textContent = round;
+      starsEl.textContent = '⭐'.repeat(Math.max(1, Math.min(5, 1 + Math.floor(score / 3))));
+      if (score > best) {
+        best = score;
+        localStorage.setItem('kids-color-pop-best', String(best));
+        bestEl.textContent = best;
+      }
+    }
+
+    function makeRound() {
+      const choices = shuffle(COLORS).slice(0, 6);
+      answer = choices[Math.floor(Math.random() * choices.length)];
+      targetEl.style.background = answer.hex;
+      gridEl.innerHTML = '';
+      setMessage('');
+      updateHud();
+      speak(`Find ${answer.name}`);
+
+      for (const color of shuffle(choices)) {
+        const btn = document.createElement('button');
+        btn.className = 'color-btn';
+        btn.style.background = color.hex;
+        btn.textContent = color.emoji;
+        btn.setAttribute('aria-label', color.name);
+        btn.addEventListener('click', () => choose(color));
+        gridEl.appendChild(btn);
+      }
+    }
+
+    function choose(color) {
+      if (color.name === answer.name) {
+        score += 1;
+        round += 1;
+        setMessage(`Great job! ${color.name}!`, '#15803d');
+        speak(`Great job! ${color.name}`);
+        setTimeout(makeRound, 700);
+      } else {
+        setMessage(`Oops! Try ${answer.name}!`, '#b91c1c');
+        speak(`Try ${answer.name}`);
+      }
+      updateHud();
+    }
+
+    restartBtn.addEventListener('click', () => {
+      score = 0;
+      round = 1;
+      setMessage('New game!', '#1d4ed8');
+      makeRound();
+    });
+
+    soundBtn.addEventListener('click', () => {
+      soundOn = !soundOn;
+      soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
+      setMessage(soundOn ? 'Sound on!' : 'Sound off!', '#7c3aed');
+    });
+
+    makeRound();
+  </script>
+</body>
+</html>

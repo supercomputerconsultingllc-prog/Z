@@ -12,6 +12,11 @@ NOISE_MARKERS = (
     'autopilot-state.json',
     'workspace-state.json',
 )
+NOISE_EXACT_PATHS = {
+    'BOOTSTRAP.md',
+    'IDENTITY.md',
+    'TOOLS.md',
+}
 
 
 def tail_sections(path: Path, lines: int = 80) -> str:
@@ -21,8 +26,15 @@ def tail_sections(path: Path, lines: int = 80) -> str:
     return '\n'.join(text[-lines:]).strip()
 
 
+def status_path(line: str) -> str:
+    if len(line) <= 3:
+        return ''
+    return line[3:].strip()
+
+
 def is_noise_status_line(line: str) -> bool:
-    return any(marker in line for marker in NOISE_MARKERS)
+    path = status_path(line)
+    return path in NOISE_EXACT_PATHS or any(marker in line for marker in NOISE_MARKERS)
 
 
 
@@ -40,8 +52,13 @@ def git_status_lines(limit: int = 20) -> tuple[list[str], int]:
 
     lines = [line.rstrip() for line in result.stdout.splitlines() if line.strip()]
     filtered = [line for line in lines if not is_noise_status_line(line)]
+
+    tracked = [line for line in filtered if not line.startswith('?? ')]
+    untracked = [line for line in filtered if line.startswith('?? ')]
+    prioritized = tracked + untracked
+
     hidden_count = len(lines) - len(filtered)
-    return filtered[:limit], hidden_count
+    return prioritized[:limit], hidden_count
 
 
 def build_focus_order(status_lines: list[str]) -> list[str]:

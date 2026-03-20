@@ -21,6 +21,17 @@ python3 - <<'PY'
 import json, os, re, subprocess
 from pathlib import Path
 
+
+def build_plaintext_email(*paragraphs: str) -> str:
+    cleaned = []
+    for paragraph in paragraphs:
+        paragraph = paragraph.strip()
+        if not paragraph:
+            continue
+        paragraph = re.sub(r'\n{3,}', '\n\n', paragraph)
+        cleaned.append(paragraph)
+    return '\n\n'.join(cleaned)
+
 state_path = Path(os.environ['STATE_FILE'])
 watched_account = os.environ['WATCHED_ACCOUNT']
 
@@ -116,13 +127,12 @@ for row in rows:
     recipient_match = re.search(r'<([^>]+)>', sender)
     recipient = recipient_match.group(1) if recipient_match else sender.strip()
 
-    paragraphs = [
+    reply = build_plaintext_email(
         f"Hi {greeting_name},",
         "Thanks for reaching out. I'd be glad to learn more.",
         "Could you share a brief overview of the opportunity, including the scope and expected timeline? If it's shareable, the client or company name would be helpful as well. A budget range and location would also be useful if available.",
         "Best,\nSupercomputer Consulting",
-    ]
-    reply = "\n\n".join(paragraphs)
+    )
 
     send = subprocess.run([
         'gog', 'send',

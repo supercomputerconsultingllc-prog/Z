@@ -45,3 +45,26 @@ Add a tiny self-improvement checklist to HEARTBEAT.md so future heartbeat polls 
 - Tags: heartbeat, continual-improvement, process
 
 ---
+
+## [LRN-20260320-003] best_practice
+
+**Logged**: 2026-03-20T07:28:07-07:00
+**Priority**: medium
+**Status**: pending
+**Area**: docs
+
+### Summary
+Shared formatting rules should live in one helper when generated message bodies may grow over time.
+
+### Details
+After the initial mobile-format fix, the next hardening step was to centralize plain-text paragraph joining in a helper function. That makes future email body changes less likely to reintroduce stray spacing or inconsistent paragraph separators.
+
+### Suggested Action
+Use a small helper for generated message-body assembly whenever multiple templates may evolve in the same script.
+
+### Metadata
+- Source: conversation
+- Related Files: mail/autopilot-run.sh
+- Tags: formatting, email, hardening, maintainability
+
+---

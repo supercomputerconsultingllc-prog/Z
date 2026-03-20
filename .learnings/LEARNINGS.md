@@ -897,6 +897,29 @@ Add environment and final-submission summary docs once the release flow is mostl
 
 ---
 
+## [LRN-20260320-043] best_practice
+
+**Logged**: 2026-03-20T12:00:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+Once a release scaffold has validation, prep, and guidance steps, add a single release-check command that runs them all in order.
+
+### Details
+The Windows-friendly iOS scaffold already had the individual pieces needed for a good sanity pass, but they still required the user to know the right sequence. Adding one wrapper command makes the common release-prep path more obvious and repeatable.
+
+### Suggested Action
+Bundle validation, preparation, and next-step guidance into a single release-check command when the flow stabilizes.
+
+### Metadata
+- Source: conversation
+- Related Files: apps/zombie-squad-run-ios-webwrap/tools/full-release-check.js, apps/zombie-squad-run-ios-webwrap/package.json
+- Tags: release-check, automation, windows, ios, usability
+
+---
+
 ## [LRN-20260320-028] best_practice
 
 **Logged**: 2026-03-20T08:10:00-07:00

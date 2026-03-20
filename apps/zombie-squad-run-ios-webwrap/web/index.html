@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Zombie Squad Run</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#0b1220">
@@ -28,7 +28,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
     }
     .app {
       width: min(1140px, 100%);
@@ -84,12 +84,21 @@
       display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
       background: rgba(34,197,94,.12); color: #86efac; margin-right: 6px; margin-bottom: 6px;
     }
-    .shop-btn { width: auto; margin: 6px 6px 0 0; padding: 10px 14px; font-size: 14px; }
+    .shop-btn { width: auto; margin: 6px 6px 0 0; padding: 12px 16px; font-size: 14px; min-height: 44px; }
+    .touch-row { display: none; gap: 10px; padding: 0 16px 16px; background: rgba(255,255,255,0.03); }
+    .touch-btn { flex: 1; min-height: 52px; font-size: 16px; }
     @media (max-width: 920px) {
-      .topbar { grid-template-columns: repeat(3, 1fr); }
+      .topbar { grid-template-columns: repeat(4, 1fr); }
       .content { grid-template-columns: 1fr; }
       .controls { border-left: 0; border-top: 1px solid rgba(148,163,184,.12); }
       canvas { height: 560px; }
+      .touch-row { display: flex; }
+    }
+    @media (max-width: 560px) {
+      .topbar { grid-template-columns: repeat(2, 1fr); }
+      .stat .value { font-size: 22px; }
+      .controls { padding: 12px; }
+      button { min-height: 46px; }
     }
   </style>
 </head>
@@ -103,6 +112,7 @@
       <div class="stat"><span class="label">Coins</span><span class="value" id="coinStat">0</span></div>
       <div class="stat"><span class="label">Revives</span><span class="value" id="reviveStat">1</span></div>
       <div class="stat"><span class="label">Best</span><span class="value" id="bestStat">0</span></div>
+      <div class="stat"><span class="label">Mission</span><span class="value" id="missionStat">1/3</span></div>
     </section>
 
     <section class="content">
@@ -149,6 +159,12 @@
         </div>
       </aside>
     </section>
+
+    <section class="touch-row">
+      <button class="secondary touch-btn" id="laneLeftBtn">Shoot Left</button>
+      <button class="secondary touch-btn" id="laneCenterBtn">Shoot Center</button>
+      <button class="secondary touch-btn" id="laneRightBtn">Shoot Right</button>
+    </section>
   </main>
 
   <script>
@@ -160,6 +176,7 @@
     const distanceStat = document.getElementById('distanceStat');
     const waveStat = document.getElementById('waveStat');
     const bestStat = document.getElementById('bestStat');
+    const missionStat = document.getElementById('missionStat');
     const coinStat = document.getElementById('coinStat');
     const reviveStat = document.getElementById('reviveStat');
     const restartBtn = document.getElementById('restartBtn');
@@ -169,6 +186,9 @@
     const buyGunBtn = document.getElementById('buyGunBtn');
     const buySquadBtn = document.getElementById('buySquadBtn');
     const buyReviveBtn = document.getElementById('buyReviveBtn');
+    const laneLeftBtn = document.getElementById('laneLeftBtn');
+    const laneCenterBtn = document.getElementById('laneCenterBtn');
+    const laneRightBtn = document.getElementById('laneRightBtn');
 
     const LANES = [180, 400, 620];
     const COLORS = { road:'#334155', line:'#64748b', zombie:'#22c55e', wall:'#7c2d12', crate:'#2563eb', bullet:'#fde047', coin:'#facc15' };
@@ -177,6 +197,13 @@
     let best = Number(localStorage.getItem('zombie-squad-run-best') || 0);
     let bankCoins = Number(localStorage.getItem('zombie-squad-run-coins') || 0);
     let soundOn = localStorage.getItem('zombie-squad-run-sound') !== 'off';
+    let missionIndex = Number(localStorage.getItem('zombie-squad-run-mission-index') || 0);
+    let missionProgress = Number(localStorage.getItem('zombie-squad-run-mission-progress') || 0);
+    const MISSIONS = [
+      { label: 'Break 3 walls', target: 3, event: 'walls' },
+      { label: 'Recruit 8 survivors', target: 8, event: 'survivors' },
+      { label: 'Collect 20 coins', target: 20, event: 'coins' }
+    ];
     bestStat.textContent = best;
     soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
 
@@ -186,6 +213,37 @@
       localStorage.setItem('zombie-squad-run-best', String(best));
       localStorage.setItem('zombie-squad-run-coins', String(bankCoins));
       localStorage.setItem('zombie-squad-run-sound', soundOn ? 'on' : 'off');
+      localStorage.setItem('zombie-squad-run-mission-index', String(missionIndex));
+      localStorage.setItem('zombie-squad-run-mission-progress', String(missionProgress));
+    }
+
+    function activeMission() { return MISSIONS[missionIndex % MISSIONS.length]; }
+
+    function syncMissionHud() {
+      const mission = activeMission();
+      missionStat.textContent = `${Math.min(missionProgress, mission.target)}/${mission.target}`;
+      missionStat.title = mission.label;
+    }
+
+    function updateMission(eventName, amount = 1) {
+      const mission = activeMission();
+      if (mission.event !== eventName) return;
+      missionProgress += amount;
+      if (missionProgress >= mission.target) {
+        addCoins(10);
+        missionIndex += 1;
+        missionProgress = 0;
+        overlay.innerHTML = `
+          <div class="message">
+            <h2>Mission Complete</h2>
+            <p>${mission.label}</p>
+            <p>You earned a 10-coin bonus.</p>
+            <button onclick="window.closeOverlayAndResume()">Keep Running</button>
+          </div>`;
+        state.paused = true;
+      }
+      saveMeta();
+      syncMissionHud();
     }
 
     function showTitleScreen() {
@@ -206,6 +264,7 @@
         lastTime: performance.now(), coins: bankCoins, revives: 1, usedRevive: false, distanceCoinsTick: 0
       };
       syncHud();
+      syncMissionHud();
       showTitleScreen();
     }
 
@@ -217,12 +276,14 @@
       coinStat.textContent = state.coins;
       reviveStat.textContent = state.revives;
       if (state.distance > best) { best = Math.floor(state.distance); bestStat.textContent = best; saveMeta(); }
+      syncMissionHud();
     }
 
-    function addCoins(n) { state.coins += n; bankCoins = state.coins; saveMeta(); }
+    function addCoins(n) { state.coins += n; bankCoins = state.coins; saveMeta(); updateMission('coins', n); }
 
     function fireAtLane(laneIndex) {
       if (!state.running || state.paused || state.gameOver) return;
+      if (navigator.vibrate) navigator.vibrate(12);
       const laneX = LANES[laneIndex];
       for (let i = 0; i < state.firepower; i++) {
         state.bullets.push({ x: laneX + (i - (state.firepower - 1) / 2) * 10, y: 600, speed: 560 });
@@ -278,9 +339,10 @@
     }
 
     function handleDestroyed(obj) {
-      if (obj.type === 'zombie') { state.squad += obj.reward; addCoins(obj.reward); }
+      if (obj.type === 'zombie') { state.squad += obj.reward; addCoins(obj.reward); updateMission('survivors', obj.reward); }
       else if (obj.type === 'crate') { state.firepower = Math.min(6, state.firepower + obj.reward); }
       else if (obj.type === 'coin') { addCoins(obj.reward); }
+      else if (obj.type === 'wall') { updateMission('walls', 1); }
     }
 
     function maybeReviveOrEnd() {
@@ -309,6 +371,7 @@
           <h2>Run Over</h2>
           <p>Distance: <strong>${Math.floor(state.distance)}</strong> | Coins: <strong>${state.coins}</strong></p>
           <p>Upgrade firepower, grow your squad, and save your revive for a brutal wall hit.</p>
+          <button onclick="window.mockRewardedReviveOffer()">Mock Rewarded Revive Offer</button>
           <button onclick="window.restartZombieRun()">Play Again</button>
         </div>`;
       syncHud();
@@ -391,6 +454,9 @@
     window.addEventListener('keydown', e => { if (e.key==='1') fireAtLane(0); if (e.key==='2') fireAtLane(1); if (e.key==='3') fireAtLane(2); });
     restartBtn.addEventListener('click', () => window.restartZombieRun());
     pauseBtn.addEventListener('click', () => { state.paused=!state.paused; pauseBtn.textContent=state.paused?'Resume':'Pause'; });
+    laneLeftBtn.addEventListener('click', () => fireAtLane(0));
+    laneCenterBtn.addEventListener('click', () => fireAtLane(1));
+    laneRightBtn.addEventListener('click', () => fireAtLane(2));
 
     buyGunBtn.addEventListener('click', () => { if (state.coins >= 10) { state.coins -= 10; state.firepower = Math.min(6, state.firepower + 1); bankCoins = state.coins; saveMeta(); syncHud(); } });
     buySquadBtn.addEventListener('click', () => { if (state.coins >= 8) { state.coins -= 8; state.squad += 3; bankCoins = state.coins; saveMeta(); syncHud(); } });
@@ -398,6 +464,12 @@
 
     window.closeOverlayAndResume = function() { overlay.innerHTML=''; state.paused=false; };
     window.startZombieRun = function() { overlay.innerHTML=''; state.paused=false; state.running=true; state.gameOver=false; };
+    window.mockRewardedReviveOffer = function() {
+      state.coins += 5;
+      bankCoins = state.coins;
+      saveMeta();
+      resetGame();
+    };
     window.restartZombieRun = function() { bankCoins = state.coins; saveMeta(); resetGame(); pauseBtn.textContent='Pause'; };
 
     soundBtn.addEventListener('click', () => {

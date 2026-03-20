@@ -13,6 +13,7 @@
 ## Most useful commands
 ```bash
 npm install
+npm run release:check
 npm run prepare:web
 npm run release:prep
 npm run preflight

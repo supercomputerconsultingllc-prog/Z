@@ -17,6 +17,11 @@ NOISE_EXACT_PATHS = {
     'IDENTITY.md',
     'TOOLS.md',
 }
+NOISE_PATH_PARTS = {
+    '__pycache__',
+    '.pytest_cache',
+    '.mypy_cache',
+}
 
 
 def tail_sections(path: Path, lines: int = 80) -> str:
@@ -32,9 +37,13 @@ def status_path(line: str) -> str:
     return line[3:].strip()
 
 
+def is_noise_path(path: str) -> bool:
+    return path in NOISE_EXACT_PATHS or any(part in path.split('/') for part in NOISE_PATH_PARTS)
+
+
 def is_noise_status_line(line: str) -> bool:
     path = status_path(line)
-    return path in NOISE_EXACT_PATHS or any(marker in line for marker in NOISE_MARKERS)
+    return is_noise_path(path) or any(marker in line for marker in NOISE_MARKERS)
 
 
 

@@ -1,0 +1,35 @@
+name: release-prep
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'apps/zombie-squad-run/**'
+      - 'apps/zombie-squad-run-ios-webwrap/**'
+
+jobs:
+  prep:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/zombie-squad-run-ios-webwrap
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        run: npm install
+
+      - name: Prepare release bundle
+        run: npm run release:prep
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: zombie-squad-run-release-bundle
+          path: apps/zombie-squad-run-ios-webwrap/release

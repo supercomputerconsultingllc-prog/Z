@@ -32,6 +32,11 @@ python3 /home/ai/.openclaw/workspace/business/sync_campaign_queue.py
 python3 /home/ai/.openclaw/workspace/business/score_opportunities.py
 ```
 
+## Generate follow-up due summary
+```bash
+python3 /home/ai/.openclaw/workspace/business/followup_due_summary.py
+```
+
 ## Recommended order after updating CSV state
 1. Refresh dashboard
 2. Refresh next actions

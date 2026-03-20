@@ -575,6 +575,29 @@ When operational records contain fields that can be derived from existing contex
 
 ---
 
+## [LRN-20260320-029] best_practice
+
+**Logged**: 2026-03-20T08:12:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+Follow-up tracking becomes more actionable when due dates are surfaced in a dedicated summary instead of being buried in raw CSV rows.
+
+### Details
+The business layer already tracked follow-up due dates, but there was no focused report showing overdue, due-today, upcoming, and unscheduled items. Adding a due-summary helper makes follow-up timing easier to scan quickly.
+
+### Suggested Action
+When a workflow tracks dates, add a view organized around time urgency, not just record structure.
+
+### Metadata
+- Source: conversation
+- Related Files: business/followup_due_summary.py, business/followup_due_summary.md
+- Tags: followup, due-dates, business-ops, prioritization
+
+---
+
 ## [LRN-20260320-028] best_practice
 
 **Logged**: 2026-03-20T08:10:00-07:00

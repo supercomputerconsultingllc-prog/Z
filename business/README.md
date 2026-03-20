@@ -11,6 +11,7 @@ This folder adds a lightweight operator layer for assistant-style and revenue-su
 - `import_opportunity.py` - add or update opportunities from the command line
 - `score_opportunities.py` - score tracked opportunities into lead buckets
 - `sync_campaign_queue.py` - sync queued outreach contacts into business opportunities
+- `followup_due_summary.py` - generate a due-date oriented follow-up summary
 - `refresh_all.sh` - refresh all business views in one step
 - `refresh_dashboard.py` - regenerate the dashboard from CSV state
 - `refresh_next_actions.py` - regenerate next actions from CSV state

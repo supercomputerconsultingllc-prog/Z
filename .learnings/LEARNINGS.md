@@ -229,3 +229,26 @@ Add a simple history file early in campaign workflows so send operations have an
 - Tags: campaign, ledger, auditability, workflow
 
 ---
+
+## [LRN-20260320-011] best_practice
+
+**Logged**: 2026-03-20T07:41:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+Approval-first outreach workflows should check for duplicate contacts before queueing or sending.
+
+### Details
+The campaign tooling had drafts, approvals, suppression, limits, queueing, and history scaffolding, but no duplicate-contact check. Adding a simple dedupe report reduces the chance of contacting the same address twice from a messy list.
+
+### Suggested Action
+Run a duplicate-email check as part of campaign review before queueing approved contacts.
+
+### Metadata
+- Source: conversation
+- Related Files: mail/campaign_dedupe_check.py, mail/campaign_dedupe_report.md, mail/campaign_quickstart.md
+- Tags: campaign, dedupe, quality-control, workflow
+
+---

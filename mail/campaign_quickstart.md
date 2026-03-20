@@ -26,6 +26,14 @@ python3 /home/ai/.openclaw/workspace/mail/campaign_queue_approved.py
 Open:
 - `/home/ai/.openclaw/workspace/mail/campaign_approval_queue.md`
 
+## 6) Check for duplicates
+```bash
+python3 /home/ai/.openclaw/workspace/mail/campaign_dedupe_check.py
+```
+
+Open:
+- `/home/ai/.openclaw/workspace/mail/campaign_dedupe_report.md`
+
 ## Safety notes
 - Draft generation respects suppression rules and send limits.
 - Queueing does not send email.

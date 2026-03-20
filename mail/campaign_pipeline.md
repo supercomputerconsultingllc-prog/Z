@@ -16,6 +16,8 @@ Create personalized drafts from a CSV list without sending anything automaticall
 - `campaign_approval_queue.md` - queued contacts approved for a later send step
 - `campaign_quickstart.md` - minimal command reference for the workflow
 - `campaign_send_history.csv` - ledger for recording future sends
+- `campaign_dedupe_check.py` - detect duplicate contacts by email
+- `campaign_dedupe_report.md` - duplicate-contact report output
 
 ## Default workflow
 1. Fill in `campaign_contacts_template.csv` or copy it to a real campaign CSV.

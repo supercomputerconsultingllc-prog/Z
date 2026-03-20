@@ -26,3 +26,4 @@ npm run cap:init:notes
 - `release/REPO_PUBLISH_CHECKLIST.md`
 - `release/LAUNCH_DAY_CHECKLIST.md`
 - `release/LAUNCH_PLAN.md`
+- `release/store-assets/README.md`

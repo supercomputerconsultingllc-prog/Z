@@ -713,6 +713,29 @@ Add separate repo-publish and launch-day checklists once a release flow becomes 
 
 ---
 
+## [LRN-20260320-035] best_practice
+
+**Logged**: 2026-03-20T10:35:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+Once the release path is documented, add a store-asset template pack so listing prep is not reinvented later.
+
+### Details
+The Windows-friendly iOS path had technical prep, cloud-build notes, and launch checklists, but no compact store-asset pack for screenshots, listing copy structure, and promo planning. Adding one reduces friction at submission time.
+
+### Suggested Action
+Add a reusable store-asset template pack after the core release workflow is in place.
+
+### Metadata
+- Source: conversation
+- Related Files: apps/zombie-squad-run-ios-webwrap/release/store-assets/README.md, apps/zombie-squad-run-ios-webwrap/release/store-assets/SCREENSHOT_SCRIPT.md
+- Tags: store-assets, release, listing, usability
+
+---
+
 ## [LRN-20260320-028] best_practice
 
 **Logged**: 2026-03-20T08:10:00-07:00

@@ -29,6 +29,7 @@ You said the constraint is Windows only. Native iOS builds still require Apple t
 - `release/LAUNCH_PLAN.md` - paid vs free launch recommendation
 - `release/REPO_PUBLISH_CHECKLIST.md` - repo-ready publishing checklist
 - `release/LAUNCH_DAY_CHECKLIST.md` - launch-day execution checklist
+- `release/store-assets/` - store listing asset template pack
 
 ## Important note
 This scaffold does not eliminate Apple's build/signing requirements. It automates prep and reduces Mac dependence by shifting the final iOS build step to a cloud service.

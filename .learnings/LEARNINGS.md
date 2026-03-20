@@ -644,6 +644,29 @@ When a release folder contains several prep files, add a brief summary page that
 
 ---
 
+## [LRN-20260320-032] best_practice
+
+**Logged**: 2026-03-20T09:53:00-07:00
+**Priority**: medium
+**Status**: pending
+**Area**: docs
+
+### Summary
+When the user only has Windows, automate the release-prep path toward a cloud iOS builder instead of assuming local Xcode access.
+
+### Details
+A Windows-only workflow cannot complete native iOS builds locally. The practical solution is to automate web-asset prep, release bundling, and next-step documentation so the final Apple-specific build/sign/upload can happen in a cloud service like Codemagic.
+
+### Suggested Action
+For Windows-only iOS requests, build a reproducible prep scaffold and handoff path aimed at cloud macOS/iOS builders.
+
+### Metadata
+- Source: conversation
+- Related Files: apps/zombie-squad-run-ios-webwrap/package.json, apps/zombie-squad-run-ios-webwrap/tools/prepare-web.js, apps/zombie-squad-run-ios-webwrap/release/WINDOWS_IOS_PATH.md
+- Tags: windows, ios, automation, release, cloud-build
+
+---
+
 ## [LRN-20260320-028] best_practice
 
 **Logged**: 2026-03-20T08:10:00-07:00

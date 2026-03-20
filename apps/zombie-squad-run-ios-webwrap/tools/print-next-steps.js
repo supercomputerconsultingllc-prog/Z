@@ -1,0 +1,1 @@
+console.log(`Next steps for Windows users:\n\n1. npm install\n2. npm run release:prep\n3. Push this folder to GitHub\n4. Use a cloud Apple build service like Codemagic to build/sign the iOS app\n5. Provide Apple Developer credentials/certificates inside the cloud build service\n6. Download the .ipa or publish to App Store Connect\n`);

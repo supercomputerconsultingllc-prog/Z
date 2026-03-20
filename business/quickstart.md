@@ -27,6 +27,11 @@ python3 /home/ai/.openclaw/workspace/business/state_summary.py
 python3 /home/ai/.openclaw/workspace/business/sync_campaign_queue.py
 ```
 
+## Score opportunities
+```bash
+python3 /home/ai/.openclaw/workspace/business/score_opportunities.py
+```
+
 ## Recommended order after updating CSV state
 1. Refresh dashboard
 2. Refresh next actions

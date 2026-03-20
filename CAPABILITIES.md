@@ -110,6 +110,7 @@ These are available to use even if not copied into `workspace/skills`.
 - `business/README.md` - overview of the business-ops layer
 - `business/quickstart.md` - minimal command reference for refreshing business views
 - `business/import_opportunity.py` - add or update an opportunity from the command line
+- `business/score_opportunities.py` - score tracked opportunities into lead buckets
 - `business/sync_campaign_queue.py` - sync queued outreach contacts into business opportunities
 - `business/refresh_all.sh` - refresh all business views in one step
 - `business/refresh_dashboard.py` - rebuild the business dashboard from tracked opportunity and follow-up state

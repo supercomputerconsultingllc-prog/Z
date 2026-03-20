@@ -9,13 +9,13 @@
   - Last contact: 2026-03-20
 - **opp-20260320-002** — Jamie Test / Example Labs
   - Stage: qualified
-  - Score bucket: unknown
+  - Score bucket: possible lead
   - Next action: Schedule discovery call
   - Next action due: 2026-03-26
   - Last contact: 2026-03-20
 - **opp-20260320-003** — Alex Smith / Example Co
   - Stage: outreach queued
-  - Score bucket: unknown
+  - Score bucket: possible lead
   - Next action: Review queued outreach contact
   - Next action due: unscheduled
   - Last contact: 2026-03-20

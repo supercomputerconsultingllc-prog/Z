@@ -552,6 +552,29 @@ Create explicit sync steps when adjacent workflow layers represent overlapping o
 
 ---
 
+## [LRN-20260320-027] best_practice
+
+**Logged**: 2026-03-20T08:11:00-07:00
+**Priority**: medium
+**Status**: pending
+**Area**: docs
+
+### Summary
+A smarter assistant should convert raw opportunity records into explicit lead buckets, not leave them unscored.
+
+### Details
+The business layer tracked opportunities but some records still had empty `score_bucket` values. Adding a scoring helper turns vague stored state into a more actionable view and refreshes downstream summaries automatically.
+
+### Suggested Action
+When operational records contain fields that can be derived from existing context, add a helper to compute them consistently.
+
+### Metadata
+- Source: conversation
+- Related Files: business/score_opportunities.py, business/opportunities.csv, business/state_summary.md
+- Tags: scoring, business-ops, intelligence, prioritization
+
+---
+
 ## [LRN-20260320-020] best_practice
 
 **Logged**: 2026-03-20T07:50:00-07:00

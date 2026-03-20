@@ -252,3 +252,26 @@ Run a duplicate-email check as part of campaign review before queueing approved 
 - Tags: campaign, dedupe, quality-control, workflow
 
 ---
+
+## [LRN-20260320-012] best_practice
+
+**Logged**: 2026-03-20T07:42:00-07:00
+**Priority**: medium
+**Status**: pending
+**Area**: docs
+
+### Summary
+Assistant improvements should include a lightweight business-ops layer, not just outreach mechanics.
+
+### Details
+A useful assistant for revenue work needs more than campaign scripts. It also benefits from simple opportunity tracking, follow-up timing, dashboarding, and explicit next actions. Adding a small `business/` layer makes the system more generally useful for assistant-style operations without requiring full CRM infrastructure.
+
+### Suggested Action
+Maintain a lightweight business-ops layer that tracks opportunities, follow-ups, dashboard state, and next actions.
+
+### Metadata
+- Source: conversation
+- Related Files: business/opportunities.csv, business/followups.csv, business/dashboard.md, business/next_actions.md
+- Tags: business-ops, assistant, revenue-support, workflow
+
+---

@@ -40,6 +40,7 @@ A persistent catalog of what this assistant can do in this OpenClaw workspace.
 - edit scripts and docs in the workspace
 - log learnings and improve recurring processes
 - commit workspace changes to git
+- maintain a lightweight business-ops layer with opportunity and follow-up tracking
 
 ## Installed local skills in this workspace
 - `gog` - Google Workspace CLI workflows
@@ -94,6 +95,13 @@ These are available to use even if not copied into `workspace/skills`.
 - `mail/campaign_queue_approved.py` - move approved contacts into a queue
 - `mail/campaign_dedupe_check.py` - detect duplicate contacts by email and write a report
 - `mail/campaign_pipeline.md` - lightweight campaign workflow
+
+## Business ops layer added
+- `business/opportunities.csv` - lightweight opportunity tracker
+- `business/followups.csv` - follow-up timing and thread state tracker
+- `business/dashboard.md` - human-readable revenue-support dashboard
+- `business/next_actions.md` - prioritized next steps
+- `business/README.md` - overview of the business-ops layer
 
 ## Local campaign controls added
 - suppression list support via `mail/campaign_suppression_list.csv`

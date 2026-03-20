@@ -1,0 +1,2 @@
+created_at,opportunity_id,contact_name,contact_email,company,stage,score_bucket,estimated_value,next_action,next_action_due,last_contact,location,timeline,budget_signal,notes
+2026-03-20T07:41:00-07:00,opp-20260320-001,Thomas Tate,ttate@sdsc.edu,UC San Diego / SDSC,warm lead / early conversation,possible lead,,Wait for substantive reply,2026-03-24,2026-03-20,,unknown,unknown,Initial contact established during email integration testing

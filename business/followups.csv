@@ -1,0 +1,2 @@
+thread_key,contact_email,company,thread_state,last_inbound,last_outbound,followup_due,recommended_action,missing_information,stop_conditions,notes
+sdsc-thomas-tate,ttate@sdsc.edu,UC San Diego / SDSC,waiting-on-them,2026-03-20,2026-03-20,2026-03-24,wait for sender,brief overview; scope; timeline; client/company; budget; location,no follow-up if sender replies before due date,Formatting test thread with qualification request sent

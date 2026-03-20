@@ -459,3 +459,26 @@ Add a quickstart once a workflow has more than one refresh or reporting helper.
 - Tags: quickstart, business-ops, workflow, usability
 
 ---
+
+## [LRN-20260320-021] best_practice
+
+**Logged**: 2026-03-20T07:51:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+When a workflow has multiple refresh commands, add a single wrapper to refresh them together.
+
+### Details
+The business layer had separate refresh commands for the dashboard, next actions, and state summary. Adding one wrapper script reduces friction and makes the common maintenance path easier to run consistently.
+
+### Suggested Action
+Bundle multi-step refresh flows into a single convenience script once the component commands are stable.
+
+### Metadata
+- Source: conversation
+- Related Files: business/refresh_all.sh, business/quickstart.md
+- Tags: refresh, wrapper, business-ops, usability
+
+---

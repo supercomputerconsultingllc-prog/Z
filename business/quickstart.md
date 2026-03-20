@@ -17,6 +17,11 @@ python3 /home/ai/.openclaw/workspace/business/refresh_next_actions.py
 python3 /home/ai/.openclaw/workspace/business/state_summary.py
 ```
 
+## Refresh everything in one step
+```bash
+/home/ai/.openclaw/workspace/business/refresh_all.sh
+```
+
 ## Recommended order after updating CSV state
 1. Refresh dashboard
 2. Refresh next actions

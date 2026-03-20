@@ -9,6 +9,7 @@ Create personalized drafts from a CSV list without sending anything automaticall
 - `campaign_contacts_template.csv` - starter contact list format
 - `campaign_suppression_list.csv` - do-not-contact / blocked contacts
 - `campaign_send_limits.json` - batch and approval limits
+- `refresh_all.sh` - refresh core campaign outputs in one step
 - `campaign_generate_drafts.py` - creates draft markdown output for review
 - `campaign_update_status.py` - update one contact status in the CSV
 - `campaign_queue_approved.py` - move approved contacts into the queue

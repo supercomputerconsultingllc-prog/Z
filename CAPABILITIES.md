@@ -91,6 +91,7 @@ These are available to use even if not copied into `workspace/skills`.
 - `scripts/self_check.py` - verify that core assistant, campaign, and business-ops files are present
 - `scripts/next_improvement_prompt.py` - generate one bounded next-improvement prompt from current workspace state
 - `scripts/run_bounded_improvement.sh` - print the bounded self-review prompt and stop
+- `mail/refresh_all.sh` - refresh core campaign outputs in one step
 - `mail/campaign_generate_drafts.py` - generate approval-first outbound drafts from CSV
 - `mail/campaign_update_status.py` - update campaign status for a contact
 - `mail/campaign_queue_approved.py` - move approved contacts into a queue

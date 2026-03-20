@@ -506,6 +506,29 @@ When a report depends on generated summary files, refresh those dependencies ins
 
 ---
 
+## [LRN-20260320-025] best_practice
+
+**Logged**: 2026-03-20T08:08:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+If a workflow gains several derived outputs, add a one-command refresh wrapper for it.
+
+### Details
+The campaign layer had multiple reporting and export helpers, but no single command to refresh them together. A wrapper script makes routine refreshes more reliable and easier to run consistently.
+
+### Suggested Action
+Bundle stable multi-step refresh flows into one wrapper script once the output set is clear.
+
+### Metadata
+- Source: conversation
+- Related Files: mail/refresh_all.sh, mail/campaign_quickstart.md, mail/campaign_pipeline.md
+- Tags: refresh, wrapper, campaign, usability
+
+---
+
 ## [LRN-20260320-020] best_practice
 
 **Logged**: 2026-03-20T07:50:00-07:00

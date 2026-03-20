@@ -2,6 +2,11 @@
 
 A minimal command reference for the approval-first campaign workflow.
 
+## Refresh everything in one step
+```bash
+/home/ai/.openclaw/workspace/mail/refresh_all.sh
+```
+
 ## 1) Generate drafts
 ```bash
 python3 /home/ai/.openclaw/workspace/mail/campaign_generate_drafts.py

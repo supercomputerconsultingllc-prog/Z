@@ -116,13 +116,13 @@ for row in rows:
     recipient_match = re.search(r'<([^>]+)>', sender)
     recipient = recipient_match.group(1) if recipient_match else sender.strip()
 
-    reply = (
-        f"Hi {greeting_name},\n\n"
-        "Thanks for reaching out. I’d be glad to learn more.\n\n"
-        "Could you share a brief overview of the opportunity, including the scope and expected timeline? If it’s shareable, the client or company name would be helpful as well. A budget range and location would also be useful if available.\n\n"
-        "Best,\n"
-        "Supercomputer Consulting"
-    )
+    paragraphs = [
+        f"Hi {greeting_name},",
+        "Thanks for reaching out. I'd be glad to learn more.",
+        "Could you share a brief overview of the opportunity, including the scope and expected timeline? If it's shareable, the client or company name would be helpful as well. A budget range and location would also be useful if available.",
+        "Best,\nSupercomputer Consulting",
+    ]
+    reply = "\n\n".join(paragraphs)
 
     send = subprocess.run([
         'gog', 'send',

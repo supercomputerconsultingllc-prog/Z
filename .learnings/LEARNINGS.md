@@ -183,3 +183,26 @@ Keep both a refresh step and an audit step for capability metadata so changes ca
 - Tags: capability-audit, refresh, automation, hardening
 
 ---
+
+## [LRN-20260320-009] best_practice
+
+**Logged**: 2026-03-20T07:39:30-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+When adding multiple helper scripts in one workflow, add a quickstart so the operating sequence is obvious.
+
+### Details
+The campaign tooling had grown to several scripts and control files, but the exact run order still had to be inferred from longer docs. A short quickstart reduces friction and lowers the chance of using the right tools in the wrong order.
+
+### Suggested Action
+Add a compact command reference whenever a workflow spans more than two helper scripts.
+
+### Metadata
+- Source: conversation
+- Related Files: mail/campaign_quickstart.md, mail/campaign_pipeline.md
+- Tags: docs, quickstart, workflow, usability
+
+---

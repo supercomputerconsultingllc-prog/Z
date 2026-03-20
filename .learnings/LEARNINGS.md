@@ -920,6 +920,29 @@ Bundle validation, preparation, and next-step guidance into a single release-che
 
 ---
 
+## [LRN-20260320-044] best_practice
+
+**Logged**: 2026-03-20T12:02:00-07:00
+**Priority**: medium
+**Status**: pending
+**Area**: docs
+
+### Summary
+Release validation should check for placeholder values, not just missing files.
+
+### Details
+A scaffold can pass file-existence validation while still being unshippable because bundle IDs, URLs, or support emails remain placeholder defaults. Adding a placeholder checker catches these common last-mile blockers earlier.
+
+### Suggested Action
+Pair existence validation with placeholder-value checks in late-stage release automation.
+
+### Metadata
+- Source: conversation
+- Related Files: apps/zombie-squad-run-ios-webwrap/tools/check-placeholders.js, apps/zombie-squad-run-ios-webwrap/tools/full-release-check.js
+- Tags: validation, placeholders, release, automation, quality
+
+---
+
 ## [LRN-20260320-028] best_practice
 
 **Logged**: 2026-03-20T08:10:00-07:00

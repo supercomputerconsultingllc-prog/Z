@@ -6,6 +6,11 @@ function run(cmd) {
 }
 
 run('node tools/validate-release.js');
+try {
+  run('node tools/check-placeholders.js');
+} catch (error) {
+  console.log('\nPlaceholder check failed. Fix placeholders before shipping.');
+}
 run('node tools/prepare-web.js');
 run('node tools/make-release-bundle.js');
 run('node tools/print-next-steps.js');

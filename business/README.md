@@ -7,6 +7,7 @@ This folder adds a lightweight operator layer for assistant-style and revenue-su
 - `followups.csv` - thread follow-up tracking
 - `dashboard.md` - quick human-readable view
 - `next_actions.md` - active priorities
+- `quickstart.md` - minimal command reference for refreshing business views
 - `refresh_dashboard.py` - regenerate the dashboard from CSV state
 - `refresh_next_actions.py` - regenerate next actions from CSV state
 - `state_summary.py` - generate a compact state summary from CSV state

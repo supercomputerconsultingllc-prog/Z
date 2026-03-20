@@ -106,6 +106,7 @@ These are available to use even if not copied into `workspace/skills`.
 - `business/dashboard.md` - human-readable revenue-support dashboard
 - `business/next_actions.md` - prioritized next steps
 - `business/README.md` - overview of the business-ops layer
+- `business/quickstart.md` - minimal command reference for refreshing business views
 - `business/refresh_dashboard.py` - rebuild the business dashboard from tracked opportunity and follow-up state
 - `business/refresh_next_actions.py` - rebuild business next actions from tracked opportunity and follow-up state
 - `business/state_summary.py` - generate a compact business state summary

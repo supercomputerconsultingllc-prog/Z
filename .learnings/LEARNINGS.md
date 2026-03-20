@@ -436,3 +436,26 @@ Add a simple self-check once the workspace has multiple interdependent helper la
 - Tags: self-check, reliability, assistant, maintenance
 
 ---
+
+## [LRN-20260320-020] best_practice
+
+**Logged**: 2026-03-20T07:50:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+When a workflow gains multiple refresh helpers, add a quickstart so the recommended refresh order is obvious.
+
+### Details
+The business-ops layer had several refresh and summary scripts, but no short command reference explaining how to use them together. A small quickstart makes the operating sequence easier to follow.
+
+### Suggested Action
+Add a quickstart once a workflow has more than one refresh or reporting helper.
+
+### Metadata
+- Source: conversation
+- Related Files: business/quickstart.md, business/README.md
+- Tags: quickstart, business-ops, workflow, usability
+
+---

@@ -851,6 +851,29 @@ Pair gameplay monetization notes with store-asset planning in late-stage release
 
 ---
 
+## [LRN-20260320-041] best_practice
+
+**Logged**: 2026-03-20T11:58:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+Store-asset packs become more actionable when they include field-level checklists and ready-to-paste description drafts.
+
+### Details
+After adding icon, screenshot, and listing-planning docs, the next useful step was to add direct App Store field checklists plus long and short description drafts. That reduces copy friction at submission time.
+
+### Suggested Action
+When store-prep docs already exist, add ready-to-paste field content and checklists to make submission faster.
+
+### Metadata
+- Source: conversation
+- Related Files: apps/zombie-squad-run-ios-webwrap/release/store-assets/APP_STORE_FIELD_CHECKLIST.md, apps/zombie-squad-run-ios-webwrap/release/store-assets/APP_STORE_DESCRIPTION_LONG.md
+- Tags: app-store, metadata, checklist, copy, release
+
+---
+
 ## [LRN-20260320-028] best_practice
 
 **Logged**: 2026-03-20T08:10:00-07:00

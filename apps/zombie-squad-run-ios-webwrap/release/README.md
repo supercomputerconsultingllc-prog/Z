@@ -13,6 +13,7 @@ Generated output for Windows-friendly iOS prep.
 - repo publish checklist
 - launch-day checklist
 - store asset template pack
+- App Store field and description drafts
 - monetization design notes
 
 Use this bundle as the handoff package for cloud iOS build and submission prep.

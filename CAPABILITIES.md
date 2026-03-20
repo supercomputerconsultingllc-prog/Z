@@ -102,6 +102,7 @@ These are available to use even if not copied into `workspace/skills`.
 - `business/dashboard.md` - human-readable revenue-support dashboard
 - `business/next_actions.md` - prioritized next steps
 - `business/README.md` - overview of the business-ops layer
+- `business/refresh_dashboard.py` - rebuild the business dashboard from tracked opportunity and follow-up state
 
 ## Local campaign controls added
 - suppression list support via `mail/campaign_suppression_list.csv`

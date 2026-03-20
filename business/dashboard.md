@@ -4,13 +4,12 @@
 - **opp-20260320-001** — Thomas Tate / UC San Diego / SDSC
   - Stage: warm lead / early conversation
   - Score bucket: possible lead
-  - Next action: wait for substantive reply
+  - Next action: Wait for substantive reply
   - Next action due: 2026-03-24
   - Last contact: 2026-03-20
 
-## Follow-ups due soon
-- None due today
-- Next likely review: Thomas Tate thread on 2026-03-24 if no reply arrives
+## Follow-ups tracked
+- ttate@sdsc.edu | state=waiting-on-them | due=2026-03-24 | action=wait for sender
 
 ## Open workflow assets
 - `business/opportunities.csv`

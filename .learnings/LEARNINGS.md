@@ -275,3 +275,26 @@ Maintain a lightweight business-ops layer that tracks opportunities, follow-ups,
 - Tags: business-ops, assistant, revenue-support, workflow
 
 ---
+
+## [LRN-20260320-013] best_practice
+
+**Logged**: 2026-03-20T07:42:30-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+If a dashboard is backed by structured files, add a refresh script so the human-readable view can be regenerated reliably.
+
+### Details
+The business layer added useful CSV trackers and a dashboard, but the dashboard was still a hand-maintained snapshot. A refresh helper makes it easier to keep the summary aligned with underlying state.
+
+### Suggested Action
+For every human-readable dashboard backed by CSV or JSON state, add a small refresh script and smoke-test the generated output.
+
+### Metadata
+- Source: conversation
+- Related Files: business/refresh_dashboard.py, business/dashboard.md
+- Tags: dashboard, refresh, business-ops, automation
+
+---

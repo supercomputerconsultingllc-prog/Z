@@ -15,6 +15,8 @@
     "build:hosted-pages": "node tools/build-hosted-pages.js",
     "apply:env-config": "node tools/apply-env-config.js",
     "set:pages-urls": "node tools/set-pages-urls.js",
+    "check:monetization": "node tools/check-monetization-readiness.js",
+    "finalize:release": "node tools/finalize-release.js",
     "assets:starter-pack": "node tools/generate-icon.js && node tools/capture-screenshots.js && node tools/polish-screenshots.js && node tools/build-hosted-pages.js",
     "preflight": "node tools/validate-release.js && node tools/check-assets.js && node tools/print-next-steps.js",
     "release:check": "node tools/full-release-check.js",

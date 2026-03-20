@@ -39,3 +39,10 @@
 ## Recommendation
 For the absolute fastest launch from Windows-only tooling, start with a **paid launch**.
 After the release flow is stable, add rewarded revive and cosmetic upsells in a later update.
+
+## Seamless path recommendation
+- Version 1: paid upfront at $0.99 or $1.99
+- no ad SDK at launch
+- use `release/monetization/launch-config.json` as the source of truth
+- run `npm run check:monetization` before final submission
+- move rewarded revive to Version 1.1, after the first successful review and upload path

@@ -22,9 +22,14 @@ const required = [
   'tools/build-hosted-pages.js',
   'tools/apply-env-config.js',
   'tools/set-pages-urls.js',
+  'tools/check-monetization-readiness.js',
+  'tools/finalize-release.js',
   '.github/workflows/publish-hosted-pages.yml',
   'release/GITHUB_PAGES_SETUP.md',
-  'release/FINAL_VALUES_QUICKSTART.md'
+  'release/FINAL_VALUES_QUICKSTART.md',
+  'release/UPLOAD_AND_MONETIZE_GUIDE.md',
+  'release/monetization/launch-config.json',
+  'release/monetization/MONETIZATION_QUICKSTART.md'
 ];
 
 let failed = false;

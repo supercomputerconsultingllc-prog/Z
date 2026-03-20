@@ -21,8 +21,10 @@
 
 ## Launch prep
 - [ ] pricing chosen
+- [ ] `release/monetization/launch-config.json` matches the launch plan
 - [ ] `npm run build:hosted-pages` ran successfully
 - [ ] support URL live
 - [ ] privacy policy URL live
 - [ ] screenshots uploaded
 - [ ] age rating reviewed
+- [ ] `npm run check:monetization` passes

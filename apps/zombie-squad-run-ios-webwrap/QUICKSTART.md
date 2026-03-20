@@ -22,7 +22,9 @@ npm run polish:screenshots
 npm run build:hosted-pages
 npm run apply:env-config
 npm run set:pages-urls
+npm run check:monetization
 npm run assets:starter-pack
+npm run finalize:release
 npm run check:assets
 npm run preflight
 npm run cap:init:notes

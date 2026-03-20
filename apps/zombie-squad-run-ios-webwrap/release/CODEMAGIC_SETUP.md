@@ -33,6 +33,10 @@
 ## Final outputs
 - signed `.ipa`
 - optional upload to App Store Connect
+- release bundle with generated icon, screenshots, hosted pages, and monetization config snapshot
+
+## Recommended launch setup
+For the smoothest first release, keep the launch paid-upfront and do not add ad SDKs yet. That keeps signing, review notes, privacy disclosures, and App Store setup materially simpler.
 
 ## Included starter file
 - `codemagic.yaml`

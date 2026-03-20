@@ -10,10 +10,13 @@
 - [ ] metadata proofread
 
 ## Build and submit
+- [ ] `npm run finalize:release` succeeds
+- [ ] monetization summary matches the intended launch model
 - [ ] final cloud build succeeds
 - [ ] signed `.ipa` archived
 - [ ] upload to App Store Connect succeeds
 - [ ] build selected in app listing
+- [ ] paid price tier selected if using paid launch
 - [ ] submit for review
 
 ## After submit

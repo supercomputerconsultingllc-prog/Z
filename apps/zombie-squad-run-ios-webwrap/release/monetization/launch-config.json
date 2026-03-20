@@ -1,0 +1,16 @@
+{
+  "launchModel": "paid-upfront",
+  "paidPriceTier": "$0.99_or_$1.99",
+  "rewardedRevivePlanned": true,
+  "futureMonetization": [
+    "rewarded-revive",
+    "cosmetic-squad-skins",
+    "cosmetic-weapon-skins",
+    "ad-free-upgrade"
+  ],
+  "reviewNotes": [
+    "Single-player arcade game with local on-device progress storage.",
+    "No account creation required in the current launch build.",
+    "Rewarded revive is planned for a later update, not launch."
+  ]
+}

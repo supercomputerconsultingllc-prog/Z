@@ -6,8 +6,8 @@
   "promotionalText": "Build your squad, blast through zombies, and break every wall before it breaks you.",
   "primaryCategory": "Games",
   "secondaryCategory": "Arcade",
-  "supportUrl": "https://supercomputerconsultingllc-prog.github.io/Z/support/",
-  "privacyUrl": "https://supercomputerconsultingllc-prog.github.io/Z/privacy/",
+  "supportUrl": "https://supercomputerconsultingllc-prog.github.io/Z/docs/support/",
+  "privacyUrl": "https://supercomputerconsultingllc-prog.github.io/Z/docs/privacy/",
   "reviewNotes": [
     "Single-player arcade game.",
     "Current build stores progress locally on-device.",

@@ -529,6 +529,29 @@ Bundle stable multi-step refresh flows into one wrapper script once the output s
 
 ---
 
+## [LRN-20260320-026] best_practice
+
+**Logged**: 2026-03-20T08:10:00-07:00
+**Priority**: medium
+**Status**: pending
+**Area**: docs
+
+### Summary
+When two workflow layers track related state, add a sync helper so they do not drift apart.
+
+### Details
+The campaign layer could queue outreach contacts, while the business-ops layer tracked opportunities separately. Without a sync step, those two views could diverge. Adding a helper to import queued campaign contacts into business opportunities closes that gap and refreshes downstream views.
+
+### Suggested Action
+Create explicit sync steps when adjacent workflow layers represent overlapping operational state.
+
+### Metadata
+- Source: conversation
+- Related Files: business/sync_campaign_queue.py, business/opportunities.csv, business/next_actions.md
+- Tags: sync, business-ops, campaign, consistency
+
+---
+
 ## [LRN-20260320-020] best_practice
 
 **Logged**: 2026-03-20T07:50:00-07:00

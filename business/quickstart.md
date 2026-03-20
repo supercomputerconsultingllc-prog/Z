@@ -22,6 +22,11 @@ python3 /home/ai/.openclaw/workspace/business/state_summary.py
 /home/ai/.openclaw/workspace/business/refresh_all.sh
 ```
 
+## Sync queued campaign contacts into business ops
+```bash
+python3 /home/ai/.openclaw/workspace/business/sync_campaign_queue.py
+```
+
 ## Recommended order after updating CSV state
 1. Refresh dashboard
 2. Refresh next actions

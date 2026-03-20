@@ -13,6 +13,12 @@
   - Next action: Schedule discovery call
   - Next action due: 2026-03-26
   - Last contact: 2026-03-20
+- **opp-20260320-003** — Alex Smith / Example Co
+  - Stage: outreach queued
+  - Score bucket: unknown
+  - Next action: Review queued outreach contact
+  - Next action due: unscheduled
+  - Last contact: 2026-03-20
 
 ## Follow-ups tracked
 - ttate@sdsc.edu | state=waiting-on-them | due=2026-03-24 | action=wait for sender

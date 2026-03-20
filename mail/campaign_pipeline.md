@@ -7,18 +7,34 @@ Create personalized drafts from a CSV list without sending anything automaticall
 
 ## Files
 - `campaign_contacts_template.csv` - starter contact list format
+- `campaign_suppression_list.csv` - do-not-contact / blocked contacts
+- `campaign_send_limits.json` - batch and approval limits
 - `campaign_generate_drafts.py` - creates draft markdown output for review
+- `campaign_update_status.py` - update one contact status in the CSV
+- `campaign_queue_approved.py` - move approved contacts into the queue
 - `campaign_drafts.md` - generated draft preview file
+- `campaign_approval_queue.md` - queued contacts approved for a later send step
 
 ## Default workflow
 1. Fill in `campaign_contacts_template.csv` or copy it to a real campaign CSV.
-2. Run the draft generator.
-3. Review `campaign_drafts.md`.
-4. Approve, edit, or reject drafts.
-5. Only after approval should any sending flow be used.
+2. Maintain `campaign_suppression_list.csv` before any real outreach.
+3. Run the draft generator.
+4. Review `campaign_drafts.md`.
+5. Mark rows as `approved` or `rejected`.
+6. Queue approved rows.
+7. Only after approval should any sending flow be used.
+
+## Status meanings
+- `draft`
+- `approved`
+- `queued`
+- `sent`
+- `rejected`
+- `suppressed`
 
 ## Guardrails
 - No auto-send in this pipeline.
 - Keep batches small at first.
-- Add suppression or do-not-contact rules before any real sending.
+- Suppression rules win over approval.
 - Review personalization quality before approval.
+- Respect `campaign_send_limits.json`.

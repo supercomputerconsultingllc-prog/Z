@@ -87,4 +87,11 @@ These are available to use even if not copied into `workspace/skills`.
 ## Local helper scripts added
 - `scripts/audit_capabilities.py` - compare workspace skills against `capabilities.json`
 - `mail/campaign_generate_drafts.py` - generate approval-first outbound drafts from CSV
+- `mail/campaign_update_status.py` - update campaign status for a contact
+- `mail/campaign_queue_approved.py` - move approved contacts into a queue
 - `mail/campaign_pipeline.md` - lightweight campaign workflow
+
+## Local campaign controls added
+- suppression list support via `mail/campaign_suppression_list.csv`
+- send limits via `mail/campaign_send_limits.json`
+- approval queue via `mail/campaign_approval_queue.md`

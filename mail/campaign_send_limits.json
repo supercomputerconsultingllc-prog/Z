@@ -1,0 +1,6 @@
+{
+  "maxDraftsPerRun": 25,
+  "maxApprovedToQueuePerRun": 10,
+  "requireApproval": true,
+  "defaultStatusForNewContacts": "draft"
+}

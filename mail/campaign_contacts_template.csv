@@ -1,2 +1,2 @@
 email,first_name,last_name,company,title,location,notes,status,last_contacted
-name@example.com,Alex,Smith,Example Co,Operations Lead,San Jose,Interested in capacity planning,draft,,
+name@example.com,Alex,Smith,Example Co,Operations Lead,San Jose,Interested in capacity planning,queued,

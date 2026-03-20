@@ -1,14 +1,31 @@
 #!/usr/bin/env python3
 import csv
+import json
 from pathlib import Path
 
 WORKSPACE = Path('/home/ai/.openclaw/workspace/mail')
 INPUT = WORKSPACE / 'campaign_contacts_template.csv'
 OUTPUT = WORKSPACE / 'campaign_drafts.md'
+LIMITS = WORKSPACE / 'campaign_send_limits.json'
+SUPPRESSION = WORKSPACE / 'campaign_suppression_list.csv'
 
 
 def clean(value: str) -> str:
     return ' '.join((value or '').split()).strip()
+
+
+def load_limits() -> dict:
+    return json.loads(LIMITS.read_text(encoding='utf-8'))
+
+
+def load_suppressed() -> set[str]:
+    suppressed = set()
+    with SUPPRESSION.open(newline='', encoding='utf-8') as f:
+        for row in csv.DictReader(f):
+            email = clean(row.get('email', '')).lower()
+            if email:
+                suppressed.add(email)
+    return suppressed
 
 
 def build_email(row: dict) -> tuple[str, str]:
@@ -42,15 +59,27 @@ def build_email(row: dict) -> tuple[str, str]:
 
 def main():
     rows = list(csv.DictReader(INPUT.open(newline='', encoding='utf-8')))
+    limits = load_limits()
+    suppressed = load_suppressed()
+    max_drafts = int(limits.get('maxDraftsPerRun', 25))
+
     parts = ['# Campaign Drafts', '']
-    for idx, row in enumerate(rows, 1):
+    drafted = 0
+    for row in rows:
         email = clean(row.get('email', ''))
+        status = clean(row.get('status', 'draft')) or 'draft'
         if not email:
             continue
+        if email.lower() in suppressed or status in {'suppressed', 'sent', 'queued', 'rejected'}:
+            continue
+        if drafted >= max_drafts:
+            break
         subject, body = build_email(row)
+        drafted += 1
         parts.extend([
-            f"## Draft {idx}",
+            f"## Draft {drafted}",
             f"- To: {email}",
+            f"- Status: {status}",
             f"- Subject: {subject}",
             '',
             '```text',
@@ -60,7 +89,7 @@ def main():
         ])
 
     OUTPUT.write_text('\n'.join(parts).rstrip() + '\n', encoding='utf-8')
-    print(f'Wrote {OUTPUT}')
+    print(f'Wrote {OUTPUT} with {drafted} draft(s)')
 
 
 if __name__ == '__main__':

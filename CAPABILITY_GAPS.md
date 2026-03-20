@@ -31,6 +31,11 @@ These were feasible immediately inside the workspace.
    - contact CSV template
    - draft generator
    - approval-first workflow doc
+7. Campaign controls
+   - suppression list
+   - send limits
+   - approval queue
+   - status updater
 
 ## Good additions to add later, likely requiring more setup
 These are useful but may require credentials, external installs, or explicit user approval.

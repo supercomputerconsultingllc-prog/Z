@@ -114,3 +114,26 @@ Whenever adding a new script or automation helper, run it once with sample data 
 - Tags: testing, smoke-test, formatting, automation
 
 ---
+
+## [LRN-20260320-006] correction
+
+**Logged**: 2026-03-20T07:35:00-07:00
+**Priority**: medium
+**Status**: pending
+**Area**: docs
+
+### Summary
+CSV-based helpers should defensively ignore stray columns and malformed sample rows.
+
+### Details
+The first pass of the campaign status/queue flow exposed a malformed CSV sample row with an extra trailing column. That produced a `None` key in `csv.DictReader` output and leaked junk back into the file on rewrite. The fix was to correct the sample and harden the scripts to drop `None` keys before writing.
+
+### Suggested Action
+When using CSV helpers, normalize rows before writing and test the update path, not just the read path.
+
+### Metadata
+- Source: conversation
+- Related Files: mail/campaign_contacts_template.csv, mail/campaign_update_status.py, mail/campaign_queue_approved.py
+- Tags: csv, hardening, campaign, correction
+
+---

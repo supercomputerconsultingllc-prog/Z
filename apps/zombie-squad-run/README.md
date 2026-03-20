@@ -45,4 +45,5 @@ Open `index.html` in a browser.
 - `release/PRIVACY.md`
 - `release/RELEASE_CHECKLIST.md`
 - `release/RELEASE_SUMMARY.md`
+- `release/SHIP_STATUS.md`
 - `release/SUPPORT.md`

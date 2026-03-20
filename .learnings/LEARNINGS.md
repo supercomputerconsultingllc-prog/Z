@@ -805,6 +805,29 @@ When the user asks to "do all," bundle complementary improvements across product
 
 ---
 
+## [LRN-20260320-039] best_practice
+
+**Logged**: 2026-03-20T11:35:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+Release folders benefit from a short ship-status snapshot that says what is done and what is still missing.
+
+### Details
+The game release package already had multiple prep files, but no compact status page showing current readiness. Adding one makes it easier to assess whether the project is close to ship or still missing major assets.
+
+### Suggested Action
+Add a simple ship-status document once a release folder includes several prep artifacts and the user is actively pushing toward launch.
+
+### Metadata
+- Source: conversation
+- Related Files: apps/zombie-squad-run/release/SHIP_STATUS.md, apps/zombie-squad-run/README.md
+- Tags: release, ship-status, handoff, usability
+
+---
+
 ## [LRN-20260320-028] best_practice
 
 **Logged**: 2026-03-20T08:10:00-07:00

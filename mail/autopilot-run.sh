@@ -96,17 +96,30 @@ for row in rows:
         continue
 
     name_match = re.search(r'^(.*?)\s*<', sender)
-    name = name_match.group(1).strip('" ') if name_match else 'there'
-    if name.lower() in {'', 'no-reply'}:
-        name = 'there'
+    raw_name = name_match.group(1).strip('" ') if name_match else 'there'
+    raw_name = re.sub(r'\s+', ' ', raw_name).strip()
+
+    if raw_name.lower() in {'', 'no-reply'}:
+        greeting_name = 'there'
+    else:
+        cleaned_name = raw_name
+        if ',' in cleaned_name:
+            parts = [p.strip() for p in cleaned_name.split(',') if p.strip()]
+            if len(parts) >= 2:
+                cleaned_name = parts[1]
+        cleaned_name = re.sub(r'\b(Mr|Mrs|Ms|Miss|Dr|Prof)\.??\s+', '', cleaned_name, flags=re.I)
+        tokens = [t for t in re.split(r'\s+', cleaned_name) if t]
+        greeting_name = tokens[0] if tokens else 'there'
+        if len(greeting_name) == 1:
+            greeting_name = cleaned_name or 'there'
 
     recipient_match = re.search(r'<([^>]+)>', sender)
     recipient = recipient_match.group(1) if recipient_match else sender.strip()
 
     reply = (
-        f"Hi {name},\n\n"
-        "Thanks for reaching out. I am interested.\n\n"
-        "Can you send over a short description of the opportunity, the scope, and the timeline? If it is shareable, the client or company name would help too. Budget range and location would also be useful if available.\n\n"
+        f"Hi {greeting_name},\n\n"
+        "Thanks for reaching out. I’d be glad to learn more.\n\n"
+        "Could you share a brief overview of the opportunity, including the scope and expected timeline? If it’s shareable, the client or company name would be helpful as well. A budget range and location would also be useful if available.\n\n"
         "Best,\n"
         "Supercomputer Consulting"
     )

@@ -2,6 +2,7 @@
 
 ## Revenue-support work
 1. Wait for substantive reply for Thomas Tate (due: 2026-03-24).
+2. Schedule discovery call for Jamie Test (due: 2026-03-26).
 
 ## Follow-up tracking
 1. wait for sender for ttate@sdsc.edu (due: 2026-03-24).

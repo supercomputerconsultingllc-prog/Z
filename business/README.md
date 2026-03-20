@@ -8,6 +8,7 @@ This folder adds a lightweight operator layer for assistant-style and revenue-su
 - `dashboard.md` - quick human-readable view
 - `next_actions.md` - active priorities
 - `quickstart.md` - minimal command reference for refreshing business views
+- `import_opportunity.py` - add or update opportunities from the command line
 - `refresh_all.sh` - refresh all business views in one step
 - `refresh_dashboard.py` - regenerate the dashboard from CSV state
 - `refresh_next_actions.py` - regenerate next actions from CSV state

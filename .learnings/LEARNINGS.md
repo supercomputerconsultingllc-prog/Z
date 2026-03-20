@@ -137,3 +137,26 @@ When using CSV helpers, normalize rows before writing and test the update path, 
 - Tags: csv, hardening, campaign, correction
 
 ---
+
+## [LRN-20260320-007] best_practice
+
+**Logged**: 2026-03-20T07:37:00-07:00
+**Priority**: medium
+**Status**: pending
+**Area**: docs
+
+### Summary
+When asked for autonomous self-prompting, provide a bounded one-step improvement runner instead of an open-ended loop.
+
+### Details
+A direct self-prompt loop can become unbounded and hard to audit. A safer pattern is to generate one concrete next-improvement prompt from current workspace state, require testing, and stop after a single step.
+
+### Suggested Action
+Use bounded improvement helpers that surface one next action, plus explicit stop conditions.
+
+### Metadata
+- Source: conversation
+- Related Files: scripts/next_improvement_prompt.py, scripts/run_bounded_improvement.sh, HEARTBEAT.md
+- Tags: autonomy, bounded-loop, process, safety
+
+---

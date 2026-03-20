@@ -86,6 +86,8 @@ These are available to use even if not copied into `workspace/skills`.
 
 ## Local helper scripts added
 - `scripts/audit_capabilities.py` - compare workspace skills against `capabilities.json`
+- `scripts/next_improvement_prompt.py` - generate one bounded next-improvement prompt from current workspace state
+- `scripts/run_bounded_improvement.sh` - print the bounded self-review prompt and stop
 - `mail/campaign_generate_drafts.py` - generate approval-first outbound drafts from CSV
 - `mail/campaign_update_status.py` - update campaign status for a contact
 - `mail/campaign_queue_approved.py` - move approved contacts into a queue

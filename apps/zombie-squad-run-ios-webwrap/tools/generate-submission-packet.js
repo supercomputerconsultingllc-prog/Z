@@ -20,6 +20,12 @@ const screenshotPolishedDir = path.join(root, metadata.screenshotSet.polished);
 const rawShots = fs.existsSync(screenshotRawDir) ? fs.readdirSync(screenshotRawDir).filter((f) => f.endsWith('.png')).sort() : [];
 const polishedShots = fs.existsSync(screenshotPolishedDir) ? fs.readdirSync(screenshotPolishedDir).filter((f) => f.endsWith('.png')).sort() : [];
 
+const unresolved = [];
+if ((capConfig.appId || '').includes('REPLACE_WITH_')) unresolved.push('Bundle ID is still a placeholder.');
+if ((metadata.supportUrl || '').includes('REPLACE_WITH_')) unresolved.push('Support URL is still a placeholder.');
+if ((metadata.privacyUrl || '').includes('REPLACE_WITH_')) unresolved.push('Privacy URL is still a placeholder.');
+if ((monetization.paidPriceTier || '') === '$0.99_or_$1.99') unresolved.push('Paid price tier is still a decision placeholder.');
+
 const lines = [
   '# App Store Submission Packet',
   '',
@@ -71,6 +77,9 @@ const lines = [
   '- Confirm pricing in App Store Connect matches the launch config.',
   '- Confirm screenshots match the shipped build UI.',
   '- Confirm App Privacy answers match the actual shipped build.',
+  '',
+  '## Unresolved placeholders',
+  ...(unresolved.length ? unresolved.map((item) => `- ${item}`) : ['- None detected in the current packet inputs.']),
   ''
 ];
 

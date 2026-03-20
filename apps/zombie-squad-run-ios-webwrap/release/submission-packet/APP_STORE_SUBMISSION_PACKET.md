@@ -59,3 +59,9 @@ Generated automatically from the current repo state.
 - Confirm screenshots match the shipped build UI.
 - Confirm App Privacy answers match the actual shipped build.
 
+## Unresolved placeholders
+- Bundle ID is still a placeholder.
+- Support URL is still a placeholder.
+- Privacy URL is still a placeholder.
+- Paid price tier is still a decision placeholder.
+

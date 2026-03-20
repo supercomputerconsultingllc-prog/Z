@@ -782,6 +782,29 @@ Bundle validation and next-step output into a single preflight command once both
 
 ---
 
+## [LRN-20260320-038] best_practice
+
+**Logged**: 2026-03-20T11:33:00-07:00
+**Priority**: medium
+**Status**: pending
+**Area**: docs
+
+### Summary
+A stronger shipping pass improves gameplay feel, packaging reliability, and submission materials together.
+
+### Details
+The latest iteration combined better mobile controls and mission hooks in the game, stronger release-scaffold hygiene with validation and env templates, and more complete submission materials including metadata and page templates. Grouping these changes made the release path more practical end to end.
+
+### Suggested Action
+When the user asks to "do all," bundle complementary improvements across product, packaging, and submission materials into one coordinated pass.
+
+### Metadata
+- Source: conversation
+- Related Files: apps/zombie-squad-run/index.html, apps/zombie-squad-run-ios-webwrap/.env.example, apps/zombie-squad-run-ios-webwrap/release/store-assets/app-store-metadata.json
+- Tags: gameplay, packaging, submission, coordination, release
+
+---
+
 ## [LRN-20260320-028] best_practice
 
 **Logged**: 2026-03-20T08:10:00-07:00

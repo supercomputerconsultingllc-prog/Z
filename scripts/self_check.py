@@ -13,7 +13,9 @@ CHECKS = {
     'improvement loop': [
         WORKSPACE / 'HEARTBEAT.md',
         WORKSPACE / '.learnings' / 'LEARNINGS.md',
+        WORKSPACE / 'WORKSPACE_QUICKSTART.md',
         WORKSPACE / 'scripts' / 'next_improvement_prompt.py',
+        WORKSPACE / 'scripts' / 'run_bounded_improvement.sh',
     ],
     'campaign workflow': [
         WORKSPACE / 'mail' / 'campaign_pipeline.md',

@@ -28,3 +28,10 @@ Minimal command reference for refreshing the main generated views in this worksp
 python3 /home/ai/.openclaw/workspace/scripts/self_check.py
 python3 /home/ai/.openclaw/workspace/scripts/generate_status_report.py
 ```
+
+## One bounded improvement pass
+Use this when you want a single safe next step instead of open-ended churn.
+
+```bash
+/home/ai/.openclaw/workspace/scripts/run_bounded_improvement.sh
+```

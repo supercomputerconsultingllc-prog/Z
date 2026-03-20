@@ -37,3 +37,10 @@ A browser prototype for a zombie-themed runner shooter.
 
 ## Run it
 Open `index.html` in a browser.
+
+## Release assets included
+- `manifest.webmanifest`
+- `release/APP_STORE_COPY.md`
+- `release/PRIVACY.md`
+- `release/RELEASE_CHECKLIST.md`
+- `release/SUPPORT.md`

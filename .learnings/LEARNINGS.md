@@ -483,6 +483,29 @@ For workflows with derived views, wire state-changing helpers to refresh downstr
 
 ---
 
+## [LRN-20260320-024] correction
+
+**Logged**: 2026-03-20T08:06:00-07:00
+**Priority**: medium
+**Status**: pending
+**Area**: docs
+
+### Summary
+Status-report generators should refresh dependent summaries first, or they silently publish stale state.
+
+### Details
+The initial workspace status report generator read campaign and business summary files directly, but did not ensure they were freshly regenerated first. That made the report vulnerable to stale snapshots after state changes. The fix was to trigger the business refresh wrapper and campaign summary generator before writing `STATUS.md`.
+
+### Suggested Action
+When a report depends on generated summary files, refresh those dependencies inside the report generator.
+
+### Metadata
+- Source: conversation
+- Related Files: scripts/generate_status_report.py, STATUS.md, business/refresh_all.sh, mail/campaign_state_summary.py
+- Tags: status-report, stale-data, refresh, correction
+
+---
+
 ## [LRN-20260320-020] best_practice
 
 **Logged**: 2026-03-20T07:50:00-07:00

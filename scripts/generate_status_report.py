@@ -8,6 +8,8 @@ CAPS = WORKSPACE / 'CAPABILITIES.md'
 CAMPAIGN = WORKSPACE / 'mail' / 'campaign_state_summary.md'
 BUSINESS = WORKSPACE / 'business' / 'state_summary.md'
 OUT = WORKSPACE / 'STATUS.md'
+BUSINESS_REFRESH = WORKSPACE / 'business' / 'refresh_all.sh'
+CAMPAIGN_REFRESH = WORKSPACE / 'mail' / 'campaign_state_summary.py'
 
 
 def read_tail(path: Path, max_lines: int = 40) -> str:
@@ -22,7 +24,13 @@ def recent_commits(n: int = 5) -> str:
     return res.stdout.strip() if res.returncode == 0 else '_git log unavailable_'
 
 
+def refresh_dependencies():
+    subprocess.run([str(BUSINESS_REFRESH)], check=False)
+    subprocess.run(['python3', str(CAMPAIGN_REFRESH)], check=False)
+
+
 def main():
+    refresh_dependencies()
     parts = [
         '# Workspace Status Report',
         '',

@@ -29,3 +29,6 @@
 ## Final outputs
 - signed `.ipa`
 - optional upload to App Store Connect
+
+## Included starter file
+- `codemagic.yaml`

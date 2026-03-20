@@ -11,7 +11,9 @@
 ## Cloud iOS build prep
 - [ ] GitHub repo created
 - [ ] repo pushed
+- [ ] GitHub Actions prep workflow reviewed
 - [ ] Codemagic project connected
+- [ ] Codemagic YAML reviewed
 - [ ] Apple Developer account active
 - [ ] signing configured
 - [ ] App Store Connect metadata ready

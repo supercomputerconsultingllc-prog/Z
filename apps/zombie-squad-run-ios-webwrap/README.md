@@ -19,5 +19,11 @@ You said the constraint is Windows only. Native iOS builds still require Apple t
 - `npm run release:prep` - prepares web assets and release bundle
 - `npm run cap:init:notes` - prints the next-step guidance
 
+## Added automation
+- `.github/workflows/release-prep.yml` - GitHub Actions prep workflow
+- `codemagic.yaml` - Codemagic starter workflow
+- `release/assets-checklist/` - icon and screenshot planning pack
+- `release/LAUNCH_PLAN.md` - paid vs free launch recommendation
+
 ## Important note
 This scaffold does not eliminate Apple's build/signing requirements. It automates prep and reduces Mac dependence by shifting the final iOS build step to a cloud service.

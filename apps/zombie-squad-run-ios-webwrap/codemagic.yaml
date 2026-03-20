@@ -1,0 +1,34 @@
+workflows:
+  zombie-squad-run-ios:
+    name: Zombie Squad Run iOS
+    max_build_duration: 60
+    environment:
+      xcode: latest
+      cocoapods: default
+      node: 20
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          cd apps/zombie-squad-run-ios-webwrap
+          npm install
+      - name: Prepare web assets
+        script: |
+          cd apps/zombie-squad-run-ios-webwrap
+          npm run release:prep
+      - name: Add iOS platform if needed
+        script: |
+          cd apps/zombie-squad-run-ios-webwrap
+          npx cap add ios || true
+      - name: Sync Capacitor
+        script: |
+          cd apps/zombie-squad-run-ios-webwrap
+          npx cap sync ios
+      - name: Build iOS app
+        script: |
+          echo "Open the generated iOS project settings in Codemagic and configure signing for final archive/export."
+    artifacts:
+      - apps/zombie-squad-run-ios-webwrap/release/**
+    publishing:
+      email:
+        recipients:
+          - you@example.com

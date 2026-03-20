@@ -3,9 +3,10 @@
 Use these values in Codemagic or your chosen cloud iOS build service.
 
 ## Required identifiers
-- `APP_ID` = com.yourcompany.zombiesquadrun
+- `APP_ID` = final app bundle ID, for example `com.zombiesquadrun.game`
 - `APP_NAME` = Zombie Squad Run
 - `APPLE_TEAM_ID` = your Apple Developer team ID
+- optional `BUILD_NOTIFY_EMAIL` = address for Codemagic build notifications
 - optional `PAGES_BASE_URL` = published support/privacy site base URL
 - optional `GITHUB_OWNER` = GitHub username or org
 - optional `GITHUB_REPO` = GitHub repository name

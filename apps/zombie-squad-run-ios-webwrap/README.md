@@ -28,6 +28,7 @@ You said the constraint is Windows only. Native iOS builds still require Apple t
 - `.github/workflows/release-prep.yml` - GitHub Actions prep workflow
 - `codemagic.yaml` - Codemagic starter workflow
 - `release/assets-checklist/` - icon and screenshot planning pack
+- `release/store-assets/` - listing copy, icon brief, and page templates
 - `release/LAUNCH_PLAN.md` - paid vs free launch recommendation
 - `release/REPO_PUBLISH_CHECKLIST.md` - repo-ready publishing checklist
 - `release/LAUNCH_DAY_CHECKLIST.md` - launch-day execution checklist

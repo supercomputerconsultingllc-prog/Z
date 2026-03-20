@@ -828,6 +828,29 @@ Add a simple ship-status document once a release folder includes several prep ar
 
 ---
 
+## [LRN-20260320-040] best_practice
+
+**Logged**: 2026-03-20T11:47:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+When the user wants to "do all," add both monetization design docs and store-asset planning docs so release work can continue without ambiguity.
+
+### Details
+A useful next pass after technical prep was to add explicit monetization planning for the game itself and better icon/listing guidance for the store path. That reduced uncertainty around both revenue strategy and submission assets.
+
+### Suggested Action
+Pair gameplay monetization notes with store-asset planning in late-stage release prep.
+
+### Metadata
+- Source: conversation
+- Related Files: apps/zombie-squad-run/release/monetization/MONETIZATION_PLAN.md, apps/zombie-squad-run-ios-webwrap/release/store-assets/ICON_BRIEF.md
+- Tags: monetization, store-assets, release, planning, usability
+
+---
+
 ## [LRN-20260320-028] best_practice
 
 **Logged**: 2026-03-20T08:10:00-07:00

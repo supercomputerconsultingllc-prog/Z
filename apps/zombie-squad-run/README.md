@@ -47,3 +47,4 @@ Open `index.html` in a browser.
 - `release/RELEASE_SUMMARY.md`
 - `release/SHIP_STATUS.md`
 - `release/SUPPORT.md`
+- `release/monetization/`

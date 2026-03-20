@@ -7,6 +7,8 @@ This folder helps you prepare App Store listing assets.
 - `STORE_LISTING_TEMPLATE.md`
 - `PROMO_ASSET_PLAN.md`
 - `APP_STORE_SUBMISSION_NOTES.md`
+- `ICON_BRIEF.md`
+- `SCREEN_TEXT_OVERLAYS.md`
 - `app-store-metadata.json`
 - `support-page-template.html`
 - `privacy-page-template.html`

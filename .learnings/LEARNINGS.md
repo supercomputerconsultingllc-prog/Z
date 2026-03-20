@@ -621,6 +621,29 @@ Add a top-level quickstart once multiple subsystem quickstarts exist and the wor
 
 ---
 
+## [LRN-20260320-031] best_practice
+
+**Logged**: 2026-03-20T09:35:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+Release packages benefit from a one-page summary so the handoff state is obvious without reading every asset file.
+
+### Details
+The game release package already had copy, privacy, support, checklist, and manifest files, but no short summary explaining what exists and what the next release steps are. Adding a release summary makes the package easier to hand off and review.
+
+### Suggested Action
+When a release folder contains several prep files, add a brief summary page that explains status and next steps.
+
+### Metadata
+- Source: conversation
+- Related Files: apps/zombie-squad-run/release/RELEASE_SUMMARY.md, apps/zombie-squad-run/README.md
+- Tags: release, handoff, summary, usability
+
+---
+
 ## [LRN-20260320-028] best_practice
 
 **Logged**: 2026-03-20T08:10:00-07:00

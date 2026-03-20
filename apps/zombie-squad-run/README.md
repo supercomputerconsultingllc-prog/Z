@@ -43,4 +43,5 @@ Open `index.html` in a browser.
 - `release/APP_STORE_COPY.md`
 - `release/PRIVACY.md`
 - `release/RELEASE_CHECKLIST.md`
+- `release/RELEASE_SUMMARY.md`
 - `release/SUPPORT.md`

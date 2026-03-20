@@ -943,6 +943,29 @@ Pair existence validation with placeholder-value checks in late-stage release au
 
 ---
 
+## [LRN-20260320-045] best_practice
+
+**Logged**: 2026-03-20T12:04:00-07:00
+**Priority**: medium
+**Status**: pending
+**Area**: docs
+
+### Summary
+Placeholder markers should be explicit about needing replacement, not subtle defaults that look almost real.
+
+### Details
+The first placeholder checker correctly caught `example.com` and default bundle-ID patterns, but the config files still used defaults that could be overlooked. Replacing them with `REPLACE_WITH_...` markers makes unresolved launch blockers more obvious to humans and tooling.
+
+### Suggested Action
+Use explicit replacement markers for late-stage release placeholders so they are clearly non-final.
+
+### Metadata
+- Source: conversation
+- Related Files: apps/zombie-squad-run-ios-webwrap/capacitor.config.json, apps/zombie-squad-run-ios-webwrap/release/store-assets/app-store-metadata.json, apps/zombie-squad-run-ios-webwrap/.env.example
+- Tags: placeholders, release, clarity, validation, tooling
+
+---
+
 ## [LRN-20260320-028] best_practice
 
 **Logged**: 2026-03-20T08:10:00-07:00

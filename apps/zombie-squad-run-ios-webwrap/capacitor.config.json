@@ -1,5 +1,5 @@
 {
-  "appId": "com.yourcompany.zombiesquadrun",
+  "appId": "REPLACE_WITH_REAL_APP_ID",
   "appName": "Zombie Squad Run",
   "webDir": "web",
   "bundledWebRuntime": false

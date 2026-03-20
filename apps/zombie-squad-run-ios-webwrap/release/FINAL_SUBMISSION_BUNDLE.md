@@ -19,10 +19,10 @@
 5. Confirm paid vs free launch choice is intentional.
 
 ## Suggested handoff order
-1. Run preflight
-2. Run release prep
+1. Run `npm run finalize:release`
+2. Review `release/submission-packet/APP_STORE_SUBMISSION_PACKET.md`
 3. Push repo
 4. Build in Codemagic
-5. Upload to App Store Connect
+5. Upload to App Store Connect or let Codemagic publish to TestFlight
 6. Complete store fields
 7. Submit for review

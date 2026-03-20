@@ -48,7 +48,11 @@ You said the constraint is Windows only. Native iOS builds still require Apple t
 - `release/FINAL_SUBMISSION_BUNDLE.md` - final handoff/submission summary
 - `release/REPO_PUBLISH_CHECKLIST.md` - repo-ready publishing checklist
 - `release/LAUNCH_DAY_CHECKLIST.md` - launch-day execution checklist
+- `release/CODEMAGIC_RELEASE_READY.md` - release-oriented Codemagic notes
+- `release/submission-packet/` - generated App Store submission packet
 - `release/store-assets/` - store listing asset template pack
+- `ENTERPRISE_RELEASE_RUNBOOK.md` - concise end-to-end operator runbook
+- `RELEASE_HANDOFF_CHECKLIST.md` - review-friendly release handoff checklist
 
 ## Important note
 This scaffold does not eliminate Apple's build/signing requirements. It automates prep and reduces Mac dependence by shifting the final iOS build step to a cloud service.

@@ -23,13 +23,17 @@ const required = [
   'tools/apply-env-config.js',
   'tools/set-pages-urls.js',
   'tools/check-monetization-readiness.js',
+  'tools/generate-submission-packet.js',
   'tools/finalize-release.js',
   '.github/workflows/publish-hosted-pages.yml',
   'release/GITHUB_PAGES_SETUP.md',
   'release/FINAL_VALUES_QUICKSTART.md',
   'release/UPLOAD_AND_MONETIZE_GUIDE.md',
+  'release/CODEMAGIC_RELEASE_READY.md',
   'release/monetization/launch-config.json',
-  'release/monetization/MONETIZATION_QUICKSTART.md'
+  'release/monetization/MONETIZATION_QUICKSTART.md',
+  'ENTERPRISE_RELEASE_RUNBOOK.md',
+  'RELEASE_HANDOFF_CHECKLIST.md'
 ];
 
 let failed = false;

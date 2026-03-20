@@ -16,6 +16,7 @@
     "apply:env-config": "node tools/apply-env-config.js",
     "set:pages-urls": "node tools/set-pages-urls.js",
     "check:monetization": "node tools/check-monetization-readiness.js",
+    "generate:submission-packet": "node tools/generate-submission-packet.js",
     "finalize:release": "node tools/finalize-release.js",
     "assets:starter-pack": "node tools/generate-icon.js && node tools/capture-screenshots.js && node tools/polish-screenshots.js && node tools/build-hosted-pages.js",
     "preflight": "node tools/validate-release.js && node tools/check-assets.js && node tools/print-next-steps.js",

@@ -30,6 +30,7 @@ run('node tools/check-assets.js');
 run('node tools/validate-release.js');
 run('node tools/make-release-bundle.js');
 run('node tools/check-monetization-readiness.js');
+run('node tools/generate-submission-packet.js');
 run('node tools/print-next-steps.js');
 
 console.log('\nFinal release prep completed.');

@@ -124,4 +124,3 @@ These are available to use even if not copied into `workspace/skills`.
 - send limits via `mail/campaign_send_limits.json`
 - approval queue via `mail/campaign_approval_queue.md`
 - send history ledger via `mail/campaign_send_history.csv`
-y ledger via `mail/campaign_send_history.csv`

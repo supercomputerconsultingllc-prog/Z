@@ -11,10 +11,19 @@ workflows:
         script: |
           cd apps/zombie-squad-run-ios-webwrap
           npm install
+      - name: Apply final app config
+        script: |
+          cd apps/zombie-squad-run-ios-webwrap
+          if [ -f .env ]; then npm run apply:env-config; else echo ".env not present, skipping local app-id stamp"; fi
+      - name: Stamp support and privacy URLs if configured
+        script: |
+          cd apps/zombie-squad-run-ios-webwrap
+          if [ -n "$PAGES_BASE_URL" ] || { [ -n "$GITHUB_OWNER" ] && [ -n "$GITHUB_REPO" ]; }; then npm run set:pages-urls; else echo "Pages URL stamping skipped"; fi
       - name: Prepare web assets
         script: |
           cd apps/zombie-squad-run-ios-webwrap
           npm run release:prep
+          npm run check:assets
       - name: Add iOS platform if needed
         script: |
           cd apps/zombie-squad-run-ios-webwrap

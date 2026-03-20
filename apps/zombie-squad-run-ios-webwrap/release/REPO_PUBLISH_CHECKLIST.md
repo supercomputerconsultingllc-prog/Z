@@ -26,5 +26,8 @@
 1. initialize repo if needed
 2. commit scaffold
 3. push to GitHub
-4. connect GitHub repo to Codemagic
-5. verify GitHub Actions prep workflow appears
+4. enable GitHub Pages with GitHub Actions
+5. run the hosted-pages workflow and confirm `/support/` and `/privacy/` are live
+6. run `npm run set:pages-urls` with the real Pages base URL or repo coordinates
+7. connect GitHub repo to Codemagic
+8. verify GitHub Actions prep workflow appears

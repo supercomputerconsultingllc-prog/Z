@@ -23,6 +23,8 @@ You said the constraint is Windows only. Native iOS builds still require Apple t
 - `npm run capture:screenshots` - exports 5 iPhone screenshots from built-in game scene presets using headless Chrome
 - `npm run polish:screenshots` - adds store-style title and subtitle overlays to the exported screenshots
 - `npm run build:hosted-pages` - generates support and privacy pages ready for lightweight static hosting
+- `npm run apply:env-config` - stamps your final app ID and app name from a local `.env` into `capacitor.config.json`
+- `npm run set:pages-urls` - stamps support and privacy URLs into metadata from a GitHub Pages or custom base URL
 - `npm run assets:starter-pack` - generates the icon, screenshots, polished screenshots, and hosted pages in one pass
 - `npm run check:assets` - verifies the required icon and iPhone screenshot files are present
 - `npm run preflight` - runs release validation, checks required store assets, and prints next-step guidance

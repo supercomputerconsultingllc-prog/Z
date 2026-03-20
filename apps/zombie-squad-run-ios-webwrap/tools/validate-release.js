@@ -20,8 +20,11 @@ const required = [
   'tools/capture-screenshots.js',
   'tools/polish-screenshots.js',
   'tools/build-hosted-pages.js',
+  'tools/apply-env-config.js',
+  'tools/set-pages-urls.js',
   '.github/workflows/publish-hosted-pages.yml',
-  'release/GITHUB_PAGES_SETUP.md'
+  'release/GITHUB_PAGES_SETUP.md',
+  'release/FINAL_VALUES_QUICKSTART.md'
 ];
 
 let failed = false;

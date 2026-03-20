@@ -27,6 +27,8 @@
 - team ID
 - App Store Connect API key
 - signing certificates / provisioning profile or automatic signing config
+- optional `PAGES_BASE_URL` if you want metadata URL stamping to use a fixed custom base URL
+- optional `GITHUB_OWNER` and `GITHUB_REPO` if you want metadata URL stamping to infer GitHub Pages URLs
 
 ## Final outputs
 - signed `.ipa`

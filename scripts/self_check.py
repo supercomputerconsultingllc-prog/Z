@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import py_compile
 from pathlib import Path
 
 WORKSPACE = Path('/home/ai/.openclaw/workspace')
@@ -33,11 +34,28 @@ JSON_CHECKS = [
     WORKSPACE / 'capabilities.json',
 ]
 
+PYTHON_CHECKS = [
+    WORKSPACE / 'scripts' / 'next_improvement_prompt.py',
+    WORKSPACE / 'scripts' / 'self_check.py',
+    WORKSPACE / 'scripts' / 'refresh_capabilities.py',
+    WORKSPACE / 'scripts' / 'audit_capabilities.py',
+    WORKSPACE / 'mail' / 'campaign_state_summary.py',
+    WORKSPACE / 'business' / 'state_summary.py',
+]
+
 
 def validate_json(path: Path) -> tuple[bool, str | None]:
     try:
         json.loads(path.read_text(encoding='utf-8'))
     except (OSError, json.JSONDecodeError) as exc:
+        return False, str(exc)
+    return True, None
+
+
+def validate_python(path: Path) -> tuple[bool, str | None]:
+    try:
+        py_compile.compile(str(path), doraise=True)
+    except (OSError, py_compile.PyCompileError) as exc:
         return False, str(exc)
     return True, None
 
@@ -67,6 +85,19 @@ def main():
         if detail and not ok:
             print(f'  - {detail}')
             failures.append(f'invalid json: {path.relative_to(WORKSPACE)}')
+    print()
+
+    print('## python syntax')
+    for path in PYTHON_CHECKS:
+        if not path.exists():
+            print(f'- [SKIP] {path.relative_to(WORKSPACE)} (missing, already reported above)')
+            continue
+        ok, detail = validate_python(path)
+        marker = 'OK' if ok else 'INVALID'
+        print(f'- [{marker}] {path.relative_to(WORKSPACE)}')
+        if detail and not ok:
+            print(f'  - {detail}')
+            failures.append(f'invalid python: {path.relative_to(WORKSPACE)}')
     print()
 
     if failures:

@@ -1,0 +1,52 @@
+{
+  "tools": [
+    "read",
+    "write",
+    "edit",
+    "exec",
+    "process",
+    "web_search",
+    "web_fetch",
+    "cron",
+    "sessions_list",
+    "sessions_history",
+    "sessions_send",
+    "sessions_spawn",
+    "sessions_yield",
+    "subagents",
+    "memory_search",
+    "memory_get",
+    "session_status"
+  ],
+  "workspaceSkills": [
+    "gog",
+    "image-chat-preview",
+    "m365-pnp-cli",
+    "m365cli",
+    "mcporter",
+    "outlook-calendar",
+    "outlook-email",
+    "pdf-inbox-reporter",
+    "self-improving-agent",
+    "tmux",
+    "weather"
+  ],
+  "globalSkills": [
+    "prose",
+    "clawhub",
+    "gh-issues",
+    "github",
+    "healthcheck",
+    "node-connect",
+    "oracle",
+    "session-logs",
+    "skill-creator",
+    "video-frames"
+  ],
+  "guardrails": [
+    "ask-before-external-sends",
+    "ask-before-destructive-actions",
+    "bounded-improvement-only",
+    "verify-real-fix-path"
+  ]
+}

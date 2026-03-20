@@ -68,3 +68,26 @@ Use a small helper for generated message-body assembly whenever multiple templat
 - Tags: formatting, email, hardening, maintainability
 
 ---
+
+## [LRN-20260320-004] best_practice
+
+**Logged**: 2026-03-20T07:30:00-07:00
+**Priority**: medium
+**Status**: pending
+**Area**: docs
+
+### Summary
+Capability lists should be persisted in workspace files, not only answered ad hoc in chat.
+
+### Details
+A chat-only capability summary can omit tools or blur the distinction between installed local skills and globally available skills. Adding a persistent catalog and gap file makes future audits more reliable and easier to update.
+
+### Suggested Action
+Maintain `CAPABILITIES.md`, `CAPABILITY_GAPS.md`, and a machine-readable `capabilities.json` whenever the environment meaningfully changes.
+
+### Metadata
+- Source: conversation
+- Related Files: CAPABILITIES.md, CAPABILITY_GAPS.md, capabilities.json
+- Tags: catalog, capability-audit, documentation, process
+
+---

@@ -85,6 +85,7 @@ These are available to use even if not copied into `workspace/skills`.
 - "Audit your current capabilities and tell me what changed."
 - "Generate campaign drafts from the contact CSV, but do not send anything."
 - "Refresh the whole workspace status view."
+- "Show me the top-level workspace quickstart."
 
 ## Local helper scripts added
 - `scripts/audit_capabilities.py` - compare workspace skills against `capabilities.json`

@@ -598,6 +598,29 @@ When a workflow tracks dates, add a view organized around time urgency, not just
 
 ---
 
+## [LRN-20260320-030] best_practice
+
+**Logged**: 2026-03-20T08:39:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+Once a workspace has subsystem wrappers and a root refresh command, add a top-level quickstart so the main maintenance path is obvious.
+
+### Details
+The workspace had campaign and business quickstarts plus a root refresh wrapper, but no single root quickstart that explains the overall refresh path. Adding one makes the common operational entry point easier to find.
+
+### Suggested Action
+Add a top-level quickstart once multiple subsystem quickstarts exist and the workspace has a root wrapper.
+
+### Metadata
+- Source: conversation
+- Related Files: WORKSPACE_QUICKSTART.md, refresh_all.sh, CAPABILITIES.md
+- Tags: quickstart, workspace, refresh, usability
+
+---
+
 ## [LRN-20260320-028] best_practice
 
 **Logged**: 2026-03-20T08:10:00-07:00

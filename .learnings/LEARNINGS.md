@@ -390,3 +390,26 @@ For multi-file workflows, add a summary view once the file count and helper coun
 - Tags: campaign, summary, reporting, workflow
 
 ---
+
+## [LRN-20260320-018] best_practice
+
+**Logged**: 2026-03-20T07:49:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+If a workflow keeps a hand-written next-actions file, add a refresh helper once the source-of-truth data becomes structured.
+
+### Details
+The business ops layer had CSV trackers plus a manually maintained `next_actions.md`. Once opportunity and follow-up state lived in structured files, it made sense to generate the action list from those sources instead of relying on hand edits.
+
+### Suggested Action
+When operational state is already structured, derive next-action summaries from it rather than duplicating maintenance manually.
+
+### Metadata
+- Source: conversation
+- Related Files: business/refresh_next_actions.py, business/next_actions.md
+- Tags: next-actions, refresh, business-ops, automation
+
+---

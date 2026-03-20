@@ -575,6 +575,29 @@ When operational records contain fields that can be derived from existing contex
 
 ---
 
+## [LRN-20260320-028] best_practice
+
+**Logged**: 2026-03-20T08:10:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+When separate workflow layers each have their own refresh wrapper, add a workspace-level wrapper for the common maintenance path.
+
+### Details
+The workspace had a campaign refresh wrapper, a business refresh wrapper, and a status-report generator, but no single command to refresh all of them together. Adding a top-level wrapper makes full-state regeneration easier and more consistent.
+
+### Suggested Action
+Provide a root refresh command once multiple subsystem refresh commands exist.
+
+### Metadata
+- Source: conversation
+- Related Files: refresh_all.sh, mail/refresh_all.sh, business/refresh_all.sh, scripts/generate_status_report.py
+- Tags: refresh, wrapper, workspace, usability
+
+---
+
 ## [LRN-20260320-020] best_practice
 
 **Logged**: 2026-03-20T07:50:00-07:00

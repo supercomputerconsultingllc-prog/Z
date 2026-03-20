@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -25,6 +26,8 @@ def recent_commits(n: int = 5) -> str:
 
 
 def refresh_dependencies():
+    if os.environ.get('SKIP_DEP_REFRESH') == '1':
+        return
     subprocess.run([str(BUSINESS_REFRESH)], check=False)
     subprocess.run(['python3', str(CAMPAIGN_REFRESH)], check=False)
 

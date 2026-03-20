@@ -34,14 +34,23 @@ JSON_CHECKS = [
     WORKSPACE / 'capabilities.json',
 ]
 
-PYTHON_CHECKS = [
-    WORKSPACE / 'scripts' / 'next_improvement_prompt.py',
-    WORKSPACE / 'scripts' / 'self_check.py',
-    WORKSPACE / 'scripts' / 'refresh_capabilities.py',
-    WORKSPACE / 'scripts' / 'audit_capabilities.py',
-    WORKSPACE / 'mail' / 'campaign_state_summary.py',
-    WORKSPACE / 'business' / 'state_summary.py',
+PYTHON_SCAN_ROOTS = [
+    WORKSPACE / 'scripts',
+    WORKSPACE / 'mail',
+    WORKSPACE / 'business',
 ]
+
+
+def python_checks() -> list[Path]:
+    discovered: list[Path] = []
+    for root in PYTHON_SCAN_ROOTS:
+        if not root.exists():
+            continue
+        for path in sorted(root.rglob('*.py')):
+            if '__pycache__' in path.parts:
+                continue
+            discovered.append(path)
+    return discovered
 
 
 def validate_json(path: Path) -> tuple[bool, str | None]:
@@ -88,10 +97,7 @@ def main():
     print()
 
     print('## python syntax')
-    for path in PYTHON_CHECKS:
-        if not path.exists():
-            print(f'- [SKIP] {path.relative_to(WORKSPACE)} (missing, already reported above)')
-            continue
+    for path in python_checks():
         ok, detail = validate_python(path)
         marker = 'OK' if ok else 'INVALID'
         print(f'- [{marker}] {path.relative_to(WORKSPACE)}')

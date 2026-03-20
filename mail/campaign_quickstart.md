@@ -43,6 +43,11 @@ Open:
 - `/home/ai/.openclaw/workspace/mail/campaign_send_bundle.md`
 - `/home/ai/.openclaw/workspace/mail/campaign_send_bundle.csv`
 
+## 8) Record a completed send later
+```bash
+python3 /home/ai/.openclaw/workspace/mail/campaign_append_send_history.py name@example.com "Quick question about Example Co" spring-outreach sent "manual test entry"
+```
+
 ## Safety notes
 - Draft generation respects suppression rules and send limits.
 - Queueing does not send email.

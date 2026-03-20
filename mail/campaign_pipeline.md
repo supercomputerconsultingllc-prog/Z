@@ -21,6 +21,7 @@ Create personalized drafts from a CSV list without sending anything automaticall
 - `campaign_export_queued.py` - export queued contacts into review-ready send bundles
 - `campaign_send_bundle.md` - human-readable queued-send bundle
 - `campaign_send_bundle.csv` - machine-readable queued-send bundle
+- `campaign_append_send_history.py` - append completed-send records to the history ledger
 
 ## Default workflow
 1. Fill in `campaign_contacts_template.csv` or copy it to a real campaign CSV.

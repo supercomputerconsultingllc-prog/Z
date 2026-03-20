@@ -344,3 +344,26 @@ When adding queue-based workflows, ensure repeat runs do not duplicate queue ent
 - Tags: queueing, idempotency, export, campaign
 
 ---
+
+## [LRN-20260320-016] best_practice
+
+**Logged**: 2026-03-20T07:47:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+If a workflow has a send-history ledger, add a helper to append records consistently instead of relying on manual CSV edits.
+
+### Details
+The campaign system already had a send-history CSV, but no supported way to add rows. A tiny append helper makes the ledger actually usable and reduces formatting mistakes in manual edits.
+
+### Suggested Action
+Whenever you add a ledger file for an operational workflow, also add the smallest practical write helper for it.
+
+### Metadata
+- Source: conversation
+- Related Files: mail/campaign_append_send_history.py, mail/campaign_send_history.csv
+- Tags: ledger, helper, campaign, auditability
+
+---

@@ -95,6 +95,7 @@ These are available to use even if not copied into `workspace/skills`.
 - `mail/campaign_queue_approved.py` - move approved contacts into a queue
 - `mail/campaign_dedupe_check.py` - detect duplicate contacts by email and write a report
 - `mail/campaign_export_queued.py` - export queued contacts into review-ready send bundles
+- `mail/campaign_append_send_history.py` - append completed-send records to the campaign history ledger
 - `mail/campaign_pipeline.md` - lightweight campaign workflow
 
 ## Business ops layer added

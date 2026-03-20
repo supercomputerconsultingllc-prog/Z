@@ -206,3 +206,26 @@ Add a compact command reference whenever a workflow spans more than two helper s
 - Tags: docs, quickstart, workflow, usability
 
 ---
+
+## [LRN-20260320-010] best_practice
+
+**Logged**: 2026-03-20T07:40:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+Approval-first outreach workflows should reserve a simple send-history ledger before any real send step exists.
+
+### Details
+The campaign flow already had drafts, approvals, queueing, and limits, but no dedicated ledger for recording what was eventually sent. Adding a lightweight CSV now makes later send tooling easier to audit.
+
+### Suggested Action
+Add a simple history file early in campaign workflows so send operations have an obvious place to append records.
+
+### Metadata
+- Source: conversation
+- Related Files: mail/campaign_send_history.csv, mail/campaign_pipeline.md
+- Tags: campaign, ledger, auditability, workflow
+
+---

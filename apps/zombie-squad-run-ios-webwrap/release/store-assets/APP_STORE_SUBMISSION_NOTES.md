@@ -19,5 +19,11 @@
 
 ## Before submission
 - confirm screenshots match actual current UI
+- if using the generated marketing set, review `release/store-assets/assets/screenshots/iphone/polished/`
 - confirm support and privacy URLs are live
 - proofread listing copy one last time
+
+## Review notes suggestion
+- This app is a single-player arcade game with local on-device progress storage only.
+- The current build does not require account creation.
+- Support and privacy pages are hosted separately and linked in App Store Connect.

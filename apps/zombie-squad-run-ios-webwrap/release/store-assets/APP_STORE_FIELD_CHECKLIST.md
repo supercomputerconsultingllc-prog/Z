@@ -22,3 +22,5 @@
 - [ ] Age rating answers completed
 - [ ] Ads / tracking disclosures updated if applicable
 - [ ] In-app purchase details added if applicable
+- [ ] Final screenshot set chosen, raw or polished
+- [ ] Review notes mention local-only progress storage if still true

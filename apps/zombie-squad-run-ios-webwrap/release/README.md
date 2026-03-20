@@ -4,6 +4,7 @@ A browser prototype for a zombie-themed runner shooter.
 
 ## Key docs
 - `HOSTED_PAGES_QUICKSTART.md`
+- `GITHUB_PAGES_SETUP.md`
 - `CODEMAGIC_SETUP.md`
 - `APP_PUBLISHING_CHECKLIST.md`
 - `REPLACE_VALUES_CHECKLIST.md`

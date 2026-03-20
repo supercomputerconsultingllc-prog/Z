@@ -18,6 +18,7 @@ npm run prepare:web
 npm run release:prep
 npm run generate:icon
 npm run capture:screenshots
+npm run polish:screenshots
 npm run build:hosted-pages
 npm run assets:starter-pack
 npm run check:assets

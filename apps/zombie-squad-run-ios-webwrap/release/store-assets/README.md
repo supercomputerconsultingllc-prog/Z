@@ -30,3 +30,5 @@ You can generate a first-pass icon and screenshot pack with:
 - `npm run assets:starter-pack`
 
 These outputs are intended as a usable first pack and review baseline. Replace them later with polished marketing art if needed.
+
+Polished screenshot exports are written to `assets/screenshots/iphone/polished/`.

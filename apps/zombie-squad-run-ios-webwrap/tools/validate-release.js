@@ -18,7 +18,10 @@ const required = [
   'tools/check-assets.js',
   'tools/generate-icon.js',
   'tools/capture-screenshots.js',
-  'tools/build-hosted-pages.js'
+  'tools/polish-screenshots.js',
+  'tools/build-hosted-pages.js',
+  '.github/workflows/publish-hosted-pages.yml',
+  'release/GITHUB_PAGES_SETUP.md'
 ];
 
 let failed = false;

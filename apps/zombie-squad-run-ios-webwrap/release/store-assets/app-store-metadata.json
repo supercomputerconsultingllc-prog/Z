@@ -1,9 +1,20 @@
 {
   "name": "Zombie Squad Run",
-  "subtitle": "Lane shooter with squad upgrades and zombie chaos",
-  "keywords": ["zombie", "runner", "shooter", "squad", "action", "casual", "survival", "arcade"],
-  "shortDescription": "Shoot the right lane, grow your squad, break walls, and survive the run.",
+  "subtitle": "Shoot zombies, build your squad, smash the wall",
+  "keywords": ["zombie", "runner", "shooter", "squad", "action", "arcade", "survival", "casual"],
+  "shortDescription": "Tap the right lane, rescue survivors, upgrade firepower, and survive brutal wall hits.",
   "promotionalText": "Build your squad, blast through zombies, and break every wall before it breaks you.",
+  "primaryCategory": "Games",
+  "secondaryCategory": "Arcade",
   "supportUrl": "REPLACE_WITH_REAL_SUPPORT_URL",
-  "privacyUrl": "REPLACE_WITH_REAL_PRIVACY_URL"
+  "privacyUrl": "REPLACE_WITH_REAL_PRIVACY_URL",
+  "reviewNotes": [
+    "Single-player arcade game.",
+    "Current build stores progress locally on-device.",
+    "No account creation required in the current build."
+  ],
+  "screenshotSet": {
+    "raw": "release/store-assets/assets/screenshots/iphone/",
+    "polished": "release/store-assets/assets/screenshots/iphone/polished/"
+  }
 }

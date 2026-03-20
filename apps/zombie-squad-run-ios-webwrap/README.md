@@ -19,6 +19,9 @@ You said the constraint is Windows only. Native iOS builds still require Apple t
 - `npm run release:prep` - prepares web assets and release bundle
 - `npm run cap:init:notes` - prints the next-step guidance
 
+## Quickstart
+- `QUICKSTART.md`
+
 ## Added automation
 - `.github/workflows/release-prep.yml` - GitHub Actions prep workflow
 - `codemagic.yaml` - Codemagic starter workflow

@@ -667,6 +667,29 @@ For Windows-only iOS requests, build a reproducible prep scaffold and handoff pa
 
 ---
 
+## [LRN-20260320-033] best_practice
+
+**Logged**: 2026-03-20T10:05:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+When a release scaffold accumulates multiple scripts and handoff docs, add a one-page quickstart for the fastest path.
+
+### Details
+The Windows-friendly iOS wrapper scaffold had the needed scripts and cloud-build docs, but not a single short entry page showing the exact command/order path. Adding a quickstart reduces friction for first use.
+
+### Suggested Action
+Add a quickstart once a release scaffold has more than a couple of scripts and docs.
+
+### Metadata
+- Source: conversation
+- Related Files: apps/zombie-squad-run-ios-webwrap/QUICKSTART.md, apps/zombie-squad-run-ios-webwrap/README.md
+- Tags: quickstart, windows, ios, release, usability
+
+---
+
 ## [LRN-20260320-028] best_practice
 
 **Logged**: 2026-03-20T08:10:00-07:00

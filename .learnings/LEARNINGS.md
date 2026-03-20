@@ -298,3 +298,26 @@ For every human-readable dashboard backed by CSV or JSON state, add a small refr
 - Tags: dashboard, refresh, business-ops, automation
 
 ---
+
+## [LRN-20260320-014] best_practice
+
+**Logged**: 2026-03-20T07:43:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+Structured ops layers benefit from both a detailed dashboard and a terse state summary.
+
+### Details
+A dashboard is useful for human review, but a compact summary is better for quick checks and future automation. Adding a summary script creates a second, lighter view over the same business state.
+
+### Suggested Action
+When building lightweight operational systems, provide both a detailed human-readable view and a short summary view.
+
+### Metadata
+- Source: conversation
+- Related Files: business/state_summary.py, business/state_summary.md, business/dashboard.md
+- Tags: business-ops, summary, dashboard, usability
+
+---

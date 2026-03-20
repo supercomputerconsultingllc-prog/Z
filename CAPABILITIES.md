@@ -103,6 +103,7 @@ These are available to use even if not copied into `workspace/skills`.
 - `business/next_actions.md` - prioritized next steps
 - `business/README.md` - overview of the business-ops layer
 - `business/refresh_dashboard.py` - rebuild the business dashboard from tracked opportunity and follow-up state
+- `business/state_summary.py` - generate a compact business state summary
 
 ## Local campaign controls added
 - suppression list support via `mail/campaign_suppression_list.csv`

@@ -690,6 +690,29 @@ Add a quickstart once a release scaffold has more than a couple of scripts and d
 
 ---
 
+## [LRN-20260320-034] best_practice
+
+**Logged**: 2026-03-20T10:19:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+A release scaffold should separate repo-publish steps from launch-day steps so execution is less ambiguous.
+
+### Details
+Once the Windows-friendly iOS path had prep, cloud-build, and launch docs, the next clarity improvement was to split "push the repo" tasks from "submit and launch" tasks. That makes the process easier to follow at the right time.
+
+### Suggested Action
+Add separate repo-publish and launch-day checklists once a release flow becomes multi-stage.
+
+### Metadata
+- Source: conversation
+- Related Files: apps/zombie-squad-run-ios-webwrap/release/REPO_PUBLISH_CHECKLIST.md, apps/zombie-squad-run-ios-webwrap/release/LAUNCH_DAY_CHECKLIST.md
+- Tags: release, checklist, launch, repo, usability
+
+---
+
 ## [LRN-20260320-028] best_practice
 
 **Logged**: 2026-03-20T08:10:00-07:00

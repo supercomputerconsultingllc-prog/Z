@@ -23,4 +23,6 @@ npm run cap:init:notes
 - `release/WINDOWS_IOS_PATH.md`
 - `release/CODEMAGIC_SETUP.md`
 - `release/APP_PUBLISHING_CHECKLIST.md`
+- `release/REPO_PUBLISH_CHECKLIST.md`
+- `release/LAUNCH_DAY_CHECKLIST.md`
 - `release/LAUNCH_PLAN.md`

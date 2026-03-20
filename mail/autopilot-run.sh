@@ -32,6 +32,10 @@ def build_plaintext_email(*paragraphs: str) -> str:
         cleaned.append(paragraph)
     return '\n\n'.join(cleaned)
 
+
+def compact_signoff(name: str) -> str:
+    return f"Best, {name}".strip()
+
 state_path = Path(os.environ['STATE_FILE'])
 watched_account = os.environ['WATCHED_ACCOUNT']
 
@@ -131,7 +135,7 @@ for row in rows:
         f"Hi {greeting_name},",
         "Thanks for reaching out. I'd be glad to learn more.",
         "Could you share a brief overview of the opportunity, including the scope and expected timeline? If it's shareable, the client or company name would be helpful as well. A budget range and location would also be useful if available.",
-        "Best,\nSupercomputer Consulting",
+        compact_signoff("Supercomputer Consulting"),
     )
 
     send = subprocess.run([

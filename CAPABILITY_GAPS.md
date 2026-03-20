@@ -25,6 +25,12 @@ These were feasible immediately inside the workspace.
    - Ready-to-use examples for asking for email, scheduling, research, and automation work
 4. `capabilities.json`
    - Machine-readable registry for future scripts and audits
+5. `scripts/audit_capabilities.py`
+   - Self-audit script for capability drift detection
+6. Basic outbound campaign skeleton
+   - contact CSV template
+   - draft generator
+   - approval-first workflow doc
 
 ## Good additions to add later, likely requiring more setup
 These are useful but may require credentials, external installs, or explicit user approval.

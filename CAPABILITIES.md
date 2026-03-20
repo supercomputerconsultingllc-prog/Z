@@ -81,3 +81,10 @@ These are available to use even if not copied into `workspace/skills`.
 - "Summarize this PDF from the inbox into a report."
 - "Spawn a coding sub-agent to investigate this bug."
 - "Show me the latest screenshot in chat."
+- "Audit your current capabilities and tell me what changed."
+- "Generate campaign drafts from the contact CSV, but do not send anything."
+
+## Local helper scripts added
+- `scripts/audit_capabilities.py` - compare workspace skills against `capabilities.json`
+- `mail/campaign_generate_drafts.py` - generate approval-first outbound drafts from CSV
+- `mail/campaign_pipeline.md` - lightweight campaign workflow

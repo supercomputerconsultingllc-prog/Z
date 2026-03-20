@@ -91,3 +91,26 @@ Maintain `CAPABILITIES.md`, `CAPABILITY_GAPS.md`, and a machine-readable `capabi
 - Tags: catalog, capability-audit, documentation, process
 
 ---
+
+## [LRN-20260320-005] best_practice
+
+**Logged**: 2026-03-20T07:33:00-07:00
+**Priority**: medium
+**Status**: pending
+**Area**: docs
+
+### Summary
+New helper scripts should be smoke-tested immediately, because formatting bugs often show up in first-run output.
+
+### Details
+After adding the outbound campaign draft generator, the first smoke test showed note text merging awkwardly with the following sentence. A quick test-run exposed and fixed it before the workflow was relied on.
+
+### Suggested Action
+Whenever adding a new script or automation helper, run it once with sample data and patch any output-quality issues immediately.
+
+### Metadata
+- Source: conversation
+- Related Files: mail/campaign_generate_drafts.py, mail/campaign_drafts.md
+- Tags: testing, smoke-test, formatting, automation
+
+---

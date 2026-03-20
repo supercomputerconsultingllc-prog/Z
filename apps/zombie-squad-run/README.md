@@ -7,22 +7,32 @@ A browser prototype for a zombie-themed runner shooter.
 - Tap a lane to shoot there.
 - Zombies can be shot to recruit more survivors.
 - Gun crates increase firepower.
+- Coins are earned from progress and clears.
 - Walls have strength values.
 - If a wall is still standing when you hit it, you lose that many squad members.
+- One revive can save a run, and more revives can be bought with coins.
+
+## Why it is better now
+- stronger progression loop
+- persistent coins and best score
+- simple upgrade economy
+- revive system for monetization-friendly retention
+- more believable mobile-casual structure
 
 ## Why this can monetize
 - strong simple loop
 - easy to skin and theme
-- can add revive offers, premium squads, weapon skins, map packs, and ad-supported retries
-- can be expanded into a mobile-friendly hypercasual or hybrid-casual game
+- revive offers, premium squads, weapon skins, map packs, and ad-supported retries fit naturally
+- can be expanded into a mobile-friendly hybrid-casual game
 
 ## Easy next upgrades
 - better VFX and sound
 - boss zombies
 - daily challenges
 - permanent unlock guns
-- revive system
 - team classes
+- stage themes and world map
+- missions and battle pass
 - iOS wrapper or engine port
 
 ## Run it

@@ -1,0 +1,11 @@
+node_modules/
+.DS_Store
+npm-debug.log*
+release/*.ipa
+release/*.zip
+*.mobileprovision
+*.p12
+*.key
+.env
+.env.local
+.env.production

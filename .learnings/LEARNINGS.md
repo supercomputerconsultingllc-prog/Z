@@ -736,6 +736,29 @@ Add a reusable store-asset template pack after the core release workflow is in p
 
 ---
 
+## [LRN-20260320-036] best_practice
+
+**Logged**: 2026-03-20T10:47:00-07:00
+**Priority**: medium
+**Status**: pending
+**Area**: docs
+
+### Summary
+A shipping path gets more practical when game retention, release validation, and store submission assets are improved together instead of in isolation.
+
+### Details
+The most useful next step was not a single feature. It was a combined pass across gameplay retention hooks, release-scaffold validation, and submission-ready asset templates. That created a more complete path from prototype to launch.
+
+### Suggested Action
+When preparing a product for release, bundle gameplay improvements, packaging reliability, and listing assets into the same iteration when possible.
+
+### Metadata
+- Source: conversation
+- Related Files: apps/zombie-squad-run/index.html, apps/zombie-squad-run-ios-webwrap/tools/validate-release.js, apps/zombie-squad-run-ios-webwrap/release/store-assets/app-store-metadata.json
+- Tags: release, gameplay, validation, store-assets, packaging
+
+---
+
 ## [LRN-20260320-028] best_practice
 
 **Logged**: 2026-03-20T08:10:00-07:00

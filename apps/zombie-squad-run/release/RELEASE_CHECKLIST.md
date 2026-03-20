@@ -1,8 +1,8 @@
 # Zombie Squad Run Release Checklist
 
 ## Product readiness
-- [ ] title screen added
-- [ ] settings/audio toggle added
+- [x] title screen added
+- [x] settings/audio toggle added
 - [ ] responsive mobile play tested
 - [ ] touch controls feel good on phone screens
 - [ ] restart and revive flow polished

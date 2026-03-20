@@ -14,6 +14,7 @@ A browser prototype for a zombie-themed runner shooter.
 
 ## Why it is better now
 - stronger progression loop
+- title screen and basic settings controls
 - persistent coins and best score
 - simple upgrade economy
 - revive system for monetization-friendly retention

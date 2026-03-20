@@ -144,6 +144,8 @@
           <p>Keyboard: <strong>1</strong>, <strong>2</strong>, <strong>3</strong> shoot left, center, right.</p>
           <button id="restartBtn">Restart Run</button>
           <button class="secondary" id="pauseBtn">Pause</button>
+          <button class="secondary" id="soundBtn">Sound: On</button>
+          <button class="secondary" id="titleBtn">Title Screen</button>
         </div>
       </aside>
     </section>
@@ -162,6 +164,8 @@
     const reviveStat = document.getElementById('reviveStat');
     const restartBtn = document.getElementById('restartBtn');
     const pauseBtn = document.getElementById('pauseBtn');
+    const soundBtn = document.getElementById('soundBtn');
+    const titleBtn = document.getElementById('titleBtn');
     const buyGunBtn = document.getElementById('buyGunBtn');
     const buySquadBtn = document.getElementById('buySquadBtn');
     const buyReviveBtn = document.getElementById('buyReviveBtn');
@@ -172,20 +176,37 @@
     let state;
     let best = Number(localStorage.getItem('zombie-squad-run-best') || 0);
     let bankCoins = Number(localStorage.getItem('zombie-squad-run-coins') || 0);
+    let soundOn = localStorage.getItem('zombie-squad-run-sound') !== 'off';
     bestStat.textContent = best;
+    soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
 
     function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
     function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-    function saveMeta(){ localStorage.setItem('zombie-squad-run-best', String(best)); localStorage.setItem('zombie-squad-run-coins', String(bankCoins)); }
+    function saveMeta(){
+      localStorage.setItem('zombie-squad-run-best', String(best));
+      localStorage.setItem('zombie-squad-run-coins', String(bankCoins));
+      localStorage.setItem('zombie-squad-run-sound', soundOn ? 'on' : 'off');
+    }
+
+    function showTitleScreen() {
+      state.paused = true;
+      overlay.innerHTML = `
+        <div class="message">
+          <h1>Zombie Squad Run</h1>
+          <p>Run with your squad, shoot the right lane, smash walls before impact, and spend coins to upgrade your survival chances.</p>
+          <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best}</p>
+          <button onclick="window.startZombieRun()">Start Run</button>
+        </div>`;
+    }
 
     function resetGame() {
       state = {
         squad: 8, firepower: 1, distance: 0, wave: 1, speed: 190,
-        bullets: [], objects: [], spawnTimer: 0, running: true, paused: false, gameOver: false,
+        bullets: [], objects: [], spawnTimer: 0, running: true, paused: true, gameOver: false,
         lastTime: performance.now(), coins: bankCoins, revives: 1, usedRevive: false, distanceCoinsTick: 0
       };
-      overlay.innerHTML = '';
       syncHud();
+      showTitleScreen();
     }
 
     function syncHud() {
@@ -376,7 +397,15 @@
     buyReviveBtn.addEventListener('click', () => { if (state.coins >= 15) { state.coins -= 15; state.revives += 1; bankCoins = state.coins; saveMeta(); syncHud(); } });
 
     window.closeOverlayAndResume = function() { overlay.innerHTML=''; state.paused=false; };
+    window.startZombieRun = function() { overlay.innerHTML=''; state.paused=false; state.running=true; state.gameOver=false; };
     window.restartZombieRun = function() { bankCoins = state.coins; saveMeta(); resetGame(); pauseBtn.textContent='Pause'; };
+
+    soundBtn.addEventListener('click', () => {
+      soundOn = !soundOn;
+      soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
+      saveMeta();
+    });
+    titleBtn.addEventListener('click', () => showTitleScreen());
 
     resetGame();
     requestAnimationFrame(tick);

@@ -1,0 +1,18 @@
+# Cloud Build Environment Template
+
+Use these values in Codemagic or your chosen cloud iOS build service.
+
+## Required identifiers
+- `APP_ID` = com.yourcompany.zombiesquadrun
+- `APP_NAME` = Zombie Squad Run
+- `APPLE_TEAM_ID` = your Apple Developer team ID
+
+## App Store Connect
+- `APP_STORE_CONNECT_ISSUER_ID`
+- `APP_STORE_CONNECT_KEY_ID`
+- `APP_STORE_CONNECT_PRIVATE_KEY_BASE64`
+
+## Notes
+- Do not commit real secrets to git.
+- Store signing credentials only in the cloud build provider.
+- Keep bundle identifier and App Store Connect app record aligned.

@@ -30,6 +30,8 @@ You said the constraint is Windows only. Native iOS builds still require Apple t
 - `release/assets-checklist/` - icon and screenshot planning pack
 - `release/store-assets/` - listing copy, icon brief, and page templates
 - `release/LAUNCH_PLAN.md` - paid vs free launch recommendation
+- `release/CLOUD_BUILD_ENV_TEMPLATE.md` - cloud build environment variable template
+- `release/FINAL_SUBMISSION_BUNDLE.md` - final handoff/submission summary
 - `release/REPO_PUBLISH_CHECKLIST.md` - repo-ready publishing checklist
 - `release/LAUNCH_DAY_CHECKLIST.md` - launch-day execution checklist
 - `release/store-assets/` - store listing asset template pack

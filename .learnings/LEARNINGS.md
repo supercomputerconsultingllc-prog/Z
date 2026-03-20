@@ -874,6 +874,29 @@ When store-prep docs already exist, add ready-to-paste field content and checkli
 
 ---
 
+## [LRN-20260320-042] best_practice
+
+**Logged**: 2026-03-20T11:59:00-07:00
+**Priority**: low
+**Status**: pending
+**Area**: docs
+
+### Summary
+Late-stage release scaffolds benefit from an explicit cloud-build env template and a final submission bundle summary.
+
+### Details
+Once the Windows-to-iOS path included quickstarts, validation, store assets, and metadata drafts, the next useful clarity step was to document the exact cloud environment variables and the final bundle of materials needed right before submission.
+
+### Suggested Action
+Add environment and final-submission summary docs once the release flow is mostly assembled.
+
+### Metadata
+- Source: conversation
+- Related Files: apps/zombie-squad-run-ios-webwrap/release/CLOUD_BUILD_ENV_TEMPLATE.md, apps/zombie-squad-run-ios-webwrap/release/FINAL_SUBMISSION_BUNDLE.md
+- Tags: cloud-build, submission, release, docs, usability
+
+---
+
 ## [LRN-20260320-028] best_practice
 
 **Logged**: 2026-03-20T08:10:00-07:00

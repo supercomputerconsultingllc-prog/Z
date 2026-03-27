@@ -38,3 +38,6 @@ If you send over a bit more detail on the current environment, the main challeng
 
 Best,
 Supercomputer Consulting
+
+## Formatting rule
+When sending replies, keep paragraphs as normal flowing text. Do not hard-wrap lines inside paragraphs, and do not introduce manual page-break-like line breaks for mobile clients.

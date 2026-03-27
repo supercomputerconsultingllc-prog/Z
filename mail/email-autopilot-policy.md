@@ -197,8 +197,8 @@ Use a dual model:
 
 This reduces noise while preserving signal.
 
-## 12) Fallback behavior every 2 minutes
-Every 2 minutes:
+## 12) Fallback behavior every 5 minutes
+Every 5 minutes:
 - check recent unread/new mail
 - catch up anything the watcher missed
 - apply sender tiers

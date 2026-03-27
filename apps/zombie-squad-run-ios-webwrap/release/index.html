@@ -257,6 +257,107 @@
         </div>`;
     }
 
+    function applyScenePreset(scene) {
+      overlay.innerHTML = '';
+      state.running = true;
+      state.gameOver = false;
+      state.paused = true;
+      state.bullets = [];
+      state.objects = [];
+      state.distance = 0;
+      state.wave = 1;
+      state.speed = 190;
+      state.squad = 8;
+      state.firepower = 1;
+      state.coins = 42;
+      state.revives = 1;
+      state.usedRevive = false;
+      missionIndex = 0;
+      missionProgress = 1;
+
+      if (scene === 'title') {
+        bankCoins = 42;
+        best = 312;
+        syncHud();
+        showTitleScreen();
+        return;
+      }
+
+      if (scene === 'action') {
+        state.paused = false;
+        state.distance = 228;
+        state.wave = 3;
+        state.squad = 11;
+        state.firepower = 2;
+        state.objects = [
+          { type:'zombie', lane:0, x:LANES[0], y:180, hp:2, reward:2, size:36 },
+          { type:'zombie', lane:1, x:LANES[1], y:260, hp:3, reward:3, size:36 },
+          { type:'coin', lane:2, x:LANES[2], y:230, hp:1, reward:4, size:24 },
+          { type:'crate', lane:1, x:LANES[1], y:110, hp:1, reward:1, size:32 }
+        ];
+        state.bullets = [
+          { x: LANES[1] - 8, y: 470, speed: 560 },
+          { x: LANES[1] + 8, y: 420, speed: 560 },
+          { x: LANES[0], y: 520, speed: 560 }
+        ];
+      } else if (scene === 'wall') {
+        state.paused = false;
+        state.distance = 386;
+        state.wave = 5;
+        state.squad = 14;
+        state.firepower = 3;
+        state.objects = [
+          { type:'wall', lane:1, x:LANES[1], y:220, hp:4, reward:0, size:58 },
+          { type:'zombie', lane:0, x:LANES[0], y:150, hp:2, reward:2, size:36 },
+          { type:'zombie', lane:2, x:LANES[2], y:170, hp:2, reward:2, size:36 }
+        ];
+        state.bullets = [
+          { x: LANES[1] - 12, y: 470, speed: 560 },
+          { x: LANES[1], y: 430, speed: 560 },
+          { x: LANES[1] + 12, y: 390, speed: 560 }
+        ];
+      } else if (scene === 'shop') {
+        state.distance = 144;
+        state.wave = 2;
+        state.squad = 10;
+        state.firepower = 2;
+        state.coins = 63;
+        overlay.innerHTML = `
+          <div class="message">
+            <h2>Upgrade Window</h2>
+            <p>You have enough coins to buy firepower, squad size, or a safety revive before the next push.</p>
+            <button onclick="window.closeOverlayAndResume()">Back To Run</button>
+          </div>`;
+      } else if (scene === 'revive') {
+        state.distance = 542;
+        state.wave = 6;
+        state.squad = 4;
+        state.firepower = 3;
+        state.coins = 88;
+        state.revives = 0;
+        state.usedRevive = true;
+        state.objects = [
+          { type:'zombie', lane:1, x:LANES[1], y:140, hp:3, reward:3, size:36 },
+          { type:'wall', lane:2, x:LANES[2], y:250, hp:3, reward:0, size:58 }
+        ];
+        overlay.innerHTML = `
+          <div class="message">
+            <h2>Squad Revived</h2>
+            <p>Your team barely made it. You spent one revive and returned with 4 squad members.</p>
+            <button onclick="window.closeOverlayAndResume()">Keep Running</button>
+          </div>`;
+      } else {
+        showTitleScreen();
+        return;
+      }
+
+      syncHud();
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const captureMode = params.get('capture') === '1';
+    const sceneMode = params.get('scene');
+
     function resetGame() {
       state = {
         squad: 8, firepower: 1, distance: 0, wave: 1, speed: 190,
@@ -265,7 +366,11 @@
       };
       syncHud();
       syncMissionHud();
-      showTitleScreen();
+      if (sceneMode) {
+        applyScenePreset(sceneMode);
+      } else {
+        showTitleScreen();
+      }
     }
 
     function syncHud() {

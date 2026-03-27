@@ -11,3 +11,5 @@ IDENTITY.md
 # Skill install metadata and local learning logs
 **/.clawhub/
 skills/*/.learnings/
+skills/m365-pnp-cli/
+skills/self-improving-agent/

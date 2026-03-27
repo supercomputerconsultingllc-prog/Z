@@ -1,3 +1,9 @@
 __pycache__/
 **/__pycache__/
 *.pyc
+
+# Local OpenClaw workspace state
+.openclaw/
+memory/
+BOOTSTRAP.md
+IDENTITY.md

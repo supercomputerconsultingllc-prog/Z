@@ -7,3 +7,7 @@ __pycache__/
 memory/
 BOOTSTRAP.md
 IDENTITY.md
+
+# Skill install metadata and local learning logs
+**/.clawhub/
+skills/*/.learnings/

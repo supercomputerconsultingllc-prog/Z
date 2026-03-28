@@ -346,7 +346,7 @@
 <body>
   <main class="app">
     <section class="topbar">
-      <div class="stat"><span class="label">Squad</span><span class="value" id="squadStat">8</span></div>
+      <div class="stat"><span class="label">Army</span><span class="value" id="squadStat">8</span></div>
       <div class="stat"><span class="label">Firepower</span><span class="value" id="gunStat">1</span><span class="label" id="weaponNameStat" style="margin-top:6px;display:block;color:#cbd5e1;letter-spacing:.04em;text-transform:none;">Rifle</span></div>
       <div class="stat"><span class="label">Distance</span><span class="value" id="distanceStat">0</span></div>
       <div class="stat"><span class="label">Wave</span><span class="value" id="waveStat">1</span></div>
@@ -416,17 +416,17 @@
               <span class="action-label">Settings</span>
               <span class="action-sub">Volume, brightness, and controls</span>
             </button>
-            <button class="action-btn money" id="youtubeBtn" aria-label="Open YouTube reward">
+            <button class="action-btn money" id="youtubeBtn" aria-label="Open channel bonus">
               <span class="action-icon">▶️</span>
-              <span class="action-label">YouTube</span>
-              <span class="action-sub">Open channel and claim the visit reward</span>
+              <span class="action-label">Channel Bonus</span>
+              <span class="action-sub">Open the channel bonus page</span>
             </button>
           </div>
         </div>
         <div class="card">
-          <h3>Monetization hooks</h3>
-          <span class="pill">Rewarded revive</span>
-          <span class="pill">Premium squads</span>
+          <h3>Run Features</h3>
+          <span class="pill">Extra revive</span>
+          <span class="pill">Avatar unlocks</span>
           <span class="pill">Weapon skins</span>
           <span class="pill">Season levels</span>
           <span class="pill">Ad-free unlock</span>
@@ -449,7 +449,7 @@
       <button class="secondary touch-btn" id="laneRightBtn">➡️ Shoot Right</button>
       <button class="touch-btn special" id="minigunBtn" aria-label="Activate minigun" type="button">🔥 Minigun<span class="tiny-status battle-side-status">Tap when ready</span></button>
       <button class="touch-btn utility" id="battleSettingsBtn" aria-label="Open settings" type="button">⚙️ Settings<span class="tiny-status">Brightness, volume, controls</span></button>
-      <button class="touch-btn utility" id="battleYoutubeBtn" aria-label="Open YouTube channel" type="button">▶️ YouTube<span class="tiny-status">Open @ColtRT-e5n2h</span></button>
+      <button class="touch-btn utility" id="battleYoutubeBtn" aria-label="Open bonus page" type="button">▶️ Bonus<span class="tiny-status">Open channel page</span></button>
     </section>
   </main>
 
@@ -2239,18 +2239,6 @@
         visibleSoldiers.push({ x, y, depth, scale, index: drawIndex++ });
       }
 
-      const bannerGradient = ctx.createLinearGradient(0, 0, 220, 0);
-      bannerGradient.addColorStop(0, 'rgba(15,23,42,.96)');
-      bannerGradient.addColorStop(1, 'rgba(30,64,175,.78)');
-      ctx.fillStyle = bannerGradient;
-      ctx.fillRect(18, 108, 210, 50);
-      ctx.strokeStyle = 'rgba(147,197,253,.35)';
-      ctx.strokeRect(18, 108, 210, 50);
-      ctx.fillStyle = '#eff6ff';
-      ctx.font = 'bold 22px system-ui';
-      ctx.textAlign = 'left';
-      ctx.fillText(`Soldiers ${state.squad}`, 32, 141);
-
       if (perfCrowd) {
         const cacheKey = `${Math.round(crowdRadiusX)}:${Math.round(crowdRadiusY)}:${visibleSoldiers.length}:${Math.floor(total / 8)}`;
         if (!crowdCache || crowdCache.key !== cacheKey) {
@@ -2275,11 +2263,6 @@
         }
       }
 
-      ctx.fillStyle = 'rgba(15,23,42,.88)';
-      ctx.fillRect(18, 162, 320, 36);
-      ctx.fillStyle = '#cbd5e1';
-      ctx.font = 'bold 16px system-ui';
-      ctx.fillText(`Squad ${total} • Circular mass • Bottom anchored`, 32, 185);
     }
 
     function drawObjects() {

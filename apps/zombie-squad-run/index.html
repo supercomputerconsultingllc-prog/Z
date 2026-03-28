@@ -1721,17 +1721,22 @@
 
       const skinTone = depth % 4 === 0 ? '#f1c27d' : depth % 4 === 1 ? '#e0ac69' : depth % 4 === 2 ? '#c68642' : '#8d5524';
       addRimLight(x, y - 4 * scale, 24 * scale, 'rgba(96,165,250,ALPHA)', 0.2);
-      const faceGrad = ctx.createRadialGradient(x - head * 0.36, y - 12 * scale, 1, x, y - 9.5 * scale, head * 1.15);
-      faceGrad.addColorStop(0, '#fff7ed');
-      faceGrad.addColorStop(0.58, skinTone);
+      const faceGrad = ctx.createRadialGradient(x - head * 0.4, y - 12.5 * scale, 1, x, y - 9.5 * scale, head * 1.22);
+      faceGrad.addColorStop(0, '#fffaf4');
+      faceGrad.addColorStop(0.45, skinTone);
       faceGrad.addColorStop(1, '#7c4a27');
       ctx.fillStyle = faceGrad;
       ctx.beginPath();
       ctx.arc(x, y - 10 * scale, head, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.fillStyle = 'rgba(255,255,255,0.22)';
       ctx.beginPath();
       ctx.ellipse(x - head * 0.25, y - 12 * scale, head * 0.24, head * 0.4, -0.45, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(x - 2.1 * scale, y - 10.2 * scale, 0.7 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 1.7 * scale, y - 10.2 * scale, 0.7 * scale, 0, Math.PI * 2);
       ctx.fill();
 
       const palette = avatarPalette(color);
@@ -1799,6 +1804,9 @@
       ctx.fillRect(x + bodyW * 0.05, y + 5.1 * scale, gunW * 0.26, gunH * 0.82);
       ctx.fillStyle = 'rgba(255,255,255,0.18)';
       ctx.fillRect(x + bodyW * 0.24, y + 4.1 * scale, gunW * 0.5, gunH * 0.18);
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = Math.max(0.8, 1.1 * scale);
+      ctx.strokeRect(x + bodyW * 0.16, y + 3.6 * scale, gunW * 1.18, gunH * 1.15);
 
       const legGrad = ctx.createLinearGradient(x, y + bodyH - 2 * scale, x, y + bodyH + legH);
       legGrad.addColorStop(0, '#334155');
@@ -1831,11 +1839,11 @@
       ctx.fill();
       const skin = variant === 'boss' ? '#6d28d9' : variant === 'shield' ? '#64748b' : variant === 'runner' ? '#84cc16' : '#65a30d';
       const darkSkin = variant === 'boss' ? '#3b0764' : variant === 'shield' ? '#334155' : variant === 'runner' ? '#4d7c0f' : '#3f6212';
-      addRimLight(x, y - 1 * scale, variant === 'boss' ? 42 * scale : 26 * scale, variant === 'boss' ? 'rgba(239,68,68,ALPHA)' : 'rgba(163,230,53,ALPHA)', variant === 'boss' ? 0.32 : 0.2);
+      addRimLight(x, y - 1 * scale, variant === 'boss' ? 48 * scale : variant === 'shield' ? 30 * scale : 28 * scale, variant === 'boss' ? 'rgba(239,68,68,ALPHA)' : variant === 'shield' ? 'rgba(125,211,252,ALPHA)' : 'rgba(163,230,53,ALPHA)', variant === 'boss' ? 0.34 : 0.24);
 
-      const skullGrad = ctx.createRadialGradient(x - head * 0.45, y - 13 * scale, 1, x, y - 10 * scale, head * 1.18);
-      skullGrad.addColorStop(0, variant === 'boss' ? '#e9d5ff' : '#ecfccb');
-      skullGrad.addColorStop(0.58, skin);
+      const skullGrad = ctx.createRadialGradient(x - head * 0.48, y - 13.5 * scale, 1, x, y - 10 * scale, head * 1.24);
+      skullGrad.addColorStop(0, variant === 'boss' ? '#f5d0fe' : variant === 'shield' ? '#e0f2fe' : '#ecfccb');
+      skullGrad.addColorStop(0.46, skin);
       skullGrad.addColorStop(1, darkSkin);
       ctx.fillStyle = skullGrad;
       ctx.beginPath();
@@ -1881,6 +1889,11 @@
       ctx.arc(x - 3.2 * scale, y - 11.2 * scale, 2 * scale, 0, Math.PI * 2);
       ctx.arc(x + 3.2 * scale, y - 11.2 * scale, 2 * scale, 0, Math.PI * 2);
       ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.32)';
+      ctx.beginPath();
+      ctx.arc(x - 3.7 * scale, y - 11.8 * scale, 0.55 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 2.7 * scale, y - 11.8 * scale, 0.55 * scale, 0, Math.PI * 2);
+      ctx.fill();
       ctx.fillStyle = '#7f1d1d';
       ctx.beginPath();
       ctx.arc(x - 3.2 * scale, y - 11.2 * scale, 0.9 * scale, 0, Math.PI * 2);
@@ -1895,6 +1908,9 @@
       ctx.lineTo(x + 2.2 * scale, y - 0.8 * scale);
       ctx.lineTo(x + 5 * scale, y - 4.2 * scale);
       ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = Math.max(0.8, 1 * scale);
+      ctx.strokeRect(x - bodyW / 2, y - 1 * scale, bodyW, bodyH);
 
       ctx.fillStyle = darkSkin;
       ctx.beginPath();
@@ -1910,14 +1926,14 @@
     }
 
     function drawZombiePack(x, y, count = 3, scale = 1) {
-      const total = Math.max(2, Math.min(7, Math.ceil(count)));
+      const total = Math.max(3, Math.min(12, Math.ceil(count + 2)));
       for (let i = 0; i < total; i++) {
-        const row = Math.floor(i / 3);
-        const col = i % 3;
-        const ox = (col - 1) * 12 * scale + (row % 2 ? 6 * scale : 0);
-        const oy = row * 14 * scale;
-        const memberScale = scale * (0.74 - row * 0.08 - i * 0.015);
-        drawZombie(x + ox, y + oy, Math.max(0.46, memberScale), i + row, 'shield');
+        const row = Math.floor(i / 4);
+        const col = i % 4;
+        const ox = (col - 1.5) * 11 * scale + (row % 2 ? 5 * scale : 0);
+        const oy = row * 12 * scale;
+        const memberScale = scale * (0.8 - row * 0.07 - i * 0.01);
+        drawZombie(x + ox, y + oy, Math.max(0.5, memberScale), i + row, i % 5 === 0 ? 'runner' : 'shield');
       }
     }
 
@@ -2079,16 +2095,17 @@
     function drawObjects() {
       for (const obj of state.objects) {
         if (obj.type === 'zombie') {
-          drawObjectGroundShadow(obj, 14, 5);
-          drawZombie(obj.x, obj.y, 1, 1, 'zombie');
+          drawObjectGroundShadow(obj, 15, 5.5);
+          drawZombie(obj.x, obj.y, 1.04, 1, 'zombie');
           ctx.fillStyle='#dcfce7'; ctx.font='bold 16px system-ui'; ctx.textAlign='center'; ctx.fillText(`+${obj.reward}`,obj.x,obj.y-42);
         } else if (obj.type === 'runner') {
-          drawObjectGroundShadow(obj, 12, 4.2, 0.24);
-          drawZombie(obj.x, obj.y, 0.88, 2, 'runner');
+          drawObjectGroundShadow(obj, 13, 4.6, 0.24);
+          drawZombie(obj.x, obj.y, 0.94, 2, 'runner');
           ctx.fillStyle='#ffedd5'; ctx.font='bold 15px system-ui'; ctx.textAlign='center'; ctx.fillText('FAST',obj.x,obj.y-38);
         } else if (obj.type === 'shield') {
-          drawObjectGroundShadow(obj, 22, 7, 0.3);
-          drawZombiePack(obj.x, obj.y - 6, obj.hp, 1);
+          drawObjectGroundShadow(obj, 26, 8, 0.34);
+          addRimLight(obj.x, obj.y - 4, 36, 'rgba(125,211,252,ALPHA)', 0.18);
+          drawZombiePack(obj.x, obj.y - 6, obj.hp, 1.06);
         } else if (obj.type === 'boss') {
           drawObjectGroundShadow(obj, 28, 9, 0.34);
           const bossPulse = 0.72 + Math.sin(performance.now() * 0.006) * 0.18;

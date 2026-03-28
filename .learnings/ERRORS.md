@@ -26,3 +26,30 @@ Throttle minigun burst generation, suppress normal per-shot vibration/audio for 
 - Related Files: apps/zombie-squad-run/index.html
 
 ---
+## [ERR-20260327-002] validation-command-python-missing
+
+**Logged**: 2026-03-28T03:44:00Z
+**Priority**: low
+**Status**: pending
+**Area**: infra
+
+### Summary
+Tried to use python for a quick HTML script extraction check, but python was not installed in this environment.
+
+### Error
+```
+/bin/bash: line 1: python: command not found
+```
+
+### Context
+- Operation attempted: syntax validation of embedded script in apps/zombie-squad-run/index.html
+- Environment detail: Node available, python missing
+
+### Suggested Fix
+Prefer node-only extraction/validation commands in this workspace.
+
+### Metadata
+- Reproducible: yes
+- Related Files: apps/zombie-squad-run/index.html
+
+---

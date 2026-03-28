@@ -57,6 +57,34 @@
     .content { display: grid; grid-template-columns: 1fr 320px; }
     .canvas-wrap { position: relative; min-height: 680px; background: linear-gradient(180deg, #111827 0%, #0f172a 50%, #1e293b 100%); }
     canvas { width: 100%; height: 680px; display: block; touch-action: manipulation; cursor: crosshair; }
+    .battle-side-ui {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 3;
+    }
+    .battle-side-btn {
+      width: 86px;
+      min-height: 86px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(180deg, rgba(239,68,68,.96), rgba(127,29,29,.98));
+      color: white;
+      box-shadow: 0 18px 36px rgba(0,0,0,.32);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .battle-side-btn .big { font-size: 28px; line-height: 1; }
     .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
     .message {
       background: rgba(15, 23, 42, 0.9);
@@ -263,6 +291,12 @@
     <section class="content">
       <div class="canvas-wrap">
         <canvas id="game" width="800" height="680"></canvas>
+        <div class="battle-side-ui">
+          <button class="battle-side-btn" id="minigunBtn" aria-label="Activate minigun">
+            <span class="big">🔥</span>
+            <span>Minigun</span>
+          </button>
+        </div>
         <div class="overlay" id="overlay"></div>
       </div>
 
@@ -351,6 +385,7 @@
     const buyGunBtn = document.getElementById('buyGunBtn');
     const buySquadBtn = document.getElementById('buySquadBtn');
     const buyReviveBtn = document.getElementById('buyReviveBtn');
+    const minigunBtn = document.getElementById('minigunBtn');
     const moneyBtn = document.getElementById('moneyBtn');
     const enhanceBtn = document.getElementById('enhanceBtn');
     const settingsBtn = document.getElementById('settingsBtn');
@@ -583,6 +618,8 @@
       state.paused = true;
       state.bullets = [];
       state.objects = [];
+      state.minigunCharge = 100;
+      state.minigunActiveUntil = 0;
       state.distance = 0;
       state.wave = 1;
       state.speed = 190;
@@ -609,8 +646,8 @@
         state.squad = 11;
         state.firepower = 2;
         state.objects = [
-          { type:'zombie', lane:0, x:LANES[0], y:180, hp:2, reward:2, size:36 },
-          { type:'zombie', lane:1, x:LANES[1], y:260, hp:3, reward:3, size:36 },
+          { type:'zombie', lane:0, x:LANES[0], y:180, hp:4, reward:2, size:36 },
+          { type:'zombie', lane:1, x:LANES[1], y:260, hp:5, reward:3, size:36 },
           { type:'coin', lane:2, x:LANES[2], y:230, hp:1, reward:4, size:24 },
           { type:'crate', lane:1, x:LANES[1], y:110, hp:1, reward:1, size:32 }
         ];
@@ -627,8 +664,8 @@
         state.firepower = 3;
         state.objects = [
           { type:'wall', lane:1, x:LANES[1], y:220, hp:4, reward:0, size:58 },
-          { type:'zombie', lane:0, x:LANES[0], y:150, hp:2, reward:2, size:36 },
-          { type:'zombie', lane:2, x:LANES[2], y:170, hp:2, reward:2, size:36 }
+          { type:'zombie', lane:0, x:LANES[0], y:150, hp:4, reward:2, size:36 },
+          { type:'zombie', lane:2, x:LANES[2], y:170, hp:4, reward:2, size:36 }
         ];
         state.bullets = [
           { x: LANES[1] - 12, y: 470, speed: 560 },
@@ -656,7 +693,7 @@
         state.revives = 0;
         state.usedRevive = true;
         state.objects = [
-          { type:'zombie', lane:1, x:LANES[1], y:140, hp:3, reward:3, size:36 },
+          { type:'zombie', lane:1, x:LANES[1], y:140, hp:5, reward:3, size:36 },
           { type:'wall', lane:2, x:LANES[2], y:250, hp:3, reward:0, size:58 }
         ];
         overlay.innerHTML = `
@@ -681,7 +718,8 @@
       state = {
         squad: 8, firepower: 1, distance: 0, wave: 1, speed: 190,
         bullets: [], objects: [], spawnTimer: 0, running: true, paused: true, gameOver: false,
-        lastTime: performance.now(), coins: bankCoins, revives: 1, usedRevive: false, distanceCoinsTick: 0
+        lastTime: performance.now(), coins: bankCoins, revives: 1, usedRevive: false, distanceCoinsTick: 0,
+        minigunCharge: 100, minigunActiveUntil: 0
       };
       syncHud();
       syncMissionHud();
@@ -718,7 +756,7 @@
       const lane = rand(0, 2);
       const roll = Math.random();
       let obj;
-      if (roll < 0.42) obj = { type:'zombie', lane, x:LANES[lane], y:-60, hp:rand(1,3), reward:rand(1,3), size:36 };
+      if (roll < 0.42) obj = { type:'zombie', lane, x:LANES[lane], y:-60, hp:rand(3, 5 + Math.floor(state.wave / 2)), reward:rand(1,3), size:36 };
       else if (roll < 0.70) obj = { type:'wall', lane, x:LANES[lane], y:-80, hp:rand(2, Math.max(4, 2 + Math.floor(state.wave/2))), reward:0, size:58 };
       else if (roll < 0.88) obj = { type:'crate', lane, x:LANES[lane], y:-50, hp:1, reward:1, size:32 };
       else obj = { type:'coin', lane, x:LANES[lane], y:-40, hp:1, reward:rand(2,5), size:24 };
@@ -730,6 +768,12 @@
       state.distance += dt * (state.speed / 12);
       state.wave = 1 + Math.floor(state.distance / 180);
       state.speed = 190 + state.wave * 8;
+      state.minigunCharge = Math.min(100, state.minigunCharge + dt * 8);
+      if (state.minigunActiveUntil > performance.now()) {
+        for (const laneX of LANES) {
+          state.bullets.push({ x: laneX + rand(-10, 10), y: 610, speed: 720 });
+        }
+      }
       const distanceCoins = Math.floor(state.distance / 100);
       if (distanceCoins > state.distanceCoinsTick) { addCoins(distanceCoins - state.distanceCoinsTick); state.distanceCoinsTick = distanceCoins; }
       state.spawnTimer -= dt;
@@ -823,11 +867,24 @@
     }
 
     function drawSquad() {
-      const count = Math.min(state.squad, 12);
-      for (let i=0;i<count;i++) {
-        const lane = i%3; const row = Math.floor(i/3);
-        const x = LANES[lane] + (lane===1?0:(lane===0?-10:10)); const y = 600 + row*18;
+      const maxVisibleRows = 22;
+      const maxVisibleSoldiers = maxVisibleRows * 3;
+      const visibleCount = Math.min(state.squad, maxVisibleSoldiers);
+      for (let i=0;i<visibleCount;i++) {
+        const lane = i % 3;
+        const row = Math.floor(i / 3);
+        const laneOffset = lane === 1 ? 0 : (lane === 0 ? -10 : 10);
+        const x = LANES[lane] + laneOffset;
+        const y = 620 - row * 18;
         drawPerson(x,y,'#60a5fa');
+      }
+      if (state.squad > visibleCount) {
+        ctx.fillStyle = 'rgba(15,23,42,.88)';
+        ctx.fillRect(20, 112, 170, 42);
+        ctx.fillStyle = '#bfdbfe';
+        ctx.font = 'bold 20px system-ui';
+        ctx.textAlign = 'left';
+        ctx.fillText(`Reserve +${state.squad - visibleCount}`, 32, 139);
       }
     }
 
@@ -859,6 +916,9 @@
       ctx.fillStyle='rgba(15,23,42,.85)'; ctx.fillRect(20,20,360,84);
       ctx.fillStyle='#e5e7eb'; ctx.font='bold 24px system-ui'; ctx.textAlign='left'; ctx.fillText('Zombie Squad Run',36,52);
       ctx.fillStyle='#94a3b8'; ctx.font='16px system-ui'; ctx.fillText('Shoot zombies and crates. Break walls. Stack your squad.',36,80);
+      ctx.fillStyle='rgba(15,23,42,.82)'; ctx.fillRect(canvas.width - 170, 20, 140, 58);
+      ctx.fillStyle='#fecaca'; ctx.font='bold 14px system-ui'; ctx.fillText('MINIGUN', canvas.width - 154, 44);
+      ctx.fillStyle='#fff'; ctx.font='bold 24px system-ui'; ctx.fillText(`${Math.floor(state.minigunCharge)}%`, canvas.width - 154, 68);
     }
 
     function render() {
@@ -878,6 +938,11 @@
     window.addEventListener('keydown', e => { if (e.key==='1') fireAtLane(0); if (e.key==='2') fireAtLane(1); if (e.key==='3') fireAtLane(2); });
     restartBtn.addEventListener('click', () => window.restartZombieRun());
     pauseBtn.addEventListener('click', () => { state.paused=!state.paused; pauseBtn.textContent=state.paused?'Resume':'Pause'; });
+    minigunBtn.addEventListener('click', () => {
+      if (state.paused || state.gameOver || state.minigunCharge < 100) return;
+      state.minigunCharge = 0;
+      state.minigunActiveUntil = performance.now() + 2200;
+    });
     moneyBtn.addEventListener('click', openMoneyPanel);
     enhanceBtn.addEventListener('click', openEnhancementPanel);
     settingsBtn.addEventListener('click', openSettingsPanel);

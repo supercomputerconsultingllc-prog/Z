@@ -131,6 +131,20 @@
       display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
       background: rgba(34,197,94,.12); color: #86efac; margin-right: 6px; margin-bottom: 6px;
     }
+    .avatar-card {
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255,255,255,.02);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    }
+    .avatar-preview {
+      height: 64px;
+      border-radius: 12px;
+      margin: 10px 0 8px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    }
     .shop-btn { width: auto; margin: 6px 6px 0 0; padding: 12px 16px; font-size: 14px; min-height: 44px; }
     .action-grid {
       display: grid;
@@ -811,31 +825,31 @@
 
     const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@ColtRT-e5n2h';
     const AVATARS = [
-      { id: 'default', name: 'Default Trooper', cost: 0, note: 'Classic blue squad look.', colors: ['#bfdbfe', '#60a5fa', '#1d4ed8'] },
-      { id: 'ranger', name: 'Ranger Helmet', cost: 2, note: 'Forest green field gear.', colors: ['#bbf7d0', '#4ade80', '#166534'] },
-      { id: 'commander', name: 'Blue Commander', cost: 4, note: 'Sharper blue command trim.', colors: ['#dbeafe', '#60a5fa', '#1e40af'] },
-      { id: 'gold', name: 'Gold Minigun Hero', cost: 8, note: 'Gold armor for elite runs.', colors: ['#fde68a', '#fbbf24', '#92400e'] },
-      { id: 'crimson', name: 'Crimson Guard', cost: 3, note: 'Deep red assault plating.', colors: ['#fecaca', '#f87171', '#b91c1c'] },
-      { id: 'shadow', name: 'Shadow Ops', cost: 5, note: 'Stealth black tactical armor.', colors: ['#cbd5e1', '#475569', '#0f172a'] },
-      { id: 'toxic', name: 'Toxic Raider', cost: 4, note: 'Neon biohazard strike suit.', colors: ['#d9f99d', '#a3e635', '#3f6212'] },
-      { id: 'arctic', name: 'Arctic Watch', cost: 4, note: 'Cold-weather frost blue shell.', colors: ['#e0f2fe', '#7dd3fc', '#0369a1'] },
-      { id: 'sunset', name: 'Sunset Patrol', cost: 3, note: 'Orange dusk combat trim.', colors: ['#fed7aa', '#fb923c', '#c2410c'] },
-      { id: 'violet', name: 'Violet Viper', cost: 5, note: 'Purple shock trooper armor.', colors: ['#e9d5ff', '#c084fc', '#7e22ce'] },
-      { id: 'emerald', name: 'Emerald Core', cost: 4, note: 'Bright green energy weave.', colors: ['#d1fae5', '#34d399', '#047857'] },
-      { id: 'rose', name: 'Rose Falcon', cost: 4, note: 'Rose-tinted elite recon suit.', colors: ['#fbcfe8', '#f472b6', '#be185d'] },
-      { id: 'bronze', name: 'Bronze Bulwark', cost: 3, note: 'Heavy bronze defender armor.', colors: ['#fde68a', '#d97706', '#78350f'] },
-      { id: 'storm', name: 'Storm Chaser', cost: 5, note: 'Electric cyan rapid-response gear.', colors: ['#cffafe', '#22d3ee', '#0f766e'] },
-      { id: 'royal', name: 'Royal Aegis', cost: 6, note: 'Regal indigo command suit.', colors: ['#c7d2fe', '#818cf8', '#3730a3'] },
-      { id: 'sand', name: 'Sand Warden', cost: 2, note: 'Dust-tan desert runner kit.', colors: ['#fef3c7', '#fbbf24', '#a16207'] },
-      { id: 'inferno', name: 'Inferno Unit', cost: 6, note: 'Blazing ember red armor.', colors: ['#fdba74', '#f97316', '#9a3412'] },
-      { id: 'mint', name: 'Mint Circuit', cost: 3, note: 'Fresh mint combat shell.', colors: ['#ccfbf1', '#5eead4', '#0f766e'] },
-      { id: 'obsidian', name: 'Obsidian Wolf', cost: 7, note: 'Dark elite armor with silver trim.', colors: ['#e2e8f0', '#64748b', '#111827'] },
-      { id: 'plasma', name: 'Plasma Arc', cost: 6, note: 'Charged magenta battle gear.', colors: ['#f5d0fe', '#e879f9', '#a21caf'] },
-      { id: 'hazmat', name: 'Hazmat Nine', cost: 4, note: 'Warning-yellow containment suit.', colors: ['#fef08a', '#facc15', '#854d0e'] },
-      { id: 'navy', name: 'Navy Steel', cost: 3, note: 'Dark blue hardened marine look.', colors: ['#bfdbfe', '#3b82f6', '#1e3a8a'] },
-      { id: 'copper', name: 'Copper Coil', cost: 3, note: 'Copper-toned industrial plating.', colors: ['#fdba74', '#ea580c', '#7c2d12'] },
-      { id: 'ghost', name: 'Ghost Signal', cost: 7, note: 'Pale spectral white stealth suit.', colors: ['#f8fafc', '#cbd5e1', '#475569'] },
-      { id: 'nova', name: 'Nova Prime', cost: 9, note: 'High-tier luminous hero armor.', colors: ['#fef9c3', '#facc15', '#2563eb'] }
+      { id: 'default', name: 'Default Trooper', cost: 0, rarity: 'Common', theme: 'Military', note: 'Classic blue squad look.', colors: ['#bfdbfe', '#60a5fa', '#1d4ed8'] },
+      { id: 'ranger', name: 'Ranger Helmet', cost: 2, rarity: 'Common', theme: 'Military', note: 'Forest green field gear.', colors: ['#bbf7d0', '#4ade80', '#166534'] },
+      { id: 'commander', name: 'Blue Commander', cost: 4, rarity: 'Rare', theme: 'Military', note: 'Sharper blue command trim.', colors: ['#dbeafe', '#60a5fa', '#1e40af'] },
+      { id: 'gold', name: 'Gold Minigun Hero', cost: 8, rarity: 'Legendary', theme: 'Hero', note: 'Gold armor for elite runs.', colors: ['#fde68a', '#fbbf24', '#92400e'] },
+      { id: 'crimson', name: 'Crimson Guard', cost: 3, rarity: 'Common', theme: 'Military', note: 'Deep red assault plating.', colors: ['#fecaca', '#f87171', '#b91c1c'] },
+      { id: 'shadow', name: 'Shadow Ops', cost: 5, rarity: 'Epic', theme: 'Stealth', note: 'Stealth black tactical armor.', colors: ['#cbd5e1', '#475569', '#0f172a'] },
+      { id: 'toxic', name: 'Toxic Raider', cost: 4, rarity: 'Rare', theme: 'Hazard', note: 'Neon biohazard strike suit.', colors: ['#d9f99d', '#a3e635', '#3f6212'] },
+      { id: 'arctic', name: 'Arctic Watch', cost: 4, rarity: 'Rare', theme: 'Military', note: 'Cold-weather frost blue shell.', colors: ['#e0f2fe', '#7dd3fc', '#0369a1'] },
+      { id: 'sunset', name: 'Sunset Patrol', cost: 3, rarity: 'Common', theme: 'Scout', note: 'Orange dusk combat trim.', colors: ['#fed7aa', '#fb923c', '#c2410c'] },
+      { id: 'violet', name: 'Violet Viper', cost: 5, rarity: 'Epic', theme: 'Sci-Fi', note: 'Purple shock trooper armor.', colors: ['#e9d5ff', '#c084fc', '#7e22ce'] },
+      { id: 'emerald', name: 'Emerald Core', cost: 4, rarity: 'Rare', theme: 'Sci-Fi', note: 'Bright green energy weave.', colors: ['#d1fae5', '#34d399', '#047857'] },
+      { id: 'rose', name: 'Rose Falcon', cost: 4, rarity: 'Rare', theme: 'Recon', note: 'Rose-tinted elite recon suit.', colors: ['#fbcfe8', '#f472b6', '#be185d'] },
+      { id: 'bronze', name: 'Bronze Bulwark', cost: 3, rarity: 'Common', theme: 'Heavy', note: 'Heavy bronze defender armor.', colors: ['#fde68a', '#d97706', '#78350f'] },
+      { id: 'storm', name: 'Storm Chaser', cost: 5, rarity: 'Epic', theme: 'Sci-Fi', note: 'Electric cyan rapid-response gear.', colors: ['#cffafe', '#22d3ee', '#0f766e'] },
+      { id: 'royal', name: 'Royal Aegis', cost: 6, rarity: 'Epic', theme: 'Hero', note: 'Regal indigo command suit.', colors: ['#c7d2fe', '#818cf8', '#3730a3'] },
+      { id: 'sand', name: 'Sand Warden', cost: 2, rarity: 'Common', theme: 'Military', note: 'Dust-tan desert runner kit.', colors: ['#fef3c7', '#fbbf24', '#a16207'] },
+      { id: 'inferno', name: 'Inferno Unit', cost: 6, rarity: 'Epic', theme: 'Hero', note: 'Blazing ember red armor.', colors: ['#fdba74', '#f97316', '#9a3412'] },
+      { id: 'mint', name: 'Mint Circuit', cost: 3, rarity: 'Common', theme: 'Sci-Fi', note: 'Fresh mint combat shell.', colors: ['#ccfbf1', '#5eead4', '#0f766e'] },
+      { id: 'obsidian', name: 'Obsidian Wolf', cost: 7, rarity: 'Legendary', theme: 'Stealth', note: 'Dark elite armor with silver trim.', colors: ['#e2e8f0', '#64748b', '#111827'] },
+      { id: 'plasma', name: 'Plasma Arc', cost: 6, rarity: 'Epic', theme: 'Sci-Fi', note: 'Charged magenta battle gear.', colors: ['#f5d0fe', '#e879f9', '#a21caf'] },
+      { id: 'hazmat', name: 'Hazmat Nine', cost: 4, rarity: 'Rare', theme: 'Hazard', note: 'Warning-yellow containment suit.', colors: ['#fef08a', '#facc15', '#854d0e'] },
+      { id: 'navy', name: 'Navy Steel', cost: 3, rarity: 'Common', theme: 'Military', note: 'Dark blue hardened marine look.', colors: ['#bfdbfe', '#3b82f6', '#1e3a8a'] },
+      { id: 'copper', name: 'Copper Coil', cost: 3, rarity: 'Common', theme: 'Industrial', note: 'Copper-toned industrial plating.', colors: ['#fdba74', '#ea580c', '#7c2d12'] },
+      { id: 'ghost', name: 'Ghost Signal', cost: 7, rarity: 'Legendary', theme: 'Horror', note: 'Pale spectral white stealth suit.', colors: ['#f8fafc', '#cbd5e1', '#475569'] },
+      { id: 'nova', name: 'Nova Prime', cost: 9, rarity: 'Legendary', theme: 'Hero', note: 'High-tier luminous hero armor.', colors: ['#fef9c3', '#facc15', '#2563eb'] }
     ];
 
     function moneyPanelMarkup() {
@@ -921,10 +935,21 @@
                 ${avatars.map(avatar => {
                   const unlocked = unlockedAvatars.includes(avatar.id);
                   const selected = selectedAvatar === avatar.id;
-                  return `<div style="border:1px solid ${selected ? 'rgba(250,204,21,.55)' : 'rgba(255,255,255,.08)'};border-radius:14px;padding:12px;background:${selected ? 'rgba(250,204,21,.08)' : 'rgba(255,255,255,.02)'};">
+                  const rarityColor = avatar.rarity === 'Legendary' ? 'rgba(250,204,21,.9)' : avatar.rarity === 'Epic' ? 'rgba(196,132,252,.9)' : avatar.rarity === 'Rare' ? 'rgba(125,211,252,.9)' : 'rgba(134,239,172,.9)';
+                  return `<div class="avatar-card" style="border:1px solid ${selected ? 'rgba(250,204,21,.55)' : 'rgba(255,255,255,.08)'};background:${selected ? 'rgba(250,204,21,.08)' : 'rgba(255,255,255,.02)'};">
                     <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
                       <strong>${avatar.name}</strong>
-                      <span class="pill" style="margin:0;">${unlocked ? (selected ? 'Equipped' : 'Unlocked') : `${avatar.cost} AC`}</span>
+                      <span class="pill" style="margin:0;background:${rarityColor};color:#0f172a;">${unlocked ? (selected ? 'Equipped' : 'Unlocked') : `${avatar.cost} AC`}</span>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+                      <span class="pill" style="margin:0;background:rgba(255,255,255,.08);color:#e2e8f0;">${avatar.rarity}</span>
+                      <span class="pill" style="margin:0;background:rgba(255,255,255,.06);color:#cbd5e1;">${avatar.theme}</span>
+                    </div>
+                    <div class="avatar-preview" style="background:linear-gradient(135deg, ${avatar.colors[0]}, ${avatar.colors[1]} 55%, ${avatar.colors[2]});">
+                      <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,0) 38%, rgba(15,23,42,.18));"></div>
+                      <div style="position:absolute;left:18px;bottom:10px;width:16px;height:28px;border-radius:8px;background:${avatar.colors[2]};box-shadow:0 0 0 2px rgba(255,255,255,.18);"></div>
+                      <div style="position:absolute;left:22px;bottom:34px;width:8px;height:8px;border-radius:999px;background:${avatar.colors[0]};box-shadow:0 0 0 2px rgba(255,255,255,.22);"></div>
+                      <div style="position:absolute;left:46px;bottom:14px;width:70px;height:8px;border-radius:999px;background:rgba(255,255,255,.2);"></div>
                     </div>
                     <div style="display:flex;gap:8px;margin:8px 0 2px;">
                       ${avatar.colors.map(color => `<span style="width:18px;height:18px;border-radius:999px;background:${color};display:inline-block;border:1px solid rgba(255,255,255,.18);"></span>`).join('')}

@@ -1092,6 +1092,29 @@
       state.objects.push(obj);
     }
 
+    function activateMinigun() {
+      if (state.paused || state.gameOver || state.minigunCharge < 100) return;
+      const nowMs = performance.now();
+      state.minigunCharge = 0;
+      state.minigunActiveUntil = nowMs + 2600;
+      state.lastMinigunBurst = nowMs - 120;
+      playTone(140, 0.22, 'sawtooth', 2);
+
+      for (const obj of state.objects) {
+        if (obj.type === 'zombie' || obj.type === 'wall') {
+          obj.hp -= 3;
+          state.particles.push({ x: obj.x, y: obj.y, life: 0.22, color: '#fed7aa', ring: '#ea580c', burst: true, size: 18 });
+          if (obj.hp <= 0) handleDestroyed(obj);
+        }
+      }
+      state.objects = state.objects.filter(o => o.hp > 0 && o.y < 740);
+
+      for (let lane = 0; lane < LANES.length; lane++) {
+        fireAtLane(lane, 4, 260, { silent: true, noVibrate: true, muzzleScale: 1.1 });
+      }
+      syncHud();
+    }
+
     function update(dt) {
       if (!state.running || state.paused || state.gameOver) return;
       state.distance += dt * (state.speed / 12);
@@ -1102,7 +1125,7 @@
       if (state.minigunActiveUntil > nowMs) {
         if (nowMs - state.lastMinigunBurst > 90) {
           for (let lane = 0; lane < LANES.length; lane++) {
-            fireAtLane(lane, 3, 220, { silent: true, noVibrate: true, muzzleScale: 0.65 });
+            fireAtLane(lane, 4, 260, { silent: true, noVibrate: true, muzzleScale: 0.65 });
           }
           state.lastMinigunBurst = nowMs;
           playTone(150 + rand(0, 40), 0.05, 'sawtooth', 0.55);
@@ -1449,12 +1472,11 @@
     window.addEventListener('keydown', e => { if (e.key==='1') fireAtLane(0); if (e.key==='2') fireAtLane(1); if (e.key==='3') fireAtLane(2); });
     restartBtn.addEventListener('click', () => window.restartZombieRun());
     pauseBtn.addEventListener('click', () => { state.paused=!state.paused; pauseBtn.textContent=state.paused?'Resume':'Pause'; });
-    minigunBtn.addEventListener('click', () => {
-      if (state.paused || state.gameOver || state.minigunCharge < 100) return;
-      state.minigunCharge = 0;
-      state.minigunActiveUntil = performance.now() + 2200;
-      playTone(140, 0.22, 'sawtooth', 2);
-    });
+    minigunBtn.addEventListener('click', activateMinigun);
+    minigunBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      activateMinigun();
+    }, { passive: false });
     moneyBtn.addEventListener('click', openMoneyPanel);
     enhanceBtn.addEventListener('click', openEnhancementPanel);
     avatarBtn.addEventListener('click', openAvatarPanel);

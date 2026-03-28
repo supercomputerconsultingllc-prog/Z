@@ -592,25 +592,74 @@
       const bodyOsc = ctxAudio.createOscillator();
       const bodyGain = ctxAudio.createGain();
       bodyOsc.type = power >= 8 ? 'sawtooth' : 'triangle';
-      bodyOsc.frequency.setValueAtTime(190 + power * 10, now);
-      bodyOsc.frequency.exponentialRampToValueAtTime(92 + power * 4, now + 0.08);
-      bodyGain.gain.setValueAtTime((volumeLevel / 100) * 0.024 * Math.min(1.45, 0.9 + power * 0.04), now);
-      bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+      bodyOsc.frequency.setValueAtTime(210 + power * 12, now);
+      bodyOsc.frequency.exponentialRampToValueAtTime(88 + power * 5, now + 0.085);
+      bodyGain.gain.setValueAtTime((volumeLevel / 100) * 0.03 * Math.min(1.55, 0.95 + power * 0.045), now);
+      bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
       bodyOsc.connect(bodyGain);
       bodyGain.connect(ctxAudio.destination);
       bodyOsc.start(now);
-      bodyOsc.stop(now + 0.09);
+      bodyOsc.stop(now + 0.1);
 
       const crackOsc = ctxAudio.createOscillator();
       const crackGain = ctxAudio.createGain();
       crackOsc.type = 'square';
-      crackOsc.frequency.setValueAtTime(820 + power * 28, now);
-      crackGain.gain.setValueAtTime((volumeLevel / 100) * 0.011, now);
-      crackGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
+      crackOsc.frequency.setValueAtTime(900 + power * 34, now);
+      crackGain.gain.setValueAtTime((volumeLevel / 100) * 0.013, now);
+      crackGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
       crackOsc.connect(crackGain);
       crackGain.connect(ctxAudio.destination);
       crackOsc.start(now);
-      crackOsc.stop(now + 0.045);
+      crackOsc.stop(now + 0.04);
+
+      const tailOsc = ctxAudio.createOscillator();
+      const tailGain = ctxAudio.createGain();
+      tailOsc.type = power >= 6 ? 'triangle' : 'sine';
+      tailOsc.frequency.setValueAtTime(420 + power * 14, now + 0.01);
+      tailOsc.frequency.exponentialRampToValueAtTime(180 + power * 6, now + 0.07);
+      tailGain.gain.setValueAtTime((volumeLevel / 100) * 0.01 * Math.min(1.35, 0.9 + power * 0.03), now + 0.008);
+      tailGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.075);
+      tailOsc.connect(tailGain);
+      tailGain.connect(ctxAudio.destination);
+      tailOsc.start(now + 0.008);
+      tailOsc.stop(now + 0.075);
+    }
+
+    function playZombieGroan(size = 1, variant = 'zombie') {
+      if (!soundOn || volumeLevel <= 0) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      if (ctxAudio.state === 'suspended') ctxAudio.resume();
+      const now = ctxAudio.currentTime;
+      const base = variant === 'boss' ? 72 : variant === 'shield' ? 82 : variant === 'runner' ? 118 : 96;
+
+      const mainOsc = ctxAudio.createOscillator();
+      const mainGain = ctxAudio.createGain();
+      const filter = ctxAudio.createBiquadFilter();
+      mainOsc.type = variant === 'boss' ? 'sawtooth' : 'triangle';
+      mainOsc.frequency.setValueAtTime(base + Math.random() * 10, now);
+      mainOsc.frequency.linearRampToValueAtTime(base * 0.78, now + 0.34);
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(420, now);
+      mainGain.gain.setValueAtTime((volumeLevel / 100) * 0.006 * size, now);
+      mainGain.gain.linearRampToValueAtTime((volumeLevel / 100) * 0.012 * size, now + 0.08);
+      mainGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.36);
+      mainOsc.connect(filter);
+      filter.connect(mainGain);
+      mainGain.connect(ctxAudio.destination);
+      mainOsc.start(now);
+      mainOsc.stop(now + 0.36);
+
+      const raspOsc = ctxAudio.createOscillator();
+      const raspGain = ctxAudio.createGain();
+      raspOsc.type = 'square';
+      raspOsc.frequency.setValueAtTime(base * 1.95, now + 0.01);
+      raspGain.gain.setValueAtTime((volumeLevel / 100) * 0.0018 * size, now + 0.01);
+      raspGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+      raspOsc.connect(raspGain);
+      raspGain.connect(ctxAudio.destination);
+      raspOsc.start(now + 0.01);
+      raspOsc.stop(now + 0.2);
     }
 
     function playKick(time, gainBoost = 1) {
@@ -1155,7 +1204,7 @@
         squad: 8, firepower: 1, distance: 0, wave: 1, speed: 190,
         bullets: [], objects: [], particles: [], spawnTimer: 0, running: true, paused: true, gameOver: false,
         lastTime: performance.now(), coins: 0, revives: 1, usedRevive: false, distanceCoinsTick: 0,
-        minigunCharge: 100, minigunActiveUntil: 0, lastMinigunBurst: 0, bossWarningUntil: 0
+        minigunCharge: 100, minigunActiveUntil: 0, lastMinigunBurst: 0, bossWarningUntil: 0, nextGroanAt: 0
       };
       crowdCache = null;
       bankCoins = 0;
@@ -1414,6 +1463,18 @@
       }
       const roundCoins = Math.floor(state.distance / 180) * 2;
       if (roundCoins > state.distanceCoinsTick) { addCoins(roundCoins - state.distanceCoinsTick); state.distanceCoinsTick = roundCoins; }
+
+      const nowAudioMs = performance.now();
+      if (soundOn && !state.paused && !state.gameOver && nowAudioMs >= (state.nextGroanAt || 0)) {
+        const groanCandidates = state.objects.filter(obj => obj.hp > 0 && (obj.type === 'zombie' || obj.type === 'lootzombie' || obj.type === 'runner' || obj.type === 'shield' || obj.type === 'boss') && obj.y > 120);
+        if (groanCandidates.length) {
+          const groanTarget = groanCandidates.sort((a, b) => b.y - a.y)[0];
+          const sizeBoost = groanTarget.type === 'boss' ? 1.9 : groanTarget.type === 'shield' ? 1.25 : groanTarget.type === 'runner' ? 0.8 : 1;
+          playZombieGroan(sizeBoost, groanTarget.type);
+        }
+        state.nextGroanAt = nowAudioMs + Math.max(900, 2200 - Math.min(1000, state.wave * 55));
+      }
+
       state.spawnTimer -= dt;
       if (state.spawnTimer <= 0) {
         const perfTier = squadPerfTier();

@@ -60,12 +60,11 @@
     .battle-side-ui {
       position: absolute;
       right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
+      bottom: 14px;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       gap: 10px;
-      z-index: 3;
+      z-index: 4;
     }
     .battle-side-btn {
       width: 86px;
@@ -361,6 +360,18 @@
     <section class="content">
       <div class="canvas-wrap">
         <canvas id="game" width="800" height="680"></canvas>
+        <div class="battle-side-ui">
+          <button class="battle-side-btn" id="floatingMinigunBtn" aria-label="Activate minigun" type="button">
+            <span class="big">🔥</span>
+            <span>Minigun</span>
+            <span class="battle-side-status" id="floatingMinigunStatus" style="font-size:11px;opacity:.86;">Tap when ready</span>
+          </button>
+          <button class="battle-side-btn" id="floatingSettingsBtn" aria-label="Open settings" type="button" style="background:linear-gradient(180deg, rgba(71,85,105,.96), rgba(30,41,59,.98));">
+            <span class="big">⚙️</span>
+            <span>Settings</span>
+            <span style="font-size:11px;opacity:.86;">Brightness + volume</span>
+          </button>
+        </div>
         <div class="overlay" id="overlay"></div>
       </div>
 
@@ -460,6 +471,9 @@
     const pauseBtn = document.getElementById('pauseBtn');
     const soundBtn = document.getElementById('soundBtn');
     const titleBtn = document.getElementById('titleBtn');
+    const floatingMinigunBtn = document.getElementById('floatingMinigunBtn');
+    const floatingMinigunStatus = document.getElementById('floatingMinigunStatus');
+    const floatingSettingsBtn = document.getElementById('floatingSettingsBtn');
     const buyGunBtn = document.getElementById('buyGunBtn');
     const buySquadBtn = document.getElementById('buySquadBtn');
     const buyReviveBtn = document.getElementById('buyReviveBtn');
@@ -1209,15 +1223,19 @@
     }
 
     function flashMinigunButton(message) {
-      minigunBtn.classList.remove('ready');
-      const label = minigunBtn.querySelector('.battle-side-status');
-      if (!label) return;
-      const original = label.dataset.original || label.textContent;
-      label.dataset.original = original;
-      label.textContent = message;
+      [minigunBtn, floatingMinigunBtn].forEach(btn => btn && btn.classList.remove('ready'));
+      [minigunBtn?.querySelector('.battle-side-status'), floatingMinigunStatus].forEach(label => {
+        if (!label) return;
+        const original = label.dataset.original || label.textContent;
+        label.dataset.original = original;
+        label.textContent = message;
+      });
       clearTimeout(flashMinigunButton.timer);
       flashMinigunButton.timer = setTimeout(() => {
-        label.textContent = label.dataset.original || 'Tap when ready';
+        [minigunBtn?.querySelector('.battle-side-status'), floatingMinigunStatus].forEach(label => {
+          if (!label) return;
+          label.textContent = label.dataset.original || 'Tap when ready';
+        });
       }, 700);
     }
 
@@ -1556,10 +1574,9 @@
         rows = Math.max(1, Math.ceil(total / normalRowCap));
       }
 
-      const rawGapX = columns > 1 ? crowdWidth / (columns - 1) : crowdWidth;
+      const rawGapX = columns > 1 ? crowdWidth / Math.max(columns - 1, 1) : crowdWidth;
       const rawGapY = rows > 1 ? crowdHeight / Math.max(rows - 1, 1) : crowdHeight;
       const scale = Math.max(minScale, Math.min(maxScale, rawGapX / baseBodyWidth, rawGapY / baseBodyHeight));
-      const gapX = columns > 1 ? crowdWidth / (columns - 1) : 0;
       const gapY = rows > 1 ? crowdHeight / Math.max(rows - 1, 1) : 0;
       const visibleSoldiers = [];
 
@@ -1577,11 +1594,11 @@
         const col = i % columns;
         const rowStartIndex = row * columns;
         const rowCount = Math.min(columns, total - rowStartIndex);
-        const rowWidth = gapX * Math.max(rowCount - 1, 0);
-        const rowStartX = (canvas.width - rowWidth) / 2;
-        const x = rowCount === 1 ? canvas.width / 2 : rowStartX + col * gapX;
+        const rowSlotWidth = crowdWidth / Math.max(rowCount, 1);
+        const rowLeft = (canvas.width - crowdWidth) / 2;
+        const x = rowLeft + rowSlotWidth * (col + 0.5);
         const y = startY - row * gapY;
-        visibleSoldiers.push({ x, y, row, col });
+        visibleSoldiers.push({ x, y, row, col, rowCount });
       }
 
       const bannerGradient = ctx.createLinearGradient(0, 0, 220, 0);
@@ -1604,10 +1621,10 @@
       }
 
       ctx.fillStyle = 'rgba(15,23,42,.88)';
-      ctx.fillRect(18, 162, 250, 36);
+      ctx.fillRect(18, 162, 300, 36);
       ctx.fillStyle = '#cbd5e1';
       ctx.font = 'bold 16px system-ui';
-      ctx.fillText(`${ultraArmyMode ? 'Ultra army' : armyMode ? 'Army mode' : 'Rows'} ${rows} • Per row ${columns}`, 32, 185);
+      ctx.fillText(`Squad ${total} • Rows ${rows} • Per row ${columns}`, 32, 185);
     }
 
     function drawObjects() {
@@ -1741,7 +1758,7 @@
       ctx.fillStyle='#fff'; ctx.font='bold 24px system-ui'; ctx.fillText(`${Math.floor(state.minigunCharge)}%`, canvas.width - 154, 68);
       ctx.fillStyle='rgba(255,255,255,.12)'; ctx.fillRect(canvas.width - 154, 76, 112, 8);
       ctx.fillStyle=state.minigunCharge >= 100 ? '#ef4444' : '#f59e0b'; ctx.fillRect(canvas.width - 154, 76, 112 * (state.minigunCharge / 100), 8);
-      minigunBtn.classList.toggle('ready', state.minigunCharge >= 100 && !state.paused && !state.gameOver);
+      [minigunBtn, floatingMinigunBtn].forEach(btn => btn && btn.classList.toggle('ready', state.minigunCharge >= 100 && !state.paused && !state.gameOver));
     }
 
     function render() {
@@ -1772,14 +1789,17 @@
     window.addEventListener('keydown', e => { if (e.key==='1') fireAtLane(0); if (e.key==='2') fireAtLane(1); if (e.key==='3') fireAtLane(2); });
     restartBtn.addEventListener('click', () => window.restartZombieRun());
     pauseBtn.addEventListener('click', () => { state.paused=!state.paused; pauseBtn.textContent=state.paused?'Resume':'Pause'; });
-    minigunBtn.addEventListener('click', activateMinigun);
-    minigunBtn.addEventListener('pointerdown', activateMinigun);
-    minigunBtn.addEventListener('touchstart', activateMinigun, { passive: false });
+    [minigunBtn, floatingMinigunBtn].forEach(btn => {
+      btn.addEventListener('click', activateMinigun);
+      btn.addEventListener('pointerdown', activateMinigun);
+      btn.addEventListener('touchstart', activateMinigun, { passive: false });
+    });
     moneyBtn.addEventListener('click', openMoneyPanel);
     enhanceBtn.addEventListener('click', openEnhancementPanel);
     avatarBtn.addEventListener('click', openAvatarPanel);
     settingsBtn.addEventListener('click', openSettingsPanel);
     battleSettingsBtn.addEventListener('click', openSettingsPanel);
+    floatingSettingsBtn.addEventListener('click', openSettingsPanel);
     youtubeBtn.addEventListener('click', () => {
       state.paused = true;
       window.openYoutubeReward();

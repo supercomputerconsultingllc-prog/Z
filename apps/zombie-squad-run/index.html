@@ -450,6 +450,7 @@
       <button class="secondary touch-btn" id="laneRightBtn">➡️ Shoot Right</button>
       <button class="touch-btn special" id="minigunBtn" aria-label="Activate minigun" type="button">🔥 Minigun<span class="tiny-status battle-side-status">Tap when ready</span></button>
       <button class="touch-btn utility" id="battleSettingsBtn" aria-label="Open settings" type="button">⚙️ Settings<span class="tiny-status">Brightness, volume, controls</span></button>
+      <button class="touch-btn utility" id="battleYoutubeBtn" aria-label="Open YouTube channel" type="button">▶️ YouTube<span class="tiny-status">Open @ColtRT-e5n2h</span></button>
     </section>
   </main>
 
@@ -483,6 +484,7 @@
     const avatarBtn = document.getElementById('avatarBtn');
     const settingsBtn = document.getElementById('settingsBtn');
     const battleSettingsBtn = document.getElementById('battleSettingsBtn');
+    const battleYoutubeBtn = document.getElementById('battleYoutubeBtn');
     const youtubeBtn = document.getElementById('youtubeBtn');
     const laneLeftBtn = document.getElementById('laneLeftBtn');
     const laneCenterBtn = document.getElementById('laneCenterBtn');
@@ -1801,6 +1803,10 @@
     battleSettingsBtn.addEventListener('click', openSettingsPanel);
     floatingSettingsBtn.addEventListener('click', openSettingsPanel);
     youtubeBtn.addEventListener('click', () => {
+      state.paused = true;
+      window.openYoutubeReward();
+    });
+    battleYoutubeBtn.addEventListener('click', () => {
       state.paused = true;
       window.openYoutubeReward();
     });

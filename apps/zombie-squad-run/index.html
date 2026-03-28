@@ -520,6 +520,8 @@
     let hitFlash = 0;
     let bossWave = false;
     const impactDecals = [];
+    const shellCasings = [];
+    const muzzleFlashes = [];
     const MISSIONS = [
       { label: 'Break 12 walls', target: 12, event: 'walls' },
       { label: 'Recruit 32 survivors', target: 32, event: 'survivors' },
@@ -1269,6 +1271,8 @@
         });
       }
       state.particles.push({ x: laneX, y: 602, life: 0.09, color: profile.muzzle, ring: profile.ring, burst: true, size: (14 + effectivePower * 1.5) * muzzleScale });
+      pushMuzzleFlash(laneX + 16, 603, profile.muzzle, 0.09, (12 + effectivePower * 1.7) * muzzleScale);
+      pushShell(laneX + 6, 606, profile.ring || '#fbbf24');
       trimRuntimeLoad();
     }
 
@@ -1293,7 +1297,8 @@
       state.objects.push({ type:'boss', lane, x:LANES[lane], y:-130, hp:18 + state.wave * 2, reward:8, size:82, speedFactor:0.65 });
       state.objects.push({ type:'shield', lane:(lane + 1) % 3, x:LANES[(lane + 1) % 3], y:-90, hp:7 + Math.floor(state.wave * 0.7), reward:3, size:52, speedFactor:0.85 });
       trimRuntimeLoad();
-      addScreenShake(12, 0.12);
+      addScreenShake(18, 0.16);
+      hitFlash = Math.max(hitFlash, 0.14);
       playTone(90, 0.26, 'sawtooth', 1.8);
     }
 
@@ -1428,6 +1433,16 @@
       state.particles = state.particles.filter(p => p.life > 0).slice(-particleCap);
       for (const decal of impactDecals) decal.life -= dt;
       while (impactDecals.length && impactDecals[0].life <= 0) impactDecals.shift();
+      for (const shell of shellCasings) {
+        shell.life -= dt;
+        shell.x += shell.vx * dt;
+        shell.y += shell.vy * dt;
+        shell.vy += 180 * dt;
+        shell.rot += shell.spin * dt;
+      }
+      while (shellCasings.length && shellCasings[0].life <= 0) shellCasings.shift();
+      for (const flash of muzzleFlashes) flash.life -= dt;
+      while (muzzleFlashes.length && muzzleFlashes[0].life <= 0) muzzleFlashes.shift();
       for (const obj of state.objects) {
         if (obj.y >= 570) {
           if (obj.type === 'wall' && obj.hp > 0) state.squad -= obj.hp;
@@ -1570,6 +1585,18 @@
       if (impactDecals.length > maxDecals) impactDecals.splice(0, impactDecals.length - maxDecals);
     }
 
+    function pushShell(x, y, tint = '#fbbf24') {
+      shellCasings.push({ x, y, vx: 50 + Math.random() * 55, vy: -60 - Math.random() * 40, rot: Math.random() * Math.PI, spin: 4 + Math.random() * 3, life: 0.7, tint });
+      const maxShells = mobileSafeMode ? 10 : 20;
+      if (shellCasings.length > maxShells) shellCasings.splice(0, shellCasings.length - maxShells);
+    }
+
+    function pushMuzzleFlash(x, y, color = '#fde68a', life = 0.08, size = 16) {
+      muzzleFlashes.push({ x, y, color, life, maxLife: life, size, seed: Math.random() * 10 });
+      const maxFlashes = mobileSafeMode ? 8 : 16;
+      if (muzzleFlashes.length > maxFlashes) muzzleFlashes.splice(0, muzzleFlashes.length - maxFlashes);
+    }
+
     function drawRoadDecals() {
       for (const decal of impactDecals) {
         const alpha = Math.max(0, decal.life / decal.maxLife) * 0.38;
@@ -1597,6 +1624,61 @@
       fog.addColorStop(1, 'rgba(2,6,23,0.22)');
       ctx.fillStyle = fog;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function drawHeatHaze() {
+      for (let i = 0; i < 3; i++) {
+        const laneX = 170 + i * 240;
+        const haze = ctx.createLinearGradient(laneX, 250, laneX, 640);
+        haze.addColorStop(0, 'rgba(255,255,255,0)');
+        haze.addColorStop(0.45, 'rgba(255,255,255,0.025)');
+        haze.addColorStop(1, 'rgba(248,113,113,0.04)');
+        ctx.fillStyle = haze;
+        ctx.fillRect(laneX - 42 + Math.sin(performance.now() * 0.0018 + i) * 4, 250, 84, 390);
+      }
+    }
+
+    function drawShellCasings() {
+      for (const shell of shellCasings) {
+        ctx.save();
+        ctx.translate(shell.x, shell.y);
+        ctx.rotate(shell.rot);
+        ctx.globalAlpha = Math.max(0, shell.life / 0.7);
+        ctx.fillStyle = shell.tint;
+        ctx.fillRect(-4, -1.2, 8, 2.4);
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(2.2, -1.2, 1.8, 2.4);
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawMuzzleFlashes() {
+      for (const flash of muzzleFlashes) {
+        const a = Math.max(0, flash.life / flash.maxLife);
+        ctx.save();
+        ctx.globalAlpha = a;
+        ctx.translate(flash.x, flash.y);
+        const pulse = 1 + Math.sin(performance.now() * 0.03 + flash.seed) * 0.12;
+        ctx.fillStyle = flash.color;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(8 * pulse, -flash.size * 0.42);
+        ctx.lineTo(flash.size * 1.15, 0);
+        ctx.lineTo(8 * pulse, flash.size * 0.42);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(flash.size * 0.55, -flash.size * 0.18);
+        ctx.lineTo(flash.size * 0.74, 0);
+        ctx.lineTo(flash.size * 0.55, flash.size * 0.18);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
     }
 
     function addDirectionalLight(x, y, w, h, alpha = 0.2) {
@@ -2158,15 +2240,23 @@
       titleGlow.addColorStop(0, 'rgba(59,130,246,.18)');
       titleGlow.addColorStop(1, 'rgba(236,72,153,.14)');
       ctx.fillStyle = titleGlow; ctx.fillRect(16,16,368,92);
+      const gloss = ctx.createLinearGradient(20, 20, 20, 64);
+      gloss.addColorStop(0, 'rgba(255,255,255,0.16)');
+      gloss.addColorStop(1, 'rgba(255,255,255,0)');
       const titleGrad = ctx.createLinearGradient(20, 20, 380, 104);
       titleGrad.addColorStop(0, 'rgba(15,23,42,.94)');
       titleGrad.addColorStop(1, 'rgba(30,64,175,.72)');
       ctx.fillStyle = titleGrad; ctx.fillRect(20,20,360,84);
+      ctx.fillStyle = gloss; ctx.fillRect(24,24,352,24);
       ctx.strokeStyle = 'rgba(148,163,184,.22)'; ctx.lineWidth = 1.5; ctx.strokeRect(20,20,360,84);
       ctx.fillStyle='#e5e7eb'; ctx.font='bold 24px system-ui'; ctx.textAlign='left'; ctx.fillText('Zombie Squad Run',36,52);
       ctx.fillStyle='#94a3b8'; ctx.font='16px system-ui'; ctx.fillText('Shoot zombies, pop infected husks, break walls, stack your squad.',36,80);
-      ctx.fillStyle='rgba(15,23,42,.86)'; ctx.fillRect(canvas.width - 176, 20, 146, 64);
-      ctx.strokeStyle = 'rgba(239,68,68,.22)'; ctx.strokeRect(canvas.width - 176, 20, 146, 64);
+      const minigunGlow = ctx.createLinearGradient(canvas.width - 176, 20, canvas.width - 30, 84);
+      minigunGlow.addColorStop(0, 'rgba(127,29,29,0.92)');
+      minigunGlow.addColorStop(1, 'rgba(30,41,59,0.88)');
+      ctx.fillStyle=minigunGlow; ctx.fillRect(canvas.width - 176, 20, 146, 64);
+      ctx.fillStyle='rgba(255,255,255,0.12)'; ctx.fillRect(canvas.width - 172, 24, 138, 14);
+      ctx.strokeStyle = 'rgba(239,68,68,.28)'; ctx.strokeRect(canvas.width - 176, 20, 146, 64);
       ctx.fillStyle=state.minigunCharge >= 100 ? '#fca5a5' : '#fecaca'; ctx.font='bold 14px system-ui'; ctx.fillText('MINIGUN', canvas.width - 158, 44);
       ctx.fillStyle='#fff'; ctx.font='bold 24px system-ui'; ctx.fillText(`${Math.floor(state.minigunCharge)}%`, canvas.width - 158, 68);
       ctx.fillStyle='rgba(255,255,255,.12)'; ctx.fillRect(canvas.width - 158, 76, 116, 8);
@@ -2181,10 +2271,12 @@
         const dy = (Math.random() - 0.5) * screenShake;
         ctx.translate(dx, dy);
       }
-      drawRoad(); drawSquad(); drawObjects(); drawBullets(); drawParticles(); drawDepthFog(); drawHint();
+      drawRoad(); drawHeatHaze(); drawSquad(); drawObjects(); drawMuzzleFlashes(); drawBullets(); drawShellCasings(); drawParticles(); drawDepthFog(); drawHint();
       ctx.restore();
       if (hitFlash > 0.01) {
         ctx.fillStyle = `rgba(255,255,255,${Math.min(0.22, hitFlash)})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = `rgba(239,68,68,${Math.min(0.12, hitFlash * 0.7)})`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
       if (state.paused && !state.gameOver && !overlay.innerHTML) {

@@ -1631,6 +1631,12 @@
         ctx.fillRect(x, y, w, h);
         ctx.fillStyle = 'rgba(96,165,250,0.08)';
         for (let row = 0; row < 4; row++) ctx.fillRect(x + 8, y + 12 + row * 24, w - 16, 4);
+        if (!lowPowerMobileMode || state.squad < 70) {
+          ctx.fillStyle = 'rgba(248,113,113,0.08)';
+          ctx.fillRect(x + w * 0.2, y + h * 0.18, Math.max(8, w * 0.16), 6 + (i % 2) * 2);
+          ctx.fillStyle = 'rgba(251,191,36,0.06)';
+          ctx.fillRect(x + w * 0.56, y + h * 0.42, Math.max(7, w * 0.12), 5 + ((i + 1) % 2) * 2);
+        }
         ctx.fillStyle = 'rgba(15,23,42,0.48)';
       }
 
@@ -2506,6 +2512,15 @@
           drawObjectGroundShadow(obj, 28, 9, 0.34);
           const bossPulse = 0.72 + Math.sin(performance.now() * 0.006) * 0.18;
           if (perfTier <= 1) {
+            for (let ring = 0; ring < 2; ring++) {
+              ctx.strokeStyle = `rgba(248,113,113,${0.12 - ring * 0.04})`;
+              ctx.lineWidth = 3 - ring;
+              ctx.beginPath();
+              ctx.arc(obj.x, obj.y - 12, 58 + ring * 18 + Math.sin(performance.now() * 0.008 + ring) * 4, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+          }
+          if (perfTier <= 1) {
             const bossBeam = ctx.createLinearGradient(obj.x, obj.y - 190, obj.x, obj.y + 20);
             bossBeam.addColorStop(0, `rgba(248,113,113,${0.04 * bossPulse})`);
             bossBeam.addColorStop(0.5, `rgba(239,68,68,${0.18 * bossPulse})`);
@@ -2521,7 +2536,7 @@
             ctx.arc(obj.x, obj.y - 10, 92, 0, Math.PI * 2);
             ctx.fill();
           }
-          drawZombie(obj.x, obj.y, 1.72, 5, 'boss');
+          drawZombie(obj.x, obj.y, 1.72 + Math.sin(performance.now() * 0.01) * 0.03, 5, 'boss');
           const bossGlow = ctx.createRadialGradient(obj.x, obj.y - 18, 12, obj.x, obj.y - 10, 74);
           bossGlow.addColorStop(0, 'rgba(239,68,68,.3)');
           bossGlow.addColorStop(1, 'rgba(239,68,68,0)');
@@ -2862,6 +2877,8 @@
       titleGlow.addColorStop(0, 'rgba(59,130,246,.18)');
       titleGlow.addColorStop(1, 'rgba(236,72,153,.14)');
       ctx.fillStyle = titleGlow; ctx.fillRect(82,4,canvas.width - 164,52);
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.fillRect(82, 4, canvas.width - 164, 3);
       const gloss = ctx.createLinearGradient(86, 8, 86, 28);
       gloss.addColorStop(0, 'rgba(255,255,255,0.16)');
       gloss.addColorStop(1, 'rgba(255,255,255,0)');
@@ -2904,13 +2921,20 @@
       } else if (state.minigunCharge >= 100) {
         statusText = 'MINIGUN READY';
       }
-      ctx.fillStyle = 'rgba(15,23,42,0.82)';
+      const statusGrad = ctx.createLinearGradient(canvas.width / 2 - 150, canvas.height - 40, canvas.width / 2 + 150, canvas.height - 16);
+      statusGrad.addColorStop(0, 'rgba(15,23,42,0.88)');
+      statusGrad.addColorStop(0.5, 'rgba(30,41,59,0.84)');
+      statusGrad.addColorStop(1, 'rgba(15,23,42,0.88)');
+      ctx.fillStyle = statusGrad;
       ctx.fillRect(canvas.width / 2 - 150, canvas.height - 40, 300, 24);
       ctx.strokeStyle = 'rgba(148,163,184,0.22)';
       ctx.strokeRect(canvas.width / 2 - 150, canvas.height - 40, 300, 24);
       ctx.fillStyle = urgentThreat?.danger > 0.58 ? '#fecaca' : state.minigunCharge >= 100 ? '#fde68a' : '#e2e8f0';
       ctx.font = 'bold 13px system-ui';
+      ctx.shadowColor = urgentThreat?.danger > 0.58 ? 'rgba(248,113,113,0.32)' : 'rgba(125,211,252,0.18)';
+      ctx.shadowBlur = 8;
       ctx.fillText(statusText, canvas.width / 2, canvas.height - 23);
+      ctx.shadowBlur = 0;
 
       [minigunBtn, floatingMinigunBtn].forEach(btn => btn && btn.classList.toggle('ready', state.minigunCharge >= 100 && !state.paused && !state.gameOver));
     }

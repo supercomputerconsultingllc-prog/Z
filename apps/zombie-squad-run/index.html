@@ -1391,6 +1391,28 @@
       ctx.restore();
     }
 
+    function drawTinySoldier(x, y, tint, scale = 1, depth = 0) {
+      const bodyW = Math.max(1.2, 6 * scale);
+      const bodyH = Math.max(2, 9 * scale);
+      const head = Math.max(1, 2.8 * scale);
+      const bob = Math.sin((x + depth * 11) * 0.035) * scale * 0.35;
+      ctx.save();
+      ctx.translate(0, bob);
+      ctx.fillStyle = 'rgba(15,23,42,0.26)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + bodyH * 0.9, bodyW * 0.9, Math.max(0.8, 1.8 * scale), 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = tint;
+      ctx.fillRect(x - bodyW / 2, y - bodyH * 0.45, bodyW, bodyH);
+      ctx.fillStyle = '#dbeafe';
+      ctx.beginPath();
+      ctx.arc(x, y - bodyH * 0.6, head, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#1e3a8a';
+      ctx.fillRect(x - bodyW * 0.62, y + bodyH * 0.1, bodyW * 1.24, Math.max(0.9, 1.4 * scale));
+      ctx.restore();
+    }
+
     function drawSquad() {
       const total = Math.max(0, state.squad);
       if (!total) return;
@@ -1398,13 +1420,15 @@
       const crowdWidth = 560;
       const crowdHeight = 270;
       const startY = 636;
-      const minScale = total > 220 ? 0.045 : total > 140 ? 0.055 : total > 80 ? 0.065 : 0.08;
-      const maxScale = 0.95;
-      const baseBodyWidth = 18;
-      const baseBodyHeight = 24;
+      const armyMode = total >= 300;
+      const minScale = armyMode ? 0.03 : total > 220 ? 0.045 : total > 140 ? 0.055 : total > 80 ? 0.065 : 0.08;
+      const maxScale = armyMode ? 0.5 : 0.95;
+      const baseBodyWidth = armyMode ? 8 : 18;
+      const baseBodyHeight = armyMode ? 10 : 24;
 
       const maxColumnsThatFit = Math.max(1, Math.floor(crowdWidth / Math.max(baseBodyWidth * minScale, 1)) + 1);
-      const targetRows = Math.max(2, Math.ceil(Math.sqrt(total) / (total > 220 ? 2.3 : total > 140 ? 2.05 : total > 80 ? 1.75 : 1.35)));
+      const rowDensity = armyMode ? 3.2 : total > 220 ? 2.3 : total > 140 ? 2.05 : total > 80 ? 1.75 : 1.35;
+      const targetRows = Math.max(2, Math.ceil(Math.sqrt(total) / rowDensity));
       const columns = Math.max(1, Math.min(maxColumnsThatFit, Math.ceil(total / targetRows)));
       const rows = Math.max(1, Math.ceil(total / columns));
 
@@ -1417,12 +1441,12 @@
       const startX = (canvas.width - formationWidth) / 2;
       const visibleSoldiers = [];
 
-      const crowdGlow = ctx.createRadialGradient(canvas.width / 2, 585, 20, canvas.width / 2, 585, 260);
+      const crowdGlow = ctx.createRadialGradient(canvas.width / 2, 585, 20, canvas.width / 2, 585, armyMode ? 300 : 260);
       crowdGlow.addColorStop(0, 'rgba(96,165,250,0.18)');
       crowdGlow.addColorStop(1, 'rgba(96,165,250,0)');
       ctx.fillStyle = crowdGlow;
       ctx.beginPath();
-      ctx.ellipse(canvas.width / 2, 590, 280, 120, 0, 0, Math.PI * 2);
+      ctx.ellipse(canvas.width / 2, 590, armyMode ? 300 : 280, armyMode ? 132 : 120, 0, 0, Math.PI * 2);
       ctx.fill();
 
       for (let i = 0; i < total; i++) {
@@ -1448,14 +1472,15 @@
       visibleSoldiers.sort((a, b) => a.y - b.y);
       for (const soldier of visibleSoldiers) {
         const tint = soldier.row % 4 === 0 ? '#60a5fa' : soldier.row % 4 === 1 ? '#93c5fd' : soldier.row % 4 === 2 ? '#3b82f6' : '#2563eb';
-        drawPerson(soldier.x, soldier.y, tint, scale, soldier.row);
+        if (armyMode) drawTinySoldier(soldier.x, soldier.y, tint, scale, soldier.row);
+        else drawPerson(soldier.x, soldier.y, tint, scale, soldier.row);
       }
 
       ctx.fillStyle = 'rgba(15,23,42,.88)';
       ctx.fillRect(18, 162, 230, 36);
       ctx.fillStyle = '#cbd5e1';
       ctx.font = 'bold 16px system-ui';
-      ctx.fillText(`Rows ${rows} • Per row ${columns}`, 32, 185);
+      ctx.fillText(`${armyMode ? 'Army mode' : 'Rows'} ${rows} • Per row ${columns}`, 32, 185);
     }
 
     function drawObjects() {

@@ -174,12 +174,13 @@
           <p id="shopFeedback">Shop ready.</p>
         </div>
         <div class="card">
-          <h3>Style upgrades</h3>
-          <span class="pill">Zombie variants</span>
-          <span class="pill">Gun tiers</span>
-          <span class="pill">Soldier skins</span>
-          <span class="pill">Boss walls</span>
-          <span class="pill">Combat FX</span>
+          <h3>Avatar Armory</h3>
+          <p id="avatarCoinsText">Saved avatar coins: 0</p>
+          <button class="shop-btn secondary" id="avatarDefaultBtn">🪖 Default Trooper</button>
+          <button class="shop-btn secondary" id="avatarDesertBtn">🏜️ Desert Ranger (25)</button>
+          <button class="shop-btn secondary" id="avatarShadowBtn">🌑 Shadow Commando (40)</button>
+          <button class="shop-btn secondary" id="avatarBioBtn">☣️ Bio Armor (60)</button>
+          <p id="avatarFeedback">Choose an avatar for your shooters.</p>
         </div>
         <div class="card">
           <h3>Controls</h3>
@@ -233,6 +234,12 @@
     const buyReviveBtn = document.getElementById('buyReviveBtn');
     const weaponTierText = document.getElementById('weaponTierText');
     const shopFeedback = document.getElementById('shopFeedback');
+    const avatarCoinsText = document.getElementById('avatarCoinsText');
+    const avatarFeedback = document.getElementById('avatarFeedback');
+    const avatarDefaultBtn = document.getElementById('avatarDefaultBtn');
+    const avatarDesertBtn = document.getElementById('avatarDesertBtn');
+    const avatarShadowBtn = document.getElementById('avatarShadowBtn');
+    const avatarBioBtn = document.getElementById('avatarBioBtn');
     const laneLeftBtn = document.getElementById('laneLeftBtn');
     const laneCenterBtn = document.getElementById('laneCenterBtn');
     const laneRightBtn = document.getElementById('laneRightBtn');
@@ -245,6 +252,9 @@
     let cameraShake = 0;
     let best = Number(localStorage.getItem('zombie-squad-run-best') || 0);
     let bankCoins = 0;
+    let avatarCoins = Number(localStorage.getItem('zombie-squad-run-avatar-coins') || 0);
+    let selectedAvatar = localStorage.getItem('zombie-squad-run-avatar') || 'default';
+    let unlockedAvatars = JSON.parse(localStorage.getItem('zombie-squad-run-avatar-unlocks') || '["default"]');
     let soundOn = localStorage.getItem('zombie-squad-run-sound') !== 'off';
     let missionIndex = Number(localStorage.getItem('zombie-squad-run-mission-index') || 0);
     let missionProgress = Number(localStorage.getItem('zombie-squad-run-mission-progress') || 0);
@@ -321,9 +331,20 @@
       localStorage.setItem('zombie-squad-run-sound', soundOn ? 'on' : 'off');
       localStorage.setItem('zombie-squad-run-mission-index', String(missionIndex));
       localStorage.setItem('zombie-squad-run-mission-progress', String(missionProgress));
+      localStorage.setItem('zombie-squad-run-avatar-coins', String(avatarCoins));
+      localStorage.setItem('zombie-squad-run-avatar', selectedAvatar);
+      localStorage.setItem('zombie-squad-run-avatar-unlocks', JSON.stringify(unlockedAvatars));
     }
 
     function activeMission() { return MISSIONS[missionIndex % MISSIONS.length]; }
+
+    function syncAvatarHud() {
+      avatarCoinsText.textContent = `Saved avatar coins: ${avatarCoins}`;
+      avatarDefaultBtn.textContent = selectedAvatar === 'default' ? '🪖 Default Trooper ✓' : '🪖 Default Trooper';
+      avatarDesertBtn.textContent = unlockedAvatars.includes('desert') ? (selectedAvatar === 'desert' ? '🏜️ Desert Ranger ✓' : '🏜️ Desert Ranger') : '🏜️ Desert Ranger (25)';
+      avatarShadowBtn.textContent = unlockedAvatars.includes('shadow') ? (selectedAvatar === 'shadow' ? '🌑 Shadow Commando ✓' : '🌑 Shadow Commando') : '🌑 Shadow Commando (40)';
+      avatarBioBtn.textContent = unlockedAvatars.includes('bio') ? (selectedAvatar === 'bio' ? '☣️ Bio Armor ✓' : '☣️ Bio Armor') : '☣️ Bio Armor (60)';
+    }
 
     function syncMissionHud() {
       const mission = activeMission();
@@ -393,6 +414,7 @@
       bankCoins = 0;
       syncHud();
       syncMissionHud();
+      syncAvatarHud();
       showTitleScreen();
     }
 
@@ -419,6 +441,7 @@
       reviveStat.textContent = state.revives;
       weaponTierText.textContent = `Weapon tier: ${weaponTierName(state.firepower)}`;
       minigunStat.textContent = state.minigunUsed ? 'Used' : 'Ready';
+      syncAvatarHud();
       minigunBtn.disabled = state.minigunUsed || state.paused || state.gameOver;
       minigunBtn.textContent = state.minigunUsed ? '🌀 Minigun Used' : '🌀 Use Minigun';
       syncShopButtons();
@@ -637,6 +660,7 @@
     function endGame() {
       state.gameOver = true;
       state.running = false;
+      avatarCoins += state.coins;
       bankCoins = state.coins; saveMeta();
       overlay.innerHTML = `
         <div class="message">
@@ -960,18 +984,39 @@
       return 'heavy';
     }
 
+    function avatarPalette() {
+      if (selectedAvatar === 'desert') {
+        return {
+          bodyHi: '#fde68a', bodyLo: '#92400e', vest: '#78350f', shoulder: '#f59e0b', leg: '#a16207', shoe: '#1f2937',
+          arm: '#d97706', skinHi: '#fde68a', skinLo: '#b45309', hair: '#3f3f46', helmet: '#a16207', visor: 'rgba(253,224,71,0.45)', comms: '#fef3c7'
+        };
+      }
+      if (selectedAvatar === 'shadow') {
+        return {
+          bodyHi: '#cbd5e1', bodyLo: '#0f172a', vest: '#111827', shoulder: '#475569', leg: '#1e293b', shoe: '#020617',
+          arm: '#334155', skinHi: '#f1c27d', skinLo: '#8d5524', hair: '#111827', helmet: '#1f2937', visor: 'rgba(125,211,252,0.35)', comms: '#38bdf8'
+        };
+      }
+      if (selectedAvatar === 'bio') {
+        return {
+          bodyHi: '#bef264', bodyLo: '#166534', vest: '#14532d', shoulder: '#22c55e', leg: '#166534', shoe: '#052e16',
+          arm: '#4ade80', skinHi: '#d9f99d', skinLo: '#65a30d', hair: '#14532d', helmet: '#166534', visor: 'rgba(74,222,128,0.45)', comms: '#86efac'
+        };
+      }
+      return {
+        bodyHi: '#d9f99d', bodyLo: '#166534', vest: '#14532d', shoulder: '#84cc16', leg: '#3f6212', shoe: '#111827',
+        arm: '#65a30d', skinHi: '#fde68a', skinLo: '#b45309', hair: '#0f172a', helmet: '#365314', visor: 'rgba(110,231,183,0.55)', comms: '#facc15'
+      };
+    }
+
     function drawSquad() {
       const count = Math.min(state.squad, 12);
       const gear = squadGearForFirepower(state.firepower);
+      const palette = avatarPalette();
       for (let i=0;i<count;i++) {
         const lane = i%3; const row = Math.floor(i/3);
         const x = LANES[lane] + (lane===1?0:(lane===0?-10:10)); const y = 596 + row*20;
-        drawHumanoid(x, y, 0.92, {
-          bodyHi: '#d9f99d', bodyLo: '#166534',
-          vest: '#14532d', shoulder: '#84cc16', leg: '#3f6212', shoe: '#111827',
-          arm: '#65a30d', skinHi: '#fde68a', skinLo: '#b45309',
-          hair: '#0f172a', helmet: '#365314', visor: 'rgba(110,231,183,0.55)', comms: '#facc15'
-        }, 'human', gear);
+        drawHumanoid(x, y, 0.92, palette, 'human', gear);
       }
     }
 
@@ -1236,6 +1281,23 @@
     laneCenterBtn.addEventListener('click', () => fireAtLane(1));
     laneRightBtn.addEventListener('click', () => fireAtLane(2));
 
+    function unlockOrSelectAvatar(id, cost, label) {
+      if (!unlockedAvatars.includes(id)) {
+        if (avatarCoins < cost) {
+          avatarFeedback.textContent = `Need ${cost} saved avatar coins for ${label}.`;
+          avatarFeedback.style.color = '#fca5a5';
+          return;
+        }
+        avatarCoins -= cost;
+        unlockedAvatars.push(id);
+      }
+      selectedAvatar = id;
+      avatarFeedback.textContent = `${label} selected.`;
+      avatarFeedback.style.color = '#86efac';
+      saveMeta();
+      syncAvatarHud();
+    }
+
     buyGunBtn.addEventListener('click', () => {
       const nextTier = weaponTierName(Math.min(6, (state?.firepower ?? 1) + 1));
       purchaseUpgrade(10, () => {
@@ -1248,6 +1310,10 @@
     buyReviveBtn.addEventListener('click', () => purchaseUpgrade(15, () => {
       state.revives += 1;
     }, 'Extra revive stocked.'));
+    avatarDefaultBtn.addEventListener('click', () => unlockOrSelectAvatar('default', 0, 'Default Trooper'));
+    avatarDesertBtn.addEventListener('click', () => unlockOrSelectAvatar('desert', 25, 'Desert Ranger'));
+    avatarShadowBtn.addEventListener('click', () => unlockOrSelectAvatar('shadow', 40, 'Shadow Commando'));
+    avatarBioBtn.addEventListener('click', () => unlockOrSelectAvatar('bio', 60, 'Bio Armor'));
 
     window.closeOverlayAndResume = function() { overlay.innerHTML=''; state.paused=false; startMusic(); };
     window.startZombieRun = function() { ensureAudio(); overlay.innerHTML=''; state.paused=false; state.running=true; state.gameOver=false; startMusic(); };

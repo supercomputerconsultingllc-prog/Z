@@ -1531,9 +1531,10 @@
       const total = Math.max(0, state.squad);
       if (!total) return;
 
-      const crowdWidth = 680;
+      const crowdWidth = 760;
       const crowdHeight = 270;
       const startY = 636;
+      const normalRowCap = 12;
       const armyMode = total >= 300;
       const ultraArmyMode = total >= 500;
       const minScale = ultraArmyMode ? 0.022 : armyMode ? 0.03 : total > 220 ? 0.045 : total > 140 ? 0.055 : total > 80 ? 0.065 : 0.08;
@@ -1542,15 +1543,18 @@
       const baseBodyHeight = armyMode ? 10 : 24;
 
       const maxColumnsThatFit = Math.max(1, Math.floor(crowdWidth / Math.max(baseBodyWidth * minScale, 1)) + 1);
+      let columns;
       let rows;
-      if (ultraArmyMode) rows = Math.max(4, Math.ceil(total / Math.min(maxColumnsThatFit, 36)));
-      else if (armyMode) rows = Math.max(3, Math.ceil(total / Math.min(maxColumnsThatFit, 26)));
-      else if (total <= 12) rows = 1;
-      else if (total <= 24) rows = 2;
-      else if (total <= 36) rows = 3;
-      else if (total <= 48) rows = 4;
-      else rows = Math.max(5, Math.ceil(total / Math.min(maxColumnsThatFit, 12)));
-      const columns = Math.max(1, Math.min(maxColumnsThatFit, Math.ceil(total / rows)));
+      if (ultraArmyMode) {
+        columns = Math.min(total, maxColumnsThatFit, 36);
+        rows = Math.max(1, Math.ceil(total / columns));
+      } else if (armyMode) {
+        columns = Math.min(total, maxColumnsThatFit, 26);
+        rows = Math.max(1, Math.ceil(total / columns));
+      } else {
+        columns = Math.min(total, maxColumnsThatFit, normalRowCap);
+        rows = Math.max(1, Math.ceil(total / normalRowCap));
+      }
 
       const rawGapX = columns > 1 ? crowdWidth / (columns - 1) : crowdWidth;
       const rawGapY = rows > 1 ? crowdHeight / Math.max(rows - 1, 1) : crowdHeight;

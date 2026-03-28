@@ -686,11 +686,10 @@
         const bass = bassOffsets[(musicStep + i) % bassOffsets.length];
         const melodyFreq = root * Math.pow(2, note / 12);
         const bassFreq = (root * 0.5) * Math.pow(2, bass / 12);
-        playMusicNote(bassFreq, stepTime, 0.22, 'sawtooth', 1.05 * intensity);
-        playMusicNote(melodyFreq, stepTime, 0.15, 'square', 0.48 * intensity);
-        if (i % 2 === 0) playMusicNote(melodyFreq * 2, stepTime, 0.08, 'triangle', 0.18 * intensity);
-        if (i % 4 === 0) playKick(stepTime, 1.55 * intensity);
-        if (i % 2 === 1) playNoiseHit(stepTime, 0.06, 0.7 * intensity);
+        playMusicNote(bassFreq, stepTime, 0.22, 'sawtooth', 0.9 * intensity);
+        playMusicNote(melodyFreq, stepTime, 0.14, 'square', 0.36 * intensity);
+        if (i % 4 === 0) playKick(stepTime, 1.4 * intensity);
+        if (i % 4 === 2) playNoiseHit(stepTime, 0.05, 0.45 * intensity);
       }
       musicStep = (musicStep + 16) % 16;
     }
@@ -1582,36 +1581,39 @@
       if (!total) return;
 
       const centerX = canvas.width / 2;
-      const baseY = 622;
-      const crowdRadiusX = total >= 500 ? 320 : total >= 250 ? 285 : total >= 100 ? 245 : 205;
-      const crowdRadiusY = total >= 500 ? 150 : total >= 250 ? 138 : total >= 100 ? 124 : 108;
-      const armyMode = total >= 260;
-      const ultraArmyMode = total >= 500;
-      const minScale = ultraArmyMode ? 0.028 : armyMode ? 0.04 : total > 120 ? 0.06 : total > 60 ? 0.075 : 0.1;
-      const maxScale = ultraArmyMode ? 0.28 : armyMode ? 0.42 : 0.92;
+      const baseY = 628;
+      const armyMode = total >= 140;
+      const ultraArmyMode = total >= 320;
+      const maxDraw = ultraArmyMode ? Math.min(total, 700) : Math.min(total, 420);
+      const step = total > maxDraw ? total / maxDraw : 1;
+      const crowdRadiusX = ultraArmyMode ? 300 : armyMode ? 255 : 220;
+      const crowdRadiusY = ultraArmyMode ? 138 : armyMode ? 122 : 108;
+      const minScale = ultraArmyMode ? 0.03 : armyMode ? 0.05 : 0.11;
+      const maxScale = ultraArmyMode ? 0.24 : armyMode ? 0.36 : 0.88;
       const visibleSoldiers = [];
       const marchPhase = performance.now() * 0.004;
 
-      const crowdGlow = ctx.createRadialGradient(centerX, 592, 30, centerX, 592, crowdRadiusX + 35);
-      crowdGlow.addColorStop(0, armyMode ? 'rgba(96,165,250,0.26)' : 'rgba(96,165,250,0.18)');
+      const crowdGlow = ctx.createRadialGradient(centerX, 600, 24, centerX, 600, crowdRadiusX + 44);
+      crowdGlow.addColorStop(0, armyMode ? 'rgba(96,165,250,0.28)' : 'rgba(96,165,250,0.18)');
       crowdGlow.addColorStop(1, 'rgba(96,165,250,0)');
       ctx.fillStyle = crowdGlow;
       ctx.beginPath();
-      ctx.ellipse(centerX, 594 + (armyMode ? Math.sin(marchPhase) * 3 : 0), crowdRadiusX + 10, crowdRadiusY + 14, 0, 0, Math.PI * 2);
+      ctx.ellipse(centerX, 603 + (armyMode ? Math.sin(marchPhase) * 2.5 : 0), crowdRadiusX + 16, crowdRadiusY + 18, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      for (let i = 0; i < total; i++) {
-        const t = total === 1 ? 0 : i / Math.max(total - 1, 1);
-        const ringBias = Math.sqrt(t);
-        const angle = i * 2.399963229728653 + Math.sin(i * 0.35 + marchPhase) * 0.05;
-        const radiusX = ringBias * crowdRadiusX;
-        const radiusY = ringBias * crowdRadiusY;
-        let x = centerX + Math.cos(angle) * radiusX;
-        let y = baseY - Math.sin(angle) * radiusY;
-        y = Math.min(baseY, y);
-        const depth = (baseY - y) / Math.max(crowdRadiusY, 1);
-        const scale = Math.max(minScale, Math.min(maxScale, maxScale - depth * (armyMode ? 0.14 : 0.2)));
-        visibleSoldiers.push({ x, y, depth, scale, index: i });
+      let drawIndex = 0;
+      for (let n = 1; n <= total; n += step) {
+        const i = Math.floor(n - 1);
+        const t = total <= 1 ? 0 : i / (total - 1);
+        const angle = i * 2.399963229728653;
+        const squash = 0.72 + 0.28 * t;
+        const radius = Math.sqrt(t);
+        const x = centerX + Math.cos(angle) * crowdRadiusX * radius * squash;
+        const y = baseY - Math.sin(angle) * crowdRadiusY * radius;
+        const clampedY = Math.min(baseY, y);
+        const depth = (baseY - clampedY) / Math.max(crowdRadiusY, 1);
+        const scale = Math.max(minScale, Math.min(maxScale, maxScale - depth * (armyMode ? 0.12 : 0.18)));
+        visibleSoldiers.push({ x, y: clampedY, scale, depth, index: drawIndex++ });
       }
 
       const bannerGradient = ctx.createLinearGradient(0, 0, 220, 0);
@@ -1634,10 +1636,10 @@
       }
 
       ctx.fillStyle = 'rgba(15,23,42,.88)';
-      ctx.fillRect(18, 162, 320, 36);
+      ctx.fillRect(18, 162, 350, 36);
       ctx.fillStyle = '#cbd5e1';
       ctx.font = 'bold 16px system-ui';
-      ctx.fillText(`Squad ${total} • Circular mass • Bottom anchored`, 32, 185);
+      ctx.fillText(`Squad ${total} • Dense bottom crowd`, 32, 185);
     }
 
     function drawObjects() {

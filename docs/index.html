@@ -1599,6 +1599,17 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
+    function addDirectionalLight(x, y, w, h, alpha = 0.2) {
+      const light = ctx.createLinearGradient(x - w * 0.6, y - h * 0.5, x + w * 0.7, y + h * 0.7);
+      light.addColorStop(0, `rgba(255,255,255,${alpha})`);
+      light.addColorStop(0.45, 'rgba(255,255,255,0.04)');
+      light.addColorStop(1, 'rgba(0,0,0,0.14)');
+      ctx.fillStyle = light;
+      ctx.beginPath();
+      ctx.roundRect(x - w / 2, y - h / 2, w, h, Math.max(2, Math.min(w, h) * 0.18));
+      ctx.fill();
+    }
+
     function drawPerson(x, y, color, scale = 1, depth = 0) {
       const head = 8.5 * scale;
       const bodyW = 15 * scale;
@@ -1641,26 +1652,34 @@
       ctx.fill();
 
       const palette = avatarPalette(color);
+      ctx.lineWidth = Math.max(1.2, 1.4 * scale);
+      ctx.strokeStyle = 'rgba(226,232,240,0.18)';
       ctx.fillStyle = palette.helmet;
       ctx.beginPath();
       ctx.roundRect(x - helmetW / 2, y - 19 * scale, helmetW, helmetH, 4 * scale);
       ctx.fill();
+      ctx.stroke();
       ctx.fillStyle = palette.accent;
       ctx.fillRect(x - helmetW * 0.28, y - 17.1 * scale, helmetW * 0.56, 1.8 * scale);
       ctx.fillStyle = palette.visor;
       ctx.beginPath();
       ctx.roundRect(x - helmetW * 0.18, y - 15.5 * scale, helmetW * 0.36, 2 * scale, 2 * scale);
       ctx.fill();
+      addDirectionalLight(x, y - 16 * scale, helmetW * 0.92, helmetH * 0.92, 0.2);
 
       const torsoGrad = ctx.createLinearGradient(x - bodyW / 2, y - 2 * scale, x + bodyW / 2, y + bodyH);
       torsoGrad.addColorStop(0, palette.armorTop);
       torsoGrad.addColorStop(0.32, palette.armorMid);
       torsoGrad.addColorStop(0.7, palette.armorBottom);
       torsoGrad.addColorStop(1, '#0f172a');
+      ctx.lineWidth = Math.max(1.2, 1.5 * scale);
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
       ctx.fillStyle = torsoGrad;
       ctx.beginPath();
       ctx.roundRect(x - bodyW / 2, y - 2 * scale, bodyW, bodyH, 4 * scale);
       ctx.fill();
+      ctx.stroke();
+      addDirectionalLight(x, y + bodyH * 0.38, bodyW, bodyH, 0.18);
       ctx.fillStyle = 'rgba(255,255,255,0.22)';
       ctx.beginPath();
       ctx.roundRect(x - bodyW * 0.36, y + 0.4 * scale, bodyW * 0.22, bodyH * 0.66, 2 * scale);
@@ -1684,17 +1703,19 @@
       ctx.fill();
 
       const gunGradient = ctx.createLinearGradient(x, y, x + gunW, y + gunH);
-      gunGradient.addColorStop(0, '#64748b');
-      gunGradient.addColorStop(0.55, '#e2e8f0');
-      gunGradient.addColorStop(1, '#475569');
+      gunGradient.addColorStop(0, '#475569');
+      gunGradient.addColorStop(0.4, '#e2e8f0');
+      gunGradient.addColorStop(1, '#1e293b');
       ctx.fillStyle = gunGradient;
       ctx.beginPath();
-      ctx.roundRect(x + bodyW * 0.18, y + 4 * scale, gunW, gunH, 1.8 * scale);
+      ctx.roundRect(x + bodyW * 0.16, y + 3.6 * scale, gunW * 1.18, gunH * 1.15, 1.8 * scale);
       ctx.fill();
       ctx.fillStyle = '#f8fafc';
-      ctx.fillRect(x + bodyW * 0.18 + gunW * 0.64, y + 4.5 * scale, gunW * 0.2, gunH * 0.36);
+      ctx.fillRect(x + bodyW * 0.16 + gunW * 0.82, y + 4.2 * scale, gunW * 0.2, gunH * 0.32);
       ctx.fillStyle = '#1e293b';
-      ctx.fillRect(x + bodyW * 0.08, y + 5.1 * scale, gunW * 0.22, gunH * 0.7);
+      ctx.fillRect(x + bodyW * 0.05, y + 5.1 * scale, gunW * 0.26, gunH * 0.82);
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.fillRect(x + bodyW * 0.24, y + 4.1 * scale, gunW * 0.5, gunH * 0.18);
 
       const legGrad = ctx.createLinearGradient(x, y + bodyH - 2 * scale, x, y + bodyH + legH);
       legGrad.addColorStop(0, '#334155');
@@ -1746,10 +1767,14 @@
       bodyGrad.addColorStop(0, variant === 'boss' ? '#7c3aed' : variant === 'shield' ? '#94a3b8' : '#4b5563');
       bodyGrad.addColorStop(0.4, variant === 'boss' ? '#4c1d95' : '#1f2937');
       bodyGrad.addColorStop(1, '#020617');
+      ctx.lineWidth = Math.max(1.2, 1.6 * scale);
+      ctx.strokeStyle = variant === 'boss' ? 'rgba(233,213,255,0.18)' : 'rgba(226,232,240,0.08)';
       ctx.fillStyle = bodyGrad;
       ctx.beginPath();
       ctx.roundRect(x - bodyW / 2, y - 1 * scale, bodyW, bodyH, 4 * scale);
       ctx.fill();
+      ctx.stroke();
+      addDirectionalLight(x, y + bodyH * 0.35, bodyW, bodyH, variant === 'boss' ? 0.22 : 0.14);
       ctx.fillStyle = 'rgba(255,255,255,0.08)';
       ctx.beginPath();
       ctx.roundRect(x - bodyW * 0.28, y + 1.5 * scale, bodyW * 0.18, bodyH * 0.62, 2 * scale);
@@ -1965,6 +1990,13 @@
           ctx.fillStyle='#f8fafc'; ctx.font='bold 18px system-ui'; ctx.textAlign='center'; ctx.fillText(String(Math.ceil(obj.hp)),obj.x,obj.y-34);
         } else if (obj.type === 'boss') {
           drawObjectGroundShadow(obj, 28, 9, 0.34);
+          const bossPulse = 0.72 + Math.sin(performance.now() * 0.006) * 0.18;
+          const bossBeam = ctx.createLinearGradient(obj.x, obj.y - 190, obj.x, obj.y + 20);
+          bossBeam.addColorStop(0, `rgba(248,113,113,${0.04 * bossPulse})`);
+          bossBeam.addColorStop(0.5, `rgba(239,68,68,${0.18 * bossPulse})`);
+          bossBeam.addColorStop(1, 'rgba(239,68,68,0)');
+          ctx.fillStyle = bossBeam;
+          ctx.fillRect(obj.x - 74, obj.y - 200, 148, 230);
           drawZombie(obj.x, obj.y, 1.72, 5, 'boss');
           const bossGlow = ctx.createRadialGradient(obj.x, obj.y - 18, 12, obj.x, obj.y - 10, 74);
           bossGlow.addColorStop(0, 'rgba(239,68,68,.3)');
@@ -1981,7 +2013,7 @@
         } else if (obj.type === 'crate') {
           drawObjectGroundShadow(obj, 16, 5.4, 0.28);
           drawLootZombie(obj.x, obj.y, 1);
-          ctx.fillStyle='#fee2e2'; ctx.font='bold 14px system-ui'; ctx.textAlign='center'; ctx.fillText('GORE',obj.x,obj.y-30);
+          ctx.fillStyle='#fee2e2'; ctx.font='bold 14px system-ui'; ctx.textAlign='center'; ctx.fillText('HUSK',obj.x,obj.y-30);
         } else if (obj.type === 'wall') {
           drawObjectGroundShadow(obj, 34, 8, 0.32);
           addRimLight(obj.x, obj.y, 70, 'rgba(248,113,113,ALPHA)', 0.12);

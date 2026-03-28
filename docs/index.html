@@ -1146,7 +1146,7 @@
         squad: 8, firepower: 1, distance: 0, wave: 1, speed: 190,
         bullets: [], objects: [], particles: [], spawnTimer: 0, running: true, paused: true, gameOver: false,
         lastTime: performance.now(), coins: 0, revives: 1, usedRevive: false, distanceCoinsTick: 0,
-        minigunCharge: 100, minigunActiveUntil: 0, lastMinigunBurst: 0
+        minigunCharge: 100, minigunActiveUntil: 0, lastMinigunBurst: 0, bossWarningUntil: 0
       };
       crowdCache = null;
       bankCoins = 0;
@@ -1298,6 +1298,7 @@
     function spawnBossWave() {
       const lane = rand(0, 2);
       bossWave = true;
+      state.bossWarningUntil = performance.now() + 1800;
       state.objects.push({ type:'boss', lane, x:LANES[lane], y:-130, hp:22 + state.wave * 2, reward:6, size:82, speedFactor:0.65 });
       state.objects.push({ type:'shield', lane:(lane + 1) % 3, x:LANES[(lane + 1) % 3], y:-90, hp:8 + Math.floor(state.wave * 0.8), reward:2, size:52, speedFactor:0.85 });
       trimRuntimeLoad();
@@ -1387,7 +1388,7 @@
       if (!state.running || state.paused || state.gameOver) return;
       state.distance += dt * (state.speed / 12);
       state.wave = 1 + Math.floor(state.distance / 180);
-      state.speed = 190 + state.wave * 8;
+      state.speed = 186 + state.wave * 7.5;
       state.minigunCharge = Math.min(100, state.minigunCharge + dt * 8);
       screenShake = Math.max(0, screenShake - dt * 26);
       hitFlash = Math.max(0, hitFlash - dt * 1.8);
@@ -1405,9 +1406,12 @@
       if (roundCoins > state.distanceCoinsTick) { addCoins(roundCoins - state.distanceCoinsTick); state.distanceCoinsTick = roundCoins; }
       state.spawnTimer -= dt;
       if (state.spawnTimer <= 0) {
-        const objectCap = mobileSafeMode ? 6 : 9;
+        const perfTier = squadPerfTier();
+        const objectCap = perfTier >= 2 ? 6 : mobileSafeMode ? 6 : 9;
         if (state.objects.length < objectCap) spawnObject();
-        state.spawnTimer = Math.max(mobileSafeMode ? 0.78 : 0.62, 1.15 - state.wave * 0.025);
+        const earlyGrace = state.wave <= 3 ? 0.14 : state.wave <= 6 ? 0.08 : 0;
+        const spawnFloor = perfTier >= 2 ? 0.72 : mobileSafeMode ? 0.78 : 0.66;
+        state.spawnTimer = Math.max(spawnFloor, 1.22 - state.wave * 0.024 + earlyGrace + (bossWave ? 0.06 : 0));
       }
       for (const bullet of state.bullets) {
         bullet.y -= bullet.speed * dt;
@@ -2391,6 +2395,11 @@
           addRimLight(obj.x, obj.y, 76, 'rgba(248,113,113,ALPHA)', 0.14);
           const currentHp = Math.max(0, Math.ceil(obj.hp));
           const maxHp = Math.max(currentHp, obj.maxHp || currentHp || 1);
+          if (currentHp > 0 && currentHp / maxHp > 0.5) {
+            const pulse = 0.16 + Math.sin(performance.now() * 0.01 + obj.lane * 0.9) * 0.06;
+            ctx.fillStyle = `rgba(251,146,60,${Math.max(0.08, pulse)})`;
+            ctx.fillRect(obj.x - 58, obj.y - 92, 116, 18);
+          }
           obj.maxHp = maxHp;
           const cols = 4;
           const rows = 3;
@@ -2652,6 +2661,46 @@
       ctx.fillText(missionPopup.button, buttonX + buttonW / 2, buttonY + 33);
     }
 
+    function getLaneThreats() {
+      const threats = LANES.map((x, lane) => ({ lane, x, obj: null, danger: 0 }));
+      for (const obj of state.objects) {
+        if (!obj || obj.hp <= 0 || obj.lane == null) continue;
+        const laneThreat = threats[obj.lane];
+        const approach = Math.max(0, Math.min(1, (obj.y - 120) / 470));
+        const weight = obj.type === 'boss' ? 1 : obj.type === 'wall' ? 0.9 : obj.type === 'shield' ? 0.82 : obj.type === 'runner' ? 0.76 : 0.64;
+        const danger = approach * weight;
+        if (danger > laneThreat.danger) {
+          laneThreat.obj = obj;
+          laneThreat.danger = danger;
+        }
+      }
+      return threats;
+    }
+
+    function drawLaneWarnings() {
+      const threats = getLaneThreats();
+      const perfTier = squadPerfTier();
+      for (const threat of threats) {
+        if (!threat.obj || threat.danger < 0.18) continue;
+        const pulse = 0.72 + Math.sin(performance.now() * 0.01 + threat.lane * 1.8) * 0.2;
+        const alpha = Math.min(0.7, threat.danger * (perfTier >= 2 ? 0.42 : 0.58)) * pulse;
+        const color = threat.obj.type === 'boss' ? `rgba(239,68,68,${alpha})` : threat.obj.type === 'wall' ? `rgba(251,146,60,${alpha})` : `rgba(248,113,113,${alpha})`;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(threat.x, 542);
+        ctx.lineTo(threat.x - 18, 574);
+        ctx.lineTo(threat.x + 18, 574);
+        ctx.closePath();
+        ctx.fill();
+        if (perfTier <= 1) {
+          ctx.fillStyle = 'rgba(255,255,255,0.12)';
+          ctx.fillRect(threat.x - 28, 582, 56, 7);
+          ctx.fillStyle = threat.obj.type === 'boss' ? '#ef4444' : threat.obj.type === 'wall' ? '#fb923c' : '#f87171';
+          ctx.fillRect(threat.x - 28, 582, 56 * Math.min(1, threat.danger), 7);
+        }
+      }
+    }
+
     function drawHint() {
       const titleGlow = ctx.createLinearGradient(86, 6, canvas.width - 86, 56);
       titleGlow.addColorStop(0, 'rgba(59,130,246,.18)');
@@ -2677,6 +2726,36 @@
       ctx.fillStyle='#fff'; ctx.font='bold 24px system-ui'; ctx.fillText(`${Math.floor(state.minigunCharge)}%`, canvas.width - 158, 68);
       ctx.fillStyle='rgba(255,255,255,.12)'; ctx.fillRect(canvas.width - 158, 76, 116, 8);
       ctx.fillStyle=state.minigunCharge >= 100 ? '#ef4444' : '#f59e0b'; ctx.fillRect(canvas.width - 158, 76, 116 * (state.minigunCharge / 100), 8);
+
+      if (state.bossWarningUntil > performance.now()) {
+        const remain = (state.bossWarningUntil - performance.now()) / 1000;
+        const pulse = 0.74 + Math.sin(performance.now() * 0.02) * 0.18;
+        ctx.fillStyle = `rgba(127,29,29,${0.72 * pulse})`;
+        ctx.fillRect(canvas.width / 2 - 136, 64, 272, 32);
+        ctx.strokeStyle = `rgba(248,113,113,${0.7 * pulse})`;
+        ctx.strokeRect(canvas.width / 2 - 136, 64, 272, 32);
+        ctx.fillStyle = '#fee2e2';
+        ctx.font = 'bold 18px system-ui';
+        ctx.fillText(remain > 0.9 ? 'BOSS WAVE INCOMING' : 'BOSS ENTERING NOW', canvas.width / 2, 86);
+      }
+
+      const laneThreats = getLaneThreats();
+      const urgentThreat = laneThreats.reduce((best, threat) => threat.danger > best.danger ? threat : best, laneThreats[0]);
+      let statusText = controlsMode === 'buttons' ? 'Use lane buttons for quick shots' : 'Tap any lane to fire';
+      if (urgentThreat?.obj && urgentThreat.danger > 0.58) {
+        const laneName = urgentThreat.lane === 0 ? 'LEFT' : urgentThreat.lane === 1 ? 'CENTER' : 'RIGHT';
+        statusText = `${laneName} ${urgentThreat.obj.type === 'wall' ? 'WALL' : urgentThreat.obj.type.toUpperCase()} CLOSE`;
+      } else if (state.minigunCharge >= 100) {
+        statusText = 'MINIGUN READY';
+      }
+      ctx.fillStyle = 'rgba(15,23,42,0.82)';
+      ctx.fillRect(canvas.width / 2 - 150, canvas.height - 40, 300, 24);
+      ctx.strokeStyle = 'rgba(148,163,184,0.22)';
+      ctx.strokeRect(canvas.width / 2 - 150, canvas.height - 40, 300, 24);
+      ctx.fillStyle = urgentThreat?.danger > 0.58 ? '#fecaca' : state.minigunCharge >= 100 ? '#fde68a' : '#e2e8f0';
+      ctx.font = 'bold 13px system-ui';
+      ctx.fillText(statusText, canvas.width / 2, canvas.height - 23);
+
       [minigunBtn, floatingMinigunBtn].forEach(btn => btn && btn.classList.toggle('ready', state.minigunCharge >= 100 && !state.paused && !state.gameOver));
     }
 
@@ -2687,7 +2766,7 @@
         const dy = (Math.random() - 0.5) * screenShake;
         ctx.translate(dx, dy);
       }
-      drawRoad(); drawHeatHaze(); drawSquad(); drawObjects(); drawMuzzleFlashes(); drawBullets(); drawShellCasings(); drawParticles(); drawDepthFog(); drawHint();
+      drawRoad(); drawHeatHaze(); drawSquad(); drawObjects(); drawLaneWarnings(); drawMuzzleFlashes(); drawBullets(); drawShellCasings(); drawParticles(); drawDepthFog(); drawHint();
       if (missionPopup) drawMissionPopup();
       ctx.restore();
       if (hitFlash > 0.01) {

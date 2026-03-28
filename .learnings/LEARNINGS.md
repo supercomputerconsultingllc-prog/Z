@@ -1,5 +1,28 @@
 # LEARNINGS
 
+## [LRN-20260327-001] best_practice
+
+**Logged**: 2026-03-27T22:24:00-07:00
+**Priority**: high
+**Status**: pending
+**Area**: docs
+
+### Summary
+When a user asks to go back to a previously working version, restore the exact target files from a known-good commit first, instead of stacking multiple reverts.
+
+### Details
+During the Zombie Squad Run rollback sequence, layered reverts and re-reverts made the history noisy and increased confusion about what state the live game files were actually in. The safer move was to identify the specific known-good commit and restore `docs/index.html` and `apps/zombie-squad-run/index.html` directly from that commit.
+
+### Suggested Action
+For future rollback requests on a subset of files, prefer `git checkout <known-good-commit> -- <files>` followed by one explicit commit, before trying chains of revert commits.
+
+### Metadata
+- Source: conversation
+- Related Files: docs/index.html, apps/zombie-squad-run/index.html, TOOLS.md
+- Tags: rollback, git, deploy, best-practice
+
+---
+
 ## [LRN-20260320-001] correction
 
 **Logged**: 2026-03-20T07:28:07-07:00

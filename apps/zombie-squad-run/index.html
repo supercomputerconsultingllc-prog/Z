@@ -1454,7 +1454,7 @@
       const total = Math.max(0, state.squad);
       if (!total) return;
 
-      const crowdWidth = 560;
+      const crowdWidth = 680;
       const crowdHeight = 270;
       const startY = 636;
       const armyMode = total >= 300;
@@ -1474,8 +1474,6 @@
       const scale = Math.max(minScale, Math.min(maxScale, rawGapX / baseBodyWidth, rawGapY / baseBodyHeight));
       const gapX = columns > 1 ? crowdWidth / (columns - 1) : 0;
       const gapY = rows > 1 ? crowdHeight / Math.max(rows - 1, 1) : 0;
-      const formationWidth = gapX * Math.max(columns - 1, 0);
-      const startX = (canvas.width - formationWidth) / 2;
       const visibleSoldiers = [];
 
       const marchPhase = performance.now() * 0.004;
@@ -1490,7 +1488,11 @@
       for (let i = 0; i < total; i++) {
         const row = Math.floor(i / columns);
         const col = i % columns;
-        const x = columns === 1 ? canvas.width / 2 : startX + col * gapX;
+        const rowStartIndex = row * columns;
+        const rowCount = Math.min(columns, total - rowStartIndex);
+        const rowWidth = gapX * Math.max(rowCount - 1, 0);
+        const rowStartX = (canvas.width - rowWidth) / 2;
+        const x = rowCount === 1 ? canvas.width / 2 : rowStartX + col * gapX;
         const y = startY - row * gapY;
         visibleSoldiers.push({ x, y, row, col });
       }

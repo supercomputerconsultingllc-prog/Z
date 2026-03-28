@@ -389,7 +389,7 @@
         squad: 8, firepower: 1, distance: 0, wave: 1, speed: 190,
         bullets: [], objects: [], spawnTimer: 0, running: true, paused: true, gameOver: false,
         lastTime: performance.now(), coins: bankCoins, revives: 1, usedRevive: false, distanceCoinsTick: 0,
-        minigunReadyWave: 1, minigunUsed: false
+        minigunReadyWave: 1, minigunUsed: false, surgeWave: 0
       };
       syncHud();
       syncMissionHud();
@@ -506,9 +506,9 @@
       syncHud();
     }
 
-    function spawnObject() {
+    function spawnObject(forceZombie = false) {
       const lane = rand(0, 2);
-      const roll = Math.random();
+      const roll = forceZombie ? 0 : Math.random();
       let obj;
       if (roll < 0.42) {
         const waveTier = Math.floor((state.wave - 1) / 2);
@@ -537,19 +537,29 @@
 
       if (!state.running || state.paused || state.gameOver) return;
       state.distance += dt * (state.speed / 12);
+      const waveLength = 260;
       const prevWave = state.wave;
-      state.wave = 1 + Math.floor(state.distance / 180);
+      state.wave = 1 + Math.floor(state.distance / waveLength);
+      const waveProgress = (state.distance % waveLength) / waveLength;
       if (state.wave !== prevWave) {
         state.minigunUsed = false;
         state.minigunReadyWave = state.wave;
+        state.surgeWave = 0;
         showShopFeedback(`Wave ${state.wave}: Minigun reloaded.`, true);
         playTone(700, 0.12, 'triangle', 0.018);
+      }
+      if (waveProgress > 0.82 && state.surgeWave !== state.wave) {
+        state.surgeWave = state.wave;
+        showShopFeedback(`Wave ${state.wave}: zombie surge incoming.`, false);
+        playTone(150, 0.18, 'sawtooth', 0.026);
+        for (let i = 0; i < 4 + Math.floor(state.wave / 2); i++) spawnObject(true);
       }
       state.speed = 190 + state.wave * 8;
       const distanceCoins = Math.floor(state.distance / 100);
       if (distanceCoins > state.distanceCoinsTick) { addCoins(distanceCoins - state.distanceCoinsTick); state.distanceCoinsTick = distanceCoins; }
       state.spawnTimer -= dt;
-      if (state.spawnTimer <= 0) { spawnObject(); state.spawnTimer = Math.max(0.32, 1.05 - state.wave * 0.03); }
+      const spawnCadence = waveProgress > 0.82 ? Math.max(0.2, 0.72 - state.wave * 0.025) : Math.max(0.42, 1.15 - state.wave * 0.022);
+      if (state.spawnTimer <= 0) { spawnObject(waveProgress > 0.82 && Math.random() < 0.7); state.spawnTimer = spawnCadence; }
       for (const bullet of state.bullets) bullet.y -= bullet.speed * dt;
       state.bullets = state.bullets.filter(b => b.y > -20);
       for (const obj of state.objects) obj.y += state.speed * dt;
@@ -968,7 +978,7 @@
         { bodyHi: '#86efac', bodyLo: '#14532d', leg: '#166534', shoe: '#052e16', arm: '#22c55e', skinHi: '#bef264', skinLo: '#3f6212', hair: '#365314' }
       ];
       const palette = zombiePalettes[reward % zombiePalettes.length];
-      const scale = 1.08 + reward * 0.12;
+      const scale = 1.12 + reward * 0.14;
 
       ctx.save();
       ctx.fillStyle = 'rgba(0,0,0,0.3)';
@@ -990,7 +1000,7 @@
       ctx.restore();
 
       if (reward >= 2) {
-        ctx.fillStyle = 'rgba(127,29,29,0.35)';
+        ctx.fillStyle = 'rgba(127,29,29,0.45)';
         ctx.beginPath();
         ctx.moveTo(x - 16, y - 42);
         ctx.lineTo(x - 6, y - 58);
@@ -1003,6 +1013,8 @@
         ctx.lineTo(x - 4, y - 40);
         ctx.closePath();
         ctx.fill();
+        ctx.fillStyle = 'rgba(127,29,29,0.32)';
+        ctx.fillRect(x - 8, y - 8, 16, 6);
       }
 
       if (reward >= 3) {

@@ -1495,11 +1495,11 @@
       }
     }
 
-    function avatarPalette(color) {
+    function avatarPalette() {
       if (selectedAvatar === 'ranger') return { armorTop: '#86efac', armorMid: '#4ade80', armorBottom: '#166534', helmet: '#3f6212', visor: '#dcfce7', accent: '#bbf7d0' };
       if (selectedAvatar === 'commander') return { armorTop: '#bfdbfe', armorMid: '#60a5fa', armorBottom: '#1d4ed8', helmet: '#1e40af', visor: '#e0f2fe', accent: '#93c5fd' };
       if (selectedAvatar === 'gold') return { armorTop: '#fde68a', armorMid: '#fbbf24', armorBottom: '#b45309', helmet: '#92400e', visor: '#fff7ed', accent: '#fcd34d' };
-      return { armorTop: '#bfdbfe', armorMid: '#93c5fd', armorBottom: color || '#2563eb', helmet: '#1d4ed8', visor: '#eff6ff', accent: '#dbeafe' };
+      return { armorTop: '#bfdbfe', armorMid: '#93c5fd', armorBottom: color, helmet: '#1d4ed8', visor: '#eff6ff', accent: '#dbeafe' };
     }
 
     function drawPerson(x, y, color, scale = 1, depth = 0) {

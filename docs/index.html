@@ -1353,6 +1353,7 @@
         const spreadBase = bulletCount > 1 ? (i - (bulletCount - 1) / 2) : 0;
         const drift = spreadBase * profile.spread * (crowdSafeMode ? 0.85 : 1);
         state.bullets.push({
+          lane: laneIndex,
           x: laneX + spreadBase * (crowdSafeMode ? 14 : 10),
           y: 600,
           speed: 560 + speedBoost + profile.speed,
@@ -1514,9 +1515,13 @@
 
       const nowAudioMs = performance.now();
       if (soundOn && !state.paused && !state.gameOver && nowAudioMs >= (state.nextGroanAt || 0)) {
-        const groanCandidates = state.objects.filter(obj => obj.hp > 0 && (obj.type === 'zombie' || obj.type === 'lootzombie' || obj.type === 'runner' || obj.type === 'shield' || obj.type === 'boss') && obj.y > 120);
-        if (groanCandidates.length) {
-          const groanTarget = groanCandidates.sort((a, b) => b.y - a.y)[0];
+        let groanTarget = null;
+        for (const obj of state.objects) {
+          if (obj.hp <= 0 || obj.y <= 120) continue;
+          if (obj.type !== 'zombie' && obj.type !== 'lootzombie' && obj.type !== 'runner' && obj.type !== 'shield' && obj.type !== 'boss') continue;
+          if (!groanTarget || obj.y > groanTarget.y) groanTarget = obj;
+        }
+        if (groanTarget) {
           const sizeBoost = groanTarget.type === 'boss' ? 1.9 : groanTarget.type === 'shield' ? 1.25 : groanTarget.type === 'runner' ? 0.8 : 1;
           playZombieGroan(sizeBoost, groanTarget.type);
         }
@@ -1538,10 +1543,13 @@
       }
       state.bullets = state.bullets.filter(b => b.y > -30 && b.x > -40 && b.x < canvas.width + 40);
       for (const obj of state.objects) obj.y += state.speed * (obj.speedFactor || 1) * dt;
-      const collisionBullets = state.bullets.length > (mobileSafeMode ? 18 : 36) ? state.bullets.filter((_, i) => i % 2 === 0) : state.bullets;
-      for (const bullet of collisionBullets) {
+      const collisionStride = state.bullets.length > (mobileSafeMode ? 18 : 36) ? 2 : 1;
+      for (let bulletIndex = 0; bulletIndex < state.bullets.length; bulletIndex += collisionStride) {
+        const bullet = state.bullets[bulletIndex];
+        if (!bullet) continue;
         for (const obj of state.objects) {
           if (obj.hp <= 0) continue;
+          if (obj.lane != null && bullet.lane != null && obj.lane !== bullet.lane) continue;
           if (Math.abs(bullet.x - obj.x) < obj.size * 0.55 && Math.abs(bullet.y - obj.y) < obj.size * 0.55) {
             obj.hp -= bullet.damage || 1;
             addScreenShake(bullet.style === 'minigun' ? 4 : bullet.style === 'plasma' ? 6 : 3, bullet.style === 'plasma' ? 0.08 : 0.04);
@@ -1709,6 +1717,12 @@
           const sx = (i * 53) % canvas.width;
           const sy = 26 + ((i * 37 + skylineDrift * 0.7) % 180);
           ctx.fillRect(sx, sy, 2, 2);
+        }
+        ctx.fillStyle = 'rgba(191,219,254,0.14)';
+        for (let i = 0; i < 6; i++) {
+          const sx = 40 + i * 118;
+          const sy = 42 + ((i * 29 + skylineDrift * 0.35) % 120);
+          ctx.fillRect(sx, sy, 1, 1);
         }
       }
 
@@ -2455,6 +2469,9 @@
       ctx.beginPath();
       ctx.arc(x, y + 1 * scale, 3.2 * scale, 0, Math.PI * 2);
       ctx.fill();
+      ctx.strokeStyle = 'rgba(120,53,15,0.42)';
+      ctx.lineWidth = 1.2 * scale;
+      ctx.strokeRect(x - 20 * scale, y - 6 * scale, 40 * scale, 26 * scale);
       ctx.fillStyle = 'rgba(255,255,255,0.24)';
       ctx.beginPath();
       ctx.ellipse(x - 6 * scale, y - 5 * scale, 6 * scale, 2.2 * scale, -0.25, 0, Math.PI * 2);
@@ -3064,6 +3081,7 @@
       titleGrad.addColorStop(1, 'rgba(30,64,175,.72)');
       ctx.fillStyle = titleGrad; ctx.fillRect(86,8,canvas.width - 172,46);
       ctx.fillStyle = gloss; ctx.fillRect(90,10,canvas.width - 180,12);
+      ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fillRect(96, 42, canvas.width - 192, 2);
       ctx.strokeStyle = 'rgba(148,163,184,.22)'; ctx.lineWidth = 1.5; ctx.strokeRect(86,8,canvas.width - 172,46);
       ctx.shadowColor = 'rgba(96,165,250,0.18)';
       ctx.shadowBlur = 10;

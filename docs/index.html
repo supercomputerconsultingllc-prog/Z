@@ -3188,6 +3188,11 @@
       }
     });
 
+    window.openMoneyPanel = openMoneyPanel;
+    window.openEnhancementPanel = openEnhancementPanel;
+    window.openAvatarPanel = openAvatarPanel;
+    window.openSettingsPanel = openSettingsPanel;
+
     window.buyStarterPack = function() {
       if (starterPackClaimed) {
         overlay.innerHTML = moneyPanelMarkup();

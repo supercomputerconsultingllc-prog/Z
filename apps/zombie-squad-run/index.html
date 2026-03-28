@@ -330,7 +330,7 @@
   <main class="app">
     <section class="topbar">
       <div class="stat"><span class="label">Squad</span><span class="value" id="squadStat">8</span></div>
-      <div class="stat"><span class="label">Firepower</span><span class="value" id="gunStat">1</span></div>
+      <div class="stat"><span class="label">Firepower</span><span class="value" id="gunStat">1</span><span class="label" id="weaponNameStat" style="margin-top:6px;display:block;color:#cbd5e1;letter-spacing:.04em;text-transform:none;">Rifle</span></div>
       <div class="stat"><span class="label">Distance</span><span class="value" id="distanceStat">0</span></div>
       <div class="stat"><span class="label">Wave</span><span class="value" id="waveStat">1</span></div>
       <div class="stat"><span class="label">Coins</span><span class="value" id="coinStat">0</span></div>
@@ -435,6 +435,7 @@
     const overlay = document.getElementById('overlay');
     const squadStat = document.getElementById('squadStat');
     const gunStat = document.getElementById('gunStat');
+    const weaponNameStat = document.getElementById('weaponNameStat');
     const distanceStat = document.getElementById('distanceStat');
     const waveStat = document.getElementById('waveStat');
     const bestStat = document.getElementById('bestStat');
@@ -479,6 +480,9 @@
     let youtubeVisitClaimed = localStorage.getItem('zombie-squad-run-youtube-visit') === 'claimed';
     let youtubeSubscribeClaimed = localStorage.getItem('zombie-squad-run-youtube-subscribe') === 'claimed';
     let starterPackClaimed = localStorage.getItem('zombie-squad-run-starter-pack') === 'claimed';
+    let screenShake = 0;
+    let hitFlash = 0;
+    let bossWave = false;
     const MISSIONS = [
       { label: 'Break 12 walls', target: 12, event: 'walls' },
       { label: 'Recruit 32 survivors', target: 32, event: 'survivors' },
@@ -672,46 +676,45 @@
 
     function moneyPanelMarkup() {
       return `
-        <div class="message">
-          <h2>Money Button</h2>
-          <p>The QR link has been upgraded into a brighter mobile-style shop.</p>
-          <div class="shop-hero">
+        <div class="message settings-page">
+          <h2>Squad Shop</h2>
+          <p>Top up coins, claim channel rewards, and juice the next run.</p>
+          <div class="settings-grid">
+            <div class="settings-card" style="background:linear-gradient(135deg, rgba(245,158,11,.18), rgba(15,23,42,.96));">
+              <h4>🪙 Coin Wallet</h4>
+              <p><strong>${state.coins}</strong> run coins ready to spend.</p>
+              <p class="mini-note">Best when paired with firepower and revive upgrades.</p>
+            </div>
+            <div class="settings-card" style="background:linear-gradient(135deg, rgba(59,130,246,.18), rgba(15,23,42,.96));">
+              <h4>🔫 Current Loadout</h4>
+              <p><strong>${weaponProfile(state.firepower).name}</strong> at firepower level ${state.firepower}.</p>
+              <p class="mini-note">Next crate or upgrade will push you harder.</p>
+            </div>
+          </div>
+          <div class="shop-grid">
             <div class="shop-card featured">
-              <div class="featured-title"><span>🔥</span><span>Featured Starter Pack</span></div>
+              <h4><span>🔥 Featured Starter Pack</span><span class="shop-badge">100 Coins</span></h4>
               <p>Instantly add 100 coins and a little momentum before the next wave.</p>
               <div class="cta-row">
                 <button class="warn" onclick="window.buyStarterPack()" ${starterPackClaimed ? 'disabled' : ''}>${starterPackClaimed ? 'Starter Pack Claimed' : 'Buy 100 Coins'}</button>
               </div>
             </div>
-            <div class="shop-card balance">
-              <div class="coin-big">🪙</div>
-              <div class="balance-value">${state.coins}</div>
-              <p>Current coin balance</p>
-            </div>
-          </div>
-          <div class="shop-grid">
             <div class="shop-card">
-              <h4>
-                <span>▶️ YouTube Visit Reward</span>
-                <span class="shop-badge ${youtubeVisitClaimed ? '' : 'locked'}">${youtubeVisitClaimed ? 'Unlocked' : 'Ready'}</span>
-              </h4>
+              <h4><span>▶️ YouTube Visit Reward</span><span class="shop-badge ${youtubeVisitClaimed ? '' : 'locked'}">${youtubeVisitClaimed ? 'Claimed' : 'Ready'}</span></h4>
               <p>Open <strong>@ColtRT-e5n2h</strong> and receive 100 coins.</p>
               <div class="cta-row">
-                <button class="warn" onclick="window.openYoutubeReward()" ${youtubeVisitClaimed ? 'disabled' : ''}>${youtubeVisitClaimed ? '100 Coins Claimed' : 'Get 100 Coins'}</button>
+                <button class="warn" onclick="window.openYoutubeReward()" ${youtubeVisitClaimed ? 'disabled' : ''}>${youtubeVisitClaimed ? '100 Coins Claimed' : 'Open Channel + Claim'}</button>
               </div>
             </div>
             <div class="shop-card">
-              <h4>
-                <span>⭐ Subscribe Bonus</span>
-                <span class="shop-badge ${youtubeSubscribeClaimed ? '' : 'locked'}">${youtubeSubscribeClaimed ? 'Unlocked' : 'Honor System'}</span>
-              </h4>
+              <h4><span>⭐ Subscribe Bonus</span><span class="shop-badge ${youtubeSubscribeClaimed ? '' : 'locked'}">${youtubeSubscribeClaimed ? 'Claimed' : 'Honor System'}</span></h4>
               <p>Subscribe to <strong>@ColtRT-e5n2h</strong> and claim a 1000-coin bonus.</p>
               <div class="cta-row">
                 <button onclick="window.claimSubscribeReward()" ${youtubeSubscribeClaimed ? 'disabled' : ''}>${youtubeSubscribeClaimed ? '1000 Coins Claimed' : 'Claim 1000 Coins'}</button>
               </div>
             </div>
           </div>
-          <p class="mini-note">The subscribe reward still uses honor-system claiming until you add real verification.</p>
+          <p class="mini-note">Channel rewards are one-time bonuses. Subscribe still uses honor-system claiming until real verification exists.</p>
           <button class="secondary" onclick="window.closeOverlayAndResume()">Close</button>
         </div>`;
     }
@@ -1045,6 +1048,7 @@
     function syncHud() {
       squadStat.textContent = state.squad;
       gunStat.textContent = state.firepower;
+      weaponNameStat.textContent = weaponProfile(state.firepower).name;
       distanceStat.textContent = Math.floor(state.distance);
       waveStat.textContent = state.wave;
       coinStat.textContent = state.coins;
@@ -1141,13 +1145,33 @@
       if (state.bullets.length > 320) state.bullets.splice(0, state.bullets.length - 320);
     }
 
+    function addScreenShake(amount = 8, flash = 0.08) {
+      screenShake = Math.max(screenShake, amount);
+      hitFlash = Math.max(hitFlash, flash);
+    }
+
+    function spawnBossWave() {
+      const lane = rand(0, 2);
+      bossWave = true;
+      state.objects.push({ type:'boss', lane, x:LANES[lane], y:-130, hp:18 + state.wave * 2, reward:8, size:82, speedFactor:0.65 });
+      state.objects.push({ type:'shield', lane:(lane + 1) % 3, x:LANES[(lane + 1) % 3], y:-90, hp:7 + Math.floor(state.wave * 0.7), reward:3, size:52, speedFactor:0.85 });
+      addScreenShake(12, 0.12);
+      playTone(90, 0.26, 'sawtooth', 1.8);
+    }
+
     function spawnObject() {
+      if (state.wave > 0 && state.wave % 6 === 0 && !bossWave && !state.objects.some(obj => obj.type === 'boss')) {
+        spawnBossWave();
+        return;
+      }
       const lane = rand(0, 2);
       const roll = Math.random();
       let obj;
-      if (roll < 0.42) obj = { type:'zombie', lane, x:LANES[lane], y:-60, hp:rand(3, 5 + Math.floor(state.wave / 2)), reward:rand(1,3), size:36 };
-      else if (roll < 0.70) obj = { type:'wall', lane, x:LANES[lane], y:-80, hp:rand(2, Math.max(4, 2 + Math.floor(state.wave/2))), reward:0, size:58 };
-      else if (roll < 0.88) obj = { type:'crate', lane, x:LANES[lane], y:-50, hp:1, reward:1, size:32 };
+      if (roll < 0.32) obj = { type:'zombie', lane, x:LANES[lane], y:-60, hp:rand(3, 5 + Math.floor(state.wave / 2)), reward:rand(1,3), size:36 };
+      else if (roll < 0.52) obj = { type:'wall', lane, x:LANES[lane], y:-80, hp:rand(2, Math.max(4, 2 + Math.floor(state.wave/2))), reward:0, size:58 };
+      else if (roll < 0.66) obj = { type:'runner', lane, x:LANES[lane], y:-55, hp:rand(2, 4 + Math.floor(state.wave / 3)), reward:2, size:28, speedFactor:1.45 };
+      else if (roll < 0.78) obj = { type:'shield', lane, x:LANES[lane], y:-70, hp:rand(5, 7 + Math.floor(state.wave / 2)), reward:3, size:48, speedFactor:0.9 };
+      else if (roll < 0.89) obj = { type:'crate', lane, x:LANES[lane], y:-50, hp:1, reward:1, size:32 };
       else obj = { type:'coin', lane, x:LANES[lane], y:-40, hp:1, reward:rand(2,5), size:24 };
       state.objects.push(obj);
     }
@@ -1210,6 +1234,8 @@
       state.wave = 1 + Math.floor(state.distance / 180);
       state.speed = 190 + state.wave * 8;
       state.minigunCharge = Math.min(100, state.minigunCharge + dt * 8);
+      screenShake = Math.max(0, screenShake - dt * 26);
+      hitFlash = Math.max(0, hitFlash - dt * 1.8);
       const nowMs = performance.now();
       if (state.minigunActiveUntil > nowMs) {
         if (nowMs - state.lastMinigunBurst > 90) {
@@ -1229,12 +1255,13 @@
         bullet.x += (bullet.drift || 0) * dt;
       }
       state.bullets = state.bullets.filter(b => b.y > -30 && b.x > -40 && b.x < canvas.width + 40);
-      for (const obj of state.objects) obj.y += state.speed * dt;
+      for (const obj of state.objects) obj.y += state.speed * (obj.speedFactor || 1) * dt;
       for (const bullet of state.bullets) {
         for (const obj of state.objects) {
           if (obj.hp <= 0) continue;
           if (Math.abs(bullet.x - obj.x) < obj.size * 0.55 && Math.abs(bullet.y - obj.y) < obj.size * 0.55) {
             obj.hp -= bullet.damage || 1;
+            addScreenShake(bullet.style === 'minigun' ? 4 : bullet.style === 'plasma' ? 6 : 3, bullet.style === 'plasma' ? 0.08 : 0.04);
             state.particles.push({ x: obj.x, y: obj.y, life: 0.18, color: bullet.glow ? bullet.color || '#fde68a' : '#f8fafc', ring: bullet.ring || '#ffffff', size: (bullet.radius || 5) * 2.2, burst: bullet.style === 'arc' || bullet.style === 'plasma' });
             if (bullet.splash) applySplashDamage(obj.x, obj.y, bullet.splash, (bullet.damage || 1) * 0.55, bullet.ring, bullet.color);
             if (bullet.chain) applyChainDamage(obj, bullet.chain, bullet.damage || 1, bullet.ring, bullet.color);
@@ -1254,7 +1281,12 @@
         if (obj.y >= 570) {
           if (obj.type === 'wall' && obj.hp > 0) state.squad -= obj.hp;
           else if (obj.type === 'zombie' && obj.hp > 0) state.squad -= Math.max(1, obj.reward - 1);
+          else if (obj.type === 'runner' && obj.hp > 0) state.squad -= Math.max(2, obj.reward);
+          else if (obj.type === 'shield' && obj.hp > 0) state.squad -= Math.max(2, Math.ceil(obj.hp / 2));
+          else if (obj.type === 'boss' && obj.hp > 0) state.squad -= Math.max(6, Math.ceil(obj.hp / 2));
           else if (obj.type === 'coin' && obj.hp > 0) addCoins(obj.reward);
+          if (obj.type === 'boss') bossWave = false;
+          if (obj.hp > 0 && obj.type !== 'coin') addScreenShake(obj.type === 'boss' ? 18 : 10, obj.type === 'boss' ? 0.16 : 0.08);
           obj.hp = 0;
         }
       }
@@ -1265,6 +1297,9 @@
 
     function handleDestroyed(obj) {
       if (obj.type === 'zombie') { state.squad += obj.reward; addCoins(obj.reward); updateMission('survivors', obj.reward); playTone(220, 0.12, 'sawtooth', 1.4); }
+      else if (obj.type === 'runner') { state.squad += obj.reward + 1; addCoins(obj.reward + 1); updateMission('survivors', obj.reward + 1); playTone(320, 0.08, 'triangle', 1.5); }
+      else if (obj.type === 'shield') { state.squad += obj.reward; addCoins(obj.reward + 1); updateMission('survivors', obj.reward); playTone(150, 0.14, 'square', 1.8); }
+      else if (obj.type === 'boss') { state.squad += obj.reward + 6; addCoins(obj.reward + 8); updateMission('survivors', obj.reward + 6); playTone(110, 0.26, 'sawtooth', 2.1); addScreenShake(16, 0.18); bossWave = false; }
       else if (obj.type === 'crate') { state.firepower = Math.min(6, state.firepower + obj.reward); playTone(540, 0.1, 'triangle', 1.2); }
       else if (obj.type === 'coin') { addCoins(obj.reward); playTone(1100, 0.08, 'triangle', 1.3); }
       else if (obj.type === 'wall') { updateMission('walls', 1); playTone(180, 0.16, 'square', 1.6); }
@@ -1423,13 +1458,14 @@
       const crowdHeight = 270;
       const startY = 636;
       const armyMode = total >= 300;
-      const minScale = armyMode ? 0.03 : total > 220 ? 0.045 : total > 140 ? 0.055 : total > 80 ? 0.065 : 0.08;
-      const maxScale = armyMode ? 0.5 : 0.95;
+      const ultraArmyMode = total >= 500;
+      const minScale = ultraArmyMode ? 0.022 : armyMode ? 0.03 : total > 220 ? 0.045 : total > 140 ? 0.055 : total > 80 ? 0.065 : 0.08;
+      const maxScale = ultraArmyMode ? 0.34 : armyMode ? 0.5 : 0.95;
       const baseBodyWidth = armyMode ? 8 : 18;
       const baseBodyHeight = armyMode ? 10 : 24;
 
       const maxColumnsThatFit = Math.max(1, Math.floor(crowdWidth / Math.max(baseBodyWidth * minScale, 1)) + 1);
-      const rowDensity = armyMode ? 3.2 : total > 220 ? 2.3 : total > 140 ? 2.05 : total > 80 ? 1.75 : 1.35;
+      const rowDensity = ultraArmyMode ? 4.1 : armyMode ? 3.2 : total > 220 ? 2.3 : total > 140 ? 2.05 : total > 80 ? 1.75 : 1.35;
       const targetRows = Math.max(2, Math.ceil(Math.sqrt(total) / rowDensity));
       const columns = Math.max(1, Math.min(maxColumnsThatFit, Math.ceil(total / targetRows)));
       const rows = Math.max(1, Math.ceil(total / columns));
@@ -1480,10 +1516,10 @@
       }
 
       ctx.fillStyle = 'rgba(15,23,42,.88)';
-      ctx.fillRect(18, 162, 230, 36);
+      ctx.fillRect(18, 162, 250, 36);
       ctx.fillStyle = '#cbd5e1';
       ctx.font = 'bold 16px system-ui';
-      ctx.fillText(`${armyMode ? 'Army mode' : 'Rows'} ${rows} • Per row ${columns}`, 32, 185);
+      ctx.fillText(`${ultraArmyMode ? 'Ultra army' : armyMode ? 'Army mode' : 'Rows'} ${rows} • Per row ${columns}`, 32, 185);
     }
 
     function drawObjects() {
@@ -1491,13 +1527,26 @@
         if (obj.type === 'zombie') {
           drawPerson(obj.x,obj.y,COLORS.zombie);
           ctx.fillStyle='#dcfce7'; ctx.font='bold 16px system-ui'; ctx.textAlign='center'; ctx.fillText(`+${obj.reward}`,obj.x,obj.y-28);
+        } else if (obj.type === 'runner') {
+          drawPerson(obj.x, obj.y, '#f97316', 0.88, 2);
+          ctx.fillStyle='#ffedd5'; ctx.font='bold 15px system-ui'; ctx.textAlign='center'; ctx.fillText('FAST',obj.x,obj.y-24);
+        } else if (obj.type === 'shield') {
+          drawPerson(obj.x, obj.y, '#64748b', 1.04, 3);
+          ctx.strokeStyle='#e2e8f0'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(obj.x, obj.y + 2, 22, 0, Math.PI * 2); ctx.stroke();
+          ctx.fillStyle='#f8fafc'; ctx.font='bold 18px system-ui'; ctx.textAlign='center'; ctx.fillText(String(Math.ceil(obj.hp)),obj.x,obj.y+8);
+        } else if (obj.type === 'boss') {
+          drawPerson(obj.x, obj.y, '#7c3aed', 1.45, 5);
+          ctx.strokeStyle='#fda4ff'; ctx.lineWidth=5; ctx.strokeRect(obj.x - 42, obj.y - 46, 84, 92);
+          ctx.fillStyle='rgba(15,23,42,.92)'; ctx.fillRect(obj.x - 44, obj.y - 68, 88, 12);
+          ctx.fillStyle='#ef4444'; ctx.fillRect(obj.x - 42, obj.y - 66, 84 * Math.max(0, obj.hp / (18 + state.wave * 2)), 8);
+          ctx.fillStyle='#f5d0fe'; ctx.font='bold 15px system-ui'; ctx.textAlign='center'; ctx.fillText('BOSS',obj.x,obj.y-54);
         } else if (obj.type === 'crate') {
           ctx.fillStyle=COLORS.crate; ctx.fillRect(obj.x-24,obj.y-24,48,48);
           ctx.fillStyle='#dbeafe'; ctx.font='bold 22px system-ui'; ctx.textAlign='center'; ctx.fillText('G',obj.x,obj.y+8);
         } else if (obj.type === 'wall') {
           ctx.fillStyle=COLORS.wall; ctx.fillRect(obj.x-52,obj.y-30,104,60);
           ctx.strokeStyle='#fca5a5'; ctx.lineWidth=3; ctx.strokeRect(obj.x-52,obj.y-30,104,60);
-          ctx.fillStyle='#fee2e2'; ctx.font='bold 22px system-ui'; ctx.textAlign='center'; ctx.fillText(String(obj.hp),obj.x,obj.y+8);
+          ctx.fillStyle='#fee2e2'; ctx.font='bold 22px system-ui'; ctx.textAlign='center'; ctx.fillText(String(Math.ceil(obj.hp)),obj.x,obj.y+8);
         } else if (obj.type === 'coin') {
           ctx.fillStyle = COLORS.coin; ctx.beginPath(); ctx.arc(obj.x,obj.y,18,0,Math.PI*2); ctx.fill();
           ctx.fillStyle = '#78350f'; ctx.font='bold 18px system-ui'; ctx.textAlign='center'; ctx.fillText('$',obj.x,obj.y+6);
@@ -1608,7 +1657,18 @@
     }
 
     function render() {
+      ctx.save();
+      if (screenShake > 0.1) {
+        const dx = (Math.random() - 0.5) * screenShake;
+        const dy = (Math.random() - 0.5) * screenShake;
+        ctx.translate(dx, dy);
+      }
       drawRoad(); drawSquad(); drawObjects(); drawBullets(); drawParticles(); drawHint();
+      ctx.restore();
+      if (hitFlash > 0.01) {
+        ctx.fillStyle = `rgba(255,255,255,${Math.min(0.22, hitFlash)})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
       if (state.paused && !state.gameOver && !overlay.innerHTML) {
         ctx.fillStyle='rgba(0,0,0,.45)'; ctx.fillRect(0,0,canvas.width,canvas.height);
         ctx.fillStyle='#fff'; ctx.font='bold 42px system-ui'; ctx.textAlign='center'; ctx.fillText('Paused',canvas.width/2,canvas.height/2);

@@ -1051,11 +1051,51 @@
     function addCoins(n) { state.coins += n; bankCoins = state.coins; saveMeta(); updateMission('coins', n); }
 
     function weaponProfile(powerLevel) {
-      if (powerLevel <= 1) return { color: '#fde047', core: '#fff8c5', size: 5, trail: '#fef08a', shape: 'round', muzzle: '#fff7ae', ring: '#facc15' };
-      if (powerLevel <= 2) return { color: '#38bdf8', core: '#e0f2fe', size: 5.5, trail: '#7dd3fc', shape: 'pulse', muzzle: '#a5f3fc', ring: '#38bdf8' };
-      if (powerLevel <= 4) return { color: '#a78bfa', core: '#f3e8ff', size: 6, trail: '#c4b5fd', shape: 'plasma', muzzle: '#ddd6fe', ring: '#8b5cf6' };
-      if (powerLevel <= 6) return { color: '#fb7185', core: '#ffe4e6', size: 6.5, trail: '#fda4af', shape: 'laser', muzzle: '#fecdd3', ring: '#e11d48' };
-      return { color: '#f59e0b', core: '#fffbeb', size: 7, trail: '#fdba74', shape: 'minigun', muzzle: '#fed7aa', ring: '#ea580c' };
+      if (powerLevel <= 1) return { name: 'Rifle', color: '#fde047', core: '#fff8c5', size: 5, trail: '#fef08a', shape: 'round', muzzle: '#fff7ae', ring: '#facc15', damage: 1, spread: 0, pierce: 0, splash: 0, chain: 0, speed: 0 };
+      if (powerLevel === 2) return { name: 'Pulse', color: '#38bdf8', core: '#e0f2fe', size: 5.5, trail: '#7dd3fc', shape: 'pulse', muzzle: '#a5f3fc', ring: '#38bdf8', damage: 1.15, spread: 12, pierce: 0, splash: 0, chain: 0, speed: 20 };
+      if (powerLevel === 3) return { name: 'Scatter', color: '#22c55e', core: '#dcfce7', size: 5.8, trail: '#86efac', shape: 'scatter', muzzle: '#bbf7d0', ring: '#16a34a', damage: 0.95, spread: 26, pierce: 0, splash: 0, chain: 0, speed: 10 };
+      if (powerLevel === 4) return { name: 'Plasma', color: '#a78bfa', core: '#f3e8ff', size: 6.5, trail: '#c4b5fd', shape: 'plasma', muzzle: '#ddd6fe', ring: '#8b5cf6', damage: 1.3, spread: 18, pierce: 0, splash: 32, chain: 0, speed: 30 };
+      if (powerLevel === 5) return { name: 'Rail', color: '#fb7185', core: '#ffe4e6', size: 6.6, trail: '#fda4af', shape: 'laser', muzzle: '#fecdd3', ring: '#e11d48', damage: 1.45, spread: 12, pierce: 1, splash: 0, chain: 0, speed: 80 };
+      if (powerLevel === 6) return { name: 'Arc', color: '#f97316', core: '#ffedd5', size: 6.8, trail: '#fdba74', shape: 'arc', muzzle: '#fed7aa', ring: '#ea580c', damage: 1.2, spread: 14, pierce: 0, splash: 18, chain: 1, speed: 55 };
+      return { name: 'Minigun', color: '#f59e0b', core: '#fffbeb', size: 7, trail: '#fdba74', shape: 'minigun', muzzle: '#fed7aa', ring: '#ea580c', damage: 1.35, spread: 20, pierce: 1, splash: 16, chain: 0, speed: 110 };
+    }
+
+    function applySplashDamage(cx, cy, radius, damage, ring, color) {
+      if (!radius || radius <= 0) return;
+      for (const obj of state.objects) {
+        if (obj.hp <= 0 || (obj.type !== 'zombie' && obj.type !== 'wall' && obj.type !== 'crate')) continue;
+        const dx = obj.x - cx;
+        const dy = obj.y - cy;
+        const dist = Math.hypot(dx, dy);
+        if (dist <= radius) {
+          const falloff = Math.max(0.35, 1 - dist / Math.max(radius, 1));
+          obj.hp -= damage * falloff;
+          state.particles.push({ x: obj.x, y: obj.y, life: 0.16, color: color || '#fff', ring: ring || '#fff', size: 10 + radius * 0.12 });
+          if (obj.hp <= 0) handleDestroyed(obj);
+        }
+      }
+    }
+
+    function applyChainDamage(sourceObj, jumps, damage, ring, color) {
+      if (!sourceObj || jumps <= 0) return;
+      let current = sourceObj;
+      for (let i = 0; i < jumps; i++) {
+        let best = null;
+        let bestDist = Infinity;
+        for (const obj of state.objects) {
+          if (obj === current || obj.hp <= 0 || (obj.type !== 'zombie' && obj.type !== 'wall')) continue;
+          const dist = Math.hypot(obj.x - current.x, obj.y - current.y);
+          if (dist < 120 && dist < bestDist) {
+            best = obj;
+            bestDist = dist;
+          }
+        }
+        if (!best) break;
+        state.particles.push({ x: (current.x + best.x) / 2, y: (current.y + best.y) / 2, life: 0.14, color: color || '#fff', ring: ring || '#fff', burst: true, size: 16 });
+        best.hp -= damage * Math.max(0.55, 0.82 - i * 0.14);
+        if (best.hp <= 0) handleDestroyed(best);
+        current = best;
+      }
     }
 
     function fireAtLane(laneIndex, powerBoost = 0, speedBoost = 0, options = {}) {
@@ -1068,24 +1108,31 @@
       const effectivePower = state.firepower + powerBoost;
       const profile = weaponProfile(effectivePower);
       for (let i = 0; i < bulletCount; i++) {
+        const spreadBase = bulletCount > 1 ? (i - (bulletCount - 1) / 2) : 0;
+        const drift = spreadBase * profile.spread;
         state.bullets.push({
-          x: laneX + (i - (bulletCount - 1) / 2) * 10,
+          x: laneX + spreadBase * 10,
           y: 600,
-          speed: 560 + speedBoost,
-          damage: 1 + powerBoost * 0.2,
-          glow: powerBoost > 0,
+          speed: 560 + speedBoost + profile.speed,
+          damage: profile.damage + powerBoost * 0.16,
+          glow: powerBoost > 0 || effectivePower >= 4,
           style: profile.shape,
           color: profile.color,
           core: profile.core,
           trail: profile.trail,
           muzzle: profile.muzzle,
           ring: profile.ring,
-          radius: profile.size
+          radius: profile.size,
+          drift,
+          splash: profile.splash,
+          pierce: profile.pierce,
+          chain: profile.chain,
+          hits: 0
         });
       }
       state.particles.push({ x: laneX, y: 602, life: 0.09, color: profile.muzzle, ring: profile.ring, burst: true, size: (14 + effectivePower * 1.5) * muzzleScale });
-      if (state.particles.length > 220) state.particles.splice(0, state.particles.length - 220);
-      if (state.bullets.length > 260) state.bullets.splice(0, state.bullets.length - 260);
+      if (state.particles.length > 260) state.particles.splice(0, state.particles.length - 260);
+      if (state.bullets.length > 320) state.bullets.splice(0, state.bullets.length - 320);
     }
 
     function spawnObject() {
@@ -1171,18 +1218,26 @@
       if (roundCoins > state.distanceCoinsTick) { addCoins(roundCoins - state.distanceCoinsTick); state.distanceCoinsTick = roundCoins; }
       state.spawnTimer -= dt;
       if (state.spawnTimer <= 0) { spawnObject(); state.spawnTimer = Math.max(0.32, 1.05 - state.wave * 0.03); }
-      for (const bullet of state.bullets) bullet.y -= bullet.speed * dt;
-      state.bullets = state.bullets.filter(b => b.y > -20);
+      for (const bullet of state.bullets) {
+        bullet.y -= bullet.speed * dt;
+        bullet.x += (bullet.drift || 0) * dt;
+      }
+      state.bullets = state.bullets.filter(b => b.y > -30 && b.x > -40 && b.x < canvas.width + 40);
       for (const obj of state.objects) obj.y += state.speed * dt;
       for (const bullet of state.bullets) {
         for (const obj of state.objects) {
           if (obj.hp <= 0) continue;
           if (Math.abs(bullet.x - obj.x) < obj.size * 0.55 && Math.abs(bullet.y - obj.y) < obj.size * 0.55) {
             obj.hp -= bullet.damage || 1;
-            state.particles.push({ x: obj.x, y: obj.y, life: 0.18, color: bullet.glow ? '#fde68a' : '#f8fafc', ring: bullet.ring || '#ffffff', size: (bullet.radius || 5) * 2 });
-            bullet.y = -100;
+            state.particles.push({ x: obj.x, y: obj.y, life: 0.18, color: bullet.glow ? bullet.color || '#fde68a' : '#f8fafc', ring: bullet.ring || '#ffffff', size: (bullet.radius || 5) * 2.2, burst: bullet.style === 'arc' || bullet.style === 'plasma' });
+            if (bullet.splash) applySplashDamage(obj.x, obj.y, bullet.splash, (bullet.damage || 1) * 0.55, bullet.ring, bullet.color);
+            if (bullet.chain) applyChainDamage(obj, bullet.chain, bullet.damage || 1, bullet.ring, bullet.color);
+            bullet.hits = (bullet.hits || 0) + 1;
             if (obj.hp <= 0) handleDestroyed(obj);
-            break;
+            if (bullet.hits > (bullet.pierce || 0)) {
+              bullet.y = -100;
+              break;
+            }
           }
         }
       }
@@ -1431,6 +1486,26 @@
         } else if (bullet.style === 'pulse') {
           ctx.beginPath();
           ctx.ellipse(bullet.x, bullet.y, (bullet.radius || 5.5) + 2, bullet.radius || 5.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, (bullet.radius || 5.5) + 4, 0, Math.PI * 2);
+          ctx.globalAlpha = 0.22;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        } else if (bullet.style === 'scatter') {
+          ctx.save();
+          ctx.translate(bullet.x, bullet.y);
+          ctx.rotate((bullet.drift || 0) * 0.01);
+          ctx.fillRect(-3, -10, 6, 16);
+          ctx.strokeRect(-1.4, -7, 2.8, 8);
+          ctx.restore();
+        } else if (bullet.style === 'arc') {
+          ctx.beginPath();
+          ctx.moveTo(bullet.x - 5, bullet.y + 6);
+          ctx.quadraticCurveTo(bullet.x + 8, bullet.y, bullet.x - 1, bullet.y - 12);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, (bullet.radius || 6) * 0.65, 0, Math.PI * 2);
           ctx.fill();
         } else if (bullet.style === 'minigun') {
           ctx.fillRect(bullet.x - 2.5, bullet.y - 12, 5, 14);

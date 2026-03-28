@@ -1685,17 +1685,17 @@
         visibleSoldiers.push({ x, y: clampedY, scale, depth, index: drawIndex++ });
       }
 
-      const bannerGradient = ctx.createLinearGradient(0, 0, 240, 0);
+      const bannerGradient = ctx.createLinearGradient(0, 0, 220, 0);
       bannerGradient.addColorStop(0, 'rgba(15,23,42,.96)');
       bannerGradient.addColorStop(1, 'rgba(30,64,175,.78)');
       ctx.fillStyle = bannerGradient;
-      ctx.fillRect(18, 544, 240, 50);
+      ctx.fillRect(18, 108, 210, 50);
       ctx.strokeStyle = 'rgba(147,197,253,.35)';
-      ctx.strokeRect(18, 544, 240, 50);
+      ctx.strokeRect(18, 108, 210, 50);
       ctx.fillStyle = '#eff6ff';
       ctx.font = 'bold 22px system-ui';
       ctx.textAlign = 'left';
-      ctx.fillText(`Soldiers ${state.squad}`, 32, 577);
+      ctx.fillText(`Soldiers ${state.squad}`, 32, 141);
 
       visibleSoldiers.sort((a, b) => a.y - b.y);
       for (const soldier of visibleSoldiers) {
@@ -1705,10 +1705,10 @@
       }
 
       ctx.fillStyle = 'rgba(15,23,42,.88)';
-      ctx.fillRect(18, 598, 350, 36);
+      ctx.fillRect(18, 162, 350, 36);
       ctx.fillStyle = '#cbd5e1';
       ctx.font = 'bold 16px system-ui';
-      ctx.fillText(`Squad ${total} • Dense bottom crowd`, 32, 621);
+      ctx.fillText(`Squad ${total} • Dense bottom crowd`, 32, 185);
     }
 
     function drawObjects() {
@@ -1836,8 +1836,9 @@
     }
 
     function drawHint() {
-      ctx.fillStyle='rgba(15,23,42,.85)'; ctx.fillRect(20,20,320,58);
-      ctx.fillStyle='#e5e7eb'; ctx.font='bold 24px system-ui'; ctx.textAlign='left'; ctx.fillText('Zombie Squad Run',36,56);
+      ctx.fillStyle='rgba(15,23,42,.85)'; ctx.fillRect(20,20,360,84);
+      ctx.fillStyle='#e5e7eb'; ctx.font='bold 24px system-ui'; ctx.textAlign='left'; ctx.fillText('Zombie Squad Run',36,52);
+      ctx.fillStyle='#94a3b8'; ctx.font='16px system-ui'; ctx.fillText('Shoot zombies and crates. Break walls. Stack your squad.',36,80);
       ctx.fillStyle='rgba(15,23,42,.82)'; ctx.fillRect(canvas.width - 170, 20, 140, 58);
       ctx.fillStyle=state.minigunCharge >= 100 ? '#fca5a5' : '#fecaca'; ctx.font='bold 14px system-ui'; ctx.fillText('MINIGUN', canvas.width - 154, 44);
       ctx.fillStyle='#fff'; ctx.font='bold 24px system-ui'; ctx.fillText(`${Math.floor(state.minigunCharge)}%`, canvas.width - 154, 68);

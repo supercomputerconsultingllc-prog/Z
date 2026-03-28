@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Zombie Squad Run</title>
   <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icon.svg">
   <meta name="theme-color" content="#0b1220">
+  <meta name="description" content="Contra-style zombie lane shooter with weapon upgrades, boss walls, and cinematic night survival.">
   <style>
     :root {
       --bg: #0b1220;
@@ -59,8 +62,9 @@
     canvas { width: 100%; height: 680px; display: block; touch-action: manipulation; cursor: crosshair; }
     .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
     .message {
-      background: rgba(15, 23, 42, 0.9);
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.88));
       border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
       padding: 18px 22px;
       border-radius: 16px;
       text-align: center;
@@ -754,7 +758,17 @@
         { bodyHi: '#86efac', bodyLo: '#14532d', leg: '#166534', shoe: '#052e16', arm: '#22c55e', skinHi: '#bef264', skinLo: '#3f6212', hair: '#365314' }
       ];
       const palette = zombiePalettes[reward % zombiePalettes.length];
-      drawHumanoid(x, y, 0.97, palette, 'zombie');
+      const scale = 0.95 + reward * 0.03;
+      drawHumanoid(x, y, scale, palette, 'zombie');
+      if (reward >= 3) {
+        const glow = ctx.createRadialGradient(x, y - 14, 8, x, y - 14, 34);
+        glow.addColorStop(0, 'rgba(190,242,100,0.26)');
+        glow.addColorStop(1, 'rgba(190,242,100,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(x, y - 14, 34, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.fillStyle='rgba(220,252,231,0.92)';
       ctx.font='bold 15px system-ui';
       ctx.textAlign='center';
@@ -818,6 +832,10 @@
       ctx.strokeStyle = 'rgba(255,255,255,0.45)';
       ctx.lineWidth = 2;
       ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.beginPath();
+      ctx.arc(x - 5, y - 6, 5, 0, Math.PI * 2);
+      ctx.fill();
       ctx.fillStyle = '#78350f'; ctx.font='bold 18px system-ui'; ctx.textAlign='center'; ctx.fillText('$',x,y+6);
     }
 

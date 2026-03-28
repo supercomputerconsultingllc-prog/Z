@@ -1030,9 +1030,7 @@
     }
 
     function showTitleScreen() {
-      state.running = false;
       state.paused = true;
-      state.gameOver = false;
       overlay.innerHTML = `
         <div class="message">
           <h1>Zombie Squad Run</h1>
@@ -1040,7 +1038,6 @@
           <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best}</p>
           <button onclick="window.startZombieRun()">Start Run</button>
         </div>`;
-      refreshMusicState();
     }
 
     function applyScenePreset(scene) {
@@ -1151,7 +1148,7 @@
     function resetGame() {
       state = {
         squad: 8, firepower: 1, distance: 0, wave: 1, speed: 190,
-        bullets: [], objects: [], particles: [], spawnTimer: 0, running: false, paused: true, gameOver: false,
+        bullets: [], objects: [], particles: [], spawnTimer: 0, running: true, paused: true, gameOver: false,
         lastTime: performance.now(), coins: 0, revives: 1, usedRevive: false, distanceCoinsTick: 0,
         minigunCharge: 100, minigunActiveUntil: 0, lastMinigunBurst: 0
       };
@@ -2028,41 +2025,8 @@
         </div>`;
       syncHud();
     };
-    window.closeOverlayAndResume = function() {
-      overlay.innerHTML='';
-      state.paused = false;
-      if (!state.running) state.running = true;
-      refreshMusicState();
-    };
-    window.startZombieRun = function() {
-      emergencyPerfMode = false;
-      perfWarningUntil = 0;
-      overlay.innerHTML = '';
-      state.objects = [];
-      state.bullets = [];
-      state.particles = [];
-      state.spawnTimer = 0.2;
-      state.distance = 0;
-      state.wave = 1;
-      state.speed = 190;
-      state.squad = 8;
-      state.firepower = 1;
-      state.coins = 0;
-      state.revives = 1;
-      state.usedRevive = false;
-      state.distanceCoinsTick = 0;
-      state.minigunCharge = 100;
-      state.minigunActiveUntil = 0;
-      state.lastMinigunBurst = 0;
-      state.lastTime = performance.now();
-      state.paused = false;
-      state.running = true;
-      state.gameOver = false;
-      bankCoins = 0;
-      saveMeta();
-      syncHud();
-      refreshMusicState();
-    };
+    window.closeOverlayAndResume = function() { overlay.innerHTML=''; state.paused=false; };
+    window.startZombieRun = function() { overlay.innerHTML=''; state.paused=false; state.running=true; state.gameOver=false; refreshMusicState(); };
     window.mockRewardedReviveOffer = function() {
       state.coins += 5;
       bankCoins = state.coins;

@@ -1538,11 +1538,16 @@
         const spawnFloor = perfTier >= 2 ? 0.72 : mobileSafeMode ? 0.78 : 0.66;
         state.spawnTimer = Math.max(spawnFloor, 1.22 - state.wave * 0.024 + earlyGrace + (bossWave ? 0.06 : 0));
       }
-      for (const bullet of state.bullets) {
+      let bulletWrite = 0;
+      for (let i = 0; i < state.bullets.length; i++) {
+        const bullet = state.bullets[i];
         bullet.y -= bullet.speed * dt;
         bullet.x += (bullet.drift || 0) * dt;
+        if (bullet.y > -30 && bullet.x > -40 && bullet.x < canvas.width + 40) {
+          state.bullets[bulletWrite++] = bullet;
+        }
       }
-      state.bullets = state.bullets.filter(b => b.y > -30 && b.x > -40 && b.x < canvas.width + 40);
+      state.bullets.length = bulletWrite;
       for (const obj of state.objects) obj.y += state.speed * (obj.speedFactor || 1) * dt;
       const collisionStride = state.bullets.length > (mobileSafeMode ? 18 : 36) ? 2 : 1;
       for (let bulletIndex = 0; bulletIndex < state.bullets.length; bulletIndex += collisionStride) {
@@ -1566,10 +1571,24 @@
           }
         }
       }
-      state.bullets = state.bullets.filter(b => b.y > -20);
-      for (const particle of state.particles) particle.life -= dt;
+      bulletWrite = 0;
+      for (let i = 0; i < state.bullets.length; i++) {
+        const bullet = state.bullets[i];
+        if (bullet.y > -20) state.bullets[bulletWrite++] = bullet;
+      }
+      state.bullets.length = bulletWrite;
       const particleCap = mobileSafeMode ? 18 : 28;
-      state.particles = state.particles.filter(p => p.life > 0).slice(-particleCap);
+      let particleWrite = 0;
+      for (let i = 0; i < state.particles.length; i++) {
+        const particle = state.particles[i];
+        particle.life -= dt;
+        if (particle.life > 0) state.particles[particleWrite++] = particle;
+      }
+      if (particleWrite > particleCap) {
+        state.particles.copyWithin(0, particleWrite - particleCap, particleWrite);
+        particleWrite = particleCap;
+      }
+      state.particles.length = particleWrite;
       for (const decal of impactDecals) decal.life -= dt;
       while (impactDecals.length && impactDecals[0].life <= 0) impactDecals.shift();
       for (const shell of shellCasings) {
@@ -1596,7 +1615,12 @@
           obj.hp = 0;
         }
       }
-      state.objects = state.objects.filter(o => o.hp > 0 && o.y < 740);
+      let objectWrite = 0;
+      for (let i = 0; i < state.objects.length; i++) {
+        const obj = state.objects[i];
+        if (obj.hp > 0 && obj.y < 740) state.objects[objectWrite++] = obj;
+      }
+      state.objects.length = objectWrite;
       if (state.squad <= 0) maybeReviveOrEnd();
       syncHud();
     }
@@ -2854,8 +2878,9 @@
 
     function drawBullets() {
       const perfTier = squadPerfTier();
-      const bulletsToDraw = (perfTier >= 2 || (mobileSafeMode && state.bullets.length > 90)) ? state.bullets.filter((_, i) => i % (perfTier >= 3 ? 3 : 2) === 0) : state.bullets;
-      for (const bullet of bulletsToDraw) {
+      const bulletStride = (perfTier >= 2 || (mobileSafeMode && state.bullets.length > 90)) ? (perfTier >= 3 ? 3 : 2) : 1;
+      for (let i = 0; i < state.bullets.length; i += bulletStride) {
+        const bullet = state.bullets[i];
         ctx.save();
         ctx.shadowColor = bullet.trail || bullet.color || '#facc15';
         ctx.shadowBlur = perfTier >= 2 ? (bullet.glow ? 10 : 6) : bullet.glow ? 22 : 12;
@@ -2931,10 +2956,11 @@
 
     function drawParticles() {
       const perfTier = squadPerfTier();
-      const particlesToDraw = (perfTier >= 2 || mobileSafeMode || (lowPowerMobileMode && state.squad > 45)) && state.particles.length > (perfTier >= 2 ? 10 : 20)
-        ? state.particles.filter((_, i) => i % (perfTier >= 3 ? 3 : 2) === 0)
-        : state.particles;
-      for (const particle of particlesToDraw) {
+      const particleStride = ((perfTier >= 2 || mobileSafeMode || (lowPowerMobileMode && state.squad > 45)) && state.particles.length > (perfTier >= 2 ? 10 : 20))
+        ? (perfTier >= 3 ? 3 : 2)
+        : 1;
+      for (let i = 0; i < state.particles.length; i += particleStride) {
+        const particle = state.particles[i];
         const alpha = Math.max(0, particle.life / 0.18);
         const size = particle.size || 8;
         ctx.globalAlpha = alpha;
@@ -3106,6 +3132,7 @@
       minigunGlow.addColorStop(0, 'rgba(127,29,29,0.92)');
       minigunGlow.addColorStop(1, 'rgba(30,41,59,0.88)');
       ctx.fillStyle=minigunGlow; ctx.fillRect(canvas.width - 176, 20, 146, 64);
+      ctx.fillStyle='rgba(255,255,255,0.04)'; ctx.fillRect(canvas.width - 170, 54, 134, 2);
       ctx.fillStyle='rgba(255,255,255,0.12)'; ctx.fillRect(canvas.width - 172, 24, 138, 14);
       ctx.strokeStyle = 'rgba(239,68,68,.28)'; ctx.strokeRect(canvas.width - 176, 20, 146, 64);
       ctx.fillStyle=state.minigunCharge >= 100 ? '#fca5a5' : '#fecaca'; ctx.font='bold 14px system-ui'; ctx.fillText('MINIGUN', canvas.width - 158, 44);

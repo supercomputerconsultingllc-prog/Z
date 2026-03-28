@@ -84,6 +84,12 @@
       font-size: 13px;
       font-weight: 900;
       transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      pointer-events: auto;
+      position: relative;
+      z-index: 4;
     }
     .battle-side-btn.ready {
       box-shadow: 0 0 0 2px rgba(254,202,202,.22), 0 0 24px rgba(248,113,113,.55), 0 18px 36px rgba(0,0,0,.32);
@@ -338,9 +344,10 @@
       <div class="canvas-wrap">
         <canvas id="game" width="800" height="680"></canvas>
         <div class="battle-side-ui">
-          <button class="battle-side-btn" id="minigunBtn" aria-label="Activate minigun">
+          <button class="battle-side-btn" id="minigunBtn" aria-label="Activate minigun" type="button">
             <span class="big">🔥</span>
             <span>Minigun</span>
+            <span class="battle-side-status" style="font-size:11px;opacity:.86;">Tap when ready</span>
           </button>
         </div>
         <div class="overlay" id="overlay"></div>
@@ -1092,8 +1099,36 @@
       state.objects.push(obj);
     }
 
-    function activateMinigun() {
-      if (state.paused || state.gameOver || state.minigunCharge < 100) return;
+    function flashMinigunButton(message) {
+      minigunBtn.classList.remove('ready');
+      const label = minigunBtn.querySelector('.battle-side-status');
+      if (!label) return;
+      const original = label.dataset.original || label.textContent;
+      label.dataset.original = original;
+      label.textContent = message;
+      clearTimeout(flashMinigunButton.timer);
+      flashMinigunButton.timer = setTimeout(() => {
+        label.textContent = label.dataset.original || 'Tap when ready';
+      }, 700);
+    }
+
+    function activateMinigun(event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      if (state.paused) {
+        flashMinigunButton('Start run');
+        return;
+      }
+      if (state.gameOver) {
+        flashMinigunButton('Game over');
+        return;
+      }
+      if (state.minigunCharge < 100) {
+        flashMinigunButton(`${Math.floor(state.minigunCharge)}%`);
+        return;
+      }
       const nowMs = performance.now();
       state.minigunCharge = 0;
       state.minigunActiveUntil = nowMs + 2600;
@@ -1112,6 +1147,7 @@
       for (let lane = 0; lane < LANES.length; lane++) {
         fireAtLane(lane, 4, 260, { silent: true, noVibrate: true, muzzleScale: 1.1 });
       }
+      flashMinigunButton('Firing');
       syncHud();
     }
 
@@ -1473,10 +1509,8 @@
     restartBtn.addEventListener('click', () => window.restartZombieRun());
     pauseBtn.addEventListener('click', () => { state.paused=!state.paused; pauseBtn.textContent=state.paused?'Resume':'Pause'; });
     minigunBtn.addEventListener('click', activateMinigun);
-    minigunBtn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      activateMinigun();
-    }, { passive: false });
+    minigunBtn.addEventListener('pointerdown', activateMinigun);
+    minigunBtn.addEventListener('touchstart', activateMinigun, { passive: false });
     moneyBtn.addEventListener('click', openMoneyPanel);
     enhanceBtn.addEventListener('click', openEnhancementPanel);
     avatarBtn.addEventListener('click', openAvatarPanel);

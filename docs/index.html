@@ -256,7 +256,7 @@
     function syncMissionHud() {
       const mission = activeMission();
       missionStat.textContent = `${Math.min(missionProgress, mission.target)}/${mission.target}`;
-      missionStat.title = mission.label;
+      missionStat.title = `Mission: ${mission.label}`;
     }
 
     function updateMission(eventName, amount = 1) {
@@ -271,9 +271,13 @@
         overlay.innerHTML = `
           <div class="message">
             <h2>Mission Complete</h2>
+            <div class="badge-line">
+              <span class="badge">Bonus earned</span>
+              <span class="badge">+10 coins</span>
+            </div>
             <p>${mission.label}</p>
-            <p>You earned a 10-coin bonus.</p>
-            <button data-action="resume">Keep Running</button>
+            <p>You earned a 10-coin bonus and unlocked the next objective.</p>
+            <button data-action="resume">⚡ Keep Running</button>
           </div>`;
         state.paused = true;
       }
@@ -449,8 +453,12 @@
         overlay.innerHTML = `
           <div class="message">
             <h2>Squad Revived</h2>
+            <div class="badge-line">
+              <span class="badge">Emergency revive</span>
+              <span class="badge">Back with 4 troopers</span>
+            </div>
             <p>Your team barely made it. You spent one revive and returned with 4 squad members.</p>
-            <button data-action="resume">Keep Running</button>
+            <button data-action="resume">🟢 Keep Running</button>
           </div>`;
         state.paused = true;
         return;
@@ -465,10 +473,14 @@
       overlay.innerHTML = `
         <div class="message">
           <h2>Run Over</h2>
-          <p>Distance: <strong>${Math.floor(state.distance)}</strong> | Coins: <strong>${state.coins}</strong></p>
-          <p>Upgrade firepower, grow your squad, and save your revive for a brutal wall hit.</p>
-          <button data-action="rewarded-revive">Mock Rewarded Revive Offer</button>
-          <button data-action="restart">Play Again</button>
+          <div class="badge-line">
+            <span class="badge">Distance ${Math.floor(state.distance)}</span>
+            <span class="badge">Coins ${state.coins}</span>
+            <span class="badge">Best ${best}</span>
+          </div>
+          <p>Upgrade firepower, grow your squad, and save your revive for a brutal boss-wall hit.</p>
+          <button data-action="rewarded-revive">🎁 Mock Rewarded Revive Offer</button>
+          <button data-action="restart">🔁 Play Again</button>
         </div>`;
       syncHud();
     }
@@ -819,6 +831,12 @@
       ctx.lineTo(x + 18, y - 30);
       ctx.closePath();
       ctx.fill();
+      if (hp >= 4) {
+        ctx.fillStyle = '#fecaca';
+        ctx.font = 'bold 10px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText('BOSS WALL', x, y - 10);
+      }
       ctx.fillStyle='#fee2e2'; ctx.font='bold 24px system-ui'; ctx.textAlign='center'; ctx.fillText(String(hp),x,y+8);
     }
 

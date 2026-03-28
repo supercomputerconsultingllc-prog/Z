@@ -2259,21 +2259,22 @@
       const total = Math.max(0, state.squad);
       if (!total) return;
 
-      const sizeTier = Math.max(0, Math.floor((total - 1) / 20));
-      const tierShrink = Math.max(0.38, 1 - sizeTier * 0.05);
+      const sizeTier = Math.max(0, Math.floor(Math.max(0, total - 1) / 20));
+      const halfScale = sizeTier === 0 ? 1 : Math.pow(0.5, sizeTier);
       const centerX = canvas.width / 2;
       const baseY = 622;
-      const crowdRadiusX = (total >= 500 ? 320 : total >= 250 ? 285 : total >= 100 ? 245 : 205) * (0.98 + sizeTier * 0.01);
-      const crowdRadiusY = (total >= 500 ? 150 : total >= 250 ? 138 : total >= 100 ? 124 : 108) * (0.98 + sizeTier * 0.008);
-      const perfCrowd = total > 40;
-      const massCrowd = total > 90;
-      const armyMode = total >= 180;
-      const ultraArmyMode = total >= 360;
-      const compactArmyMode = total >= 120;
-      const minScaleBase = ultraArmyMode ? 0.028 : armyMode ? 0.04 : total > 120 ? 0.06 : total > 60 ? 0.075 : 0.1;
-      const maxScaleBase = ultraArmyMode ? 0.28 : armyMode ? 0.42 : 0.92;
-      const minScale = Math.max(0.024, minScaleBase * Math.max(0.55, tierShrink * 0.92));
-      const maxScale = Math.max(minScale + 0.02, maxScaleBase * tierShrink);
+      const crowdRadiusX = (total >= 500 ? 320 : total >= 250 ? 285 : total >= 100 ? 245 : 205) * (1 + Math.min(0.22, sizeTier * 0.035));
+      const crowdRadiusY = (total >= 500 ? 150 : total >= 250 ? 138 : total >= 100 ? 124 : 108) * (1 + Math.min(0.16, sizeTier * 0.024));
+      const dotArmyMode = sizeTier >= 5;
+      const perfCrowd = dotArmyMode || total > 80;
+      const massCrowd = dotArmyMode || total > 120;
+      const armyMode = sizeTier >= 4 || total >= 180;
+      const ultraArmyMode = sizeTier >= 6 || total >= 360;
+      const compactArmyMode = sizeTier >= 3 || total >= 120;
+      const minScaleBase = dotArmyMode ? 0.014 : ultraArmyMode ? 0.02 : armyMode ? 0.03 : 0.1;
+      const maxScaleBase = dotArmyMode ? 0.05 : ultraArmyMode ? 0.16 : armyMode ? 0.34 : 0.92;
+      const minScale = Math.max(dotArmyMode ? 0.01 : 0.018, minScaleBase * halfScale);
+      const maxScale = Math.max(minScale + (dotArmyMode ? 0.006 : 0.02), maxScaleBase * halfScale);
       const visibleSoldiers = [];
       const marchPhase = compactArmyMode ? performance.now() * 0.0025 : performance.now() * 0.004;
       const maxVisible = massCrowd ? (ultraArmyMode ? 44 : armyMode ? 48 : 42) : perfCrowd ? (ultraArmyMode ? 66 : armyMode ? 72 : 60) : mobileSafeMode ? (ultraArmyMode ? 140 : armyMode ? 120 : 100) : (ultraArmyMode ? 220 : armyMode ? 180 : 140);
@@ -2322,7 +2323,7 @@
       ctx.fillText(`Army ${state.squad}`, 32, 141);
 
       if (perfCrowd) {
-        const cacheKey = `${Math.round(crowdRadiusX)}:${Math.round(crowdRadiusY)}:${visibleSoldiers.length}:${Math.floor(total / 8)}`;
+        const cacheKey = `${Math.round(crowdRadiusX)}:${Math.round(crowdRadiusY)}:${visibleSoldiers.length}:${Math.floor(total / 8)}:${sizeTier}`;
         if (!crowdCache || crowdCache.key !== cacheKey) {
           crowdCache = { key: cacheKey, layer: buildCrowdCache(visibleSoldiers.slice(), centerX, baseY, crowdRadiusX, crowdRadiusY, total) };
         }
@@ -2340,7 +2341,7 @@
         visibleSoldiers.sort((a, b) => a.y - b.y);
         for (const soldier of visibleSoldiers) {
           const tint = soldier.index % 4 === 0 ? '#60a5fa' : soldier.index % 4 === 1 ? '#93c5fd' : soldier.index % 4 === 2 ? '#3b82f6' : '#2563eb';
-          if (armyMode) drawTinySoldier(soldier.x, soldier.y, tint, soldier.scale, soldier.index, compactArmyMode);
+          if (dotArmyMode) drawTinySoldier(soldier.x, soldier.y, tint, soldier.scale, soldier.index, true);
           else drawPerson(soldier.x, soldier.y, tint, soldier.scale, soldier.index);
         }
       }

@@ -516,6 +516,7 @@
     let squadPrice = Number(localStorage.getItem('zombie-squad-run-squad-price') || 8);
     let revivePrice = Number(localStorage.getItem('zombie-squad-run-revive-price') || 15);
     const mobileSafeMode = window.innerWidth <= 920 || ('ontouchstart' in window);
+    const lowPowerMobileMode = mobileSafeMode || window.devicePixelRatio > 2;
     let screenShake = 0;
     let hitFlash = 0;
     let bossWave = false;
@@ -1283,9 +1284,9 @@
 
     function trimRuntimeLoad() {
       const crowdSafeMode = true;
-      const maxObjects = mobileSafeMode ? 8 : 12;
-      const maxBullets = mobileSafeMode ? 36 : 54;
-      const maxParticles = mobileSafeMode ? 20 : 32;
+      const maxObjects = mobileSafeMode ? 7 : 12;
+      const maxBullets = mobileSafeMode ? 28 : 54;
+      const maxParticles = mobileSafeMode ? 14 : 32;
       if (state.objects.length > maxObjects) state.objects.splice(0, state.objects.length - maxObjects);
       if (state.bullets.length > maxBullets) state.bullets.splice(0, state.bullets.length - maxBullets);
       if (state.particles.length > maxParticles) state.particles.splice(0, state.particles.length - maxParticles);
@@ -1408,7 +1409,7 @@
       }
       state.bullets = state.bullets.filter(b => b.y > -30 && b.x > -40 && b.x < canvas.width + 40);
       for (const obj of state.objects) obj.y += state.speed * (obj.speedFactor || 1) * dt;
-      const collisionBullets = state.bullets.length > (mobileSafeMode ? 24 : 36) ? state.bullets.filter((_, i) => i % 2 === 0) : state.bullets;
+      const collisionBullets = state.bullets.length > (mobileSafeMode ? 18 : 36) ? state.bullets.filter((_, i) => i % 2 === 0) : state.bullets;
       for (const bullet of collisionBullets) {
         for (const obj of state.objects) {
           if (obj.hp <= 0) continue;
@@ -1587,13 +1588,13 @@
 
     function pushShell(x, y, tint = '#fbbf24') {
       shellCasings.push({ x, y, vx: 50 + Math.random() * 55, vy: -60 - Math.random() * 40, rot: Math.random() * Math.PI, spin: 4 + Math.random() * 3, life: 0.7, tint });
-      const maxShells = mobileSafeMode ? 10 : 20;
+      const maxShells = mobileSafeMode ? 6 : 20;
       if (shellCasings.length > maxShells) shellCasings.splice(0, shellCasings.length - maxShells);
     }
 
     function pushMuzzleFlash(x, y, color = '#fde68a', life = 0.08, size = 16) {
       muzzleFlashes.push({ x, y, color, life, maxLife: life, size, seed: Math.random() * 10 });
-      const maxFlashes = mobileSafeMode ? 8 : 16;
+      const maxFlashes = mobileSafeMode ? 5 : 16;
       if (muzzleFlashes.length > maxFlashes) muzzleFlashes.splice(0, muzzleFlashes.length - maxFlashes);
     }
 
@@ -1618,6 +1619,7 @@
     }
 
     function drawDepthFog() {
+      if (lowPowerMobileMode && state.squad > 60) return;
       const fog = ctx.createLinearGradient(0, 0, 0, canvas.height);
       fog.addColorStop(0, 'rgba(148,163,184,0.12)');
       fog.addColorStop(0.42, 'rgba(30,41,59,0.04)');
@@ -1627,6 +1629,7 @@
     }
 
     function drawHeatHaze() {
+      if (lowPowerMobileMode && state.squad > 45) return;
       for (let i = 0; i < 3; i++) {
         const laneX = 170 + i * 240;
         const haze = ctx.createLinearGradient(laneX, 250, laneX, 640);
@@ -1639,6 +1642,7 @@
     }
 
     function drawShellCasings() {
+      if (lowPowerMobileMode && state.squad > 40) return;
       for (const shell of shellCasings) {
         ctx.save();
         ctx.translate(shell.x, shell.y);
@@ -1654,6 +1658,7 @@
     }
 
     function drawMuzzleFlashes() {
+      if (lowPowerMobileMode && state.squad > 55) return;
       for (const flash of muzzleFlashes) {
         const a = Math.max(0, flash.life / flash.maxLife);
         ctx.save();
@@ -1995,6 +2000,7 @@
       const baseY = 622;
       const crowdRadiusX = total >= 500 ? 320 : total >= 250 ? 285 : total >= 100 ? 245 : 205;
       const crowdRadiusY = total >= 500 ? 150 : total >= 250 ? 138 : total >= 100 ? 124 : 108;
+      const perfCrowd = lowPowerMobileMode && total > 50;
       const armyMode = total >= 260;
       const ultraArmyMode = total >= 500;
       const compactArmyMode = total >= 220;
@@ -2002,7 +2008,7 @@
       const maxScale = ultraArmyMode ? 0.28 : armyMode ? 0.42 : 0.92;
       const visibleSoldiers = [];
       const marchPhase = compactArmyMode ? performance.now() * 0.0025 : performance.now() * 0.004;
-      const maxVisible = mobileSafeMode ? (ultraArmyMode ? 140 : armyMode ? 120 : 100) : (ultraArmyMode ? 220 : armyMode ? 180 : 140);
+      const maxVisible = perfCrowd ? (ultraArmyMode ? 72 : armyMode ? 64 : 56) : mobileSafeMode ? (ultraArmyMode ? 140 : armyMode ? 120 : 100) : (ultraArmyMode ? 220 : armyMode ? 180 : 140);
       const step = total > maxVisible ? total / maxVisible : 1;
 
       const crowdGlow = ctx.createRadialGradient(centerX, 592, 30, centerX, 592, crowdRadiusX + 35);
@@ -2012,6 +2018,12 @@
       ctx.beginPath();
       ctx.ellipse(centerX, 594 + (armyMode ? Math.sin(marchPhase) * 3 : 0), crowdRadiusX + 10, crowdRadiusY + 14, 0, 0, Math.PI * 2);
       ctx.fill();
+      if (perfCrowd) {
+        ctx.fillStyle = 'rgba(37,99,235,0.22)';
+        ctx.beginPath();
+        ctx.ellipse(centerX, 604, crowdRadiusX * 0.94, crowdRadiusY * 0.82, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       let drawIndex = 0;
       for (let n = 1; n <= total; n += step) {
@@ -2044,7 +2056,8 @@
       visibleSoldiers.sort((a, b) => a.y - b.y);
       for (const soldier of visibleSoldiers) {
         const tint = soldier.index % 4 === 0 ? '#60a5fa' : soldier.index % 4 === 1 ? '#93c5fd' : soldier.index % 4 === 2 ? '#3b82f6' : '#2563eb';
-        if (armyMode) drawTinySoldier(soldier.x, soldier.y, tint, soldier.scale, soldier.index, compactArmyMode);
+        if (perfCrowd) drawTinySoldier(soldier.x, soldier.y, tint, Math.max(0.06, soldier.scale * 0.9), soldier.index, true);
+        else if (armyMode) drawTinySoldier(soldier.x, soldier.y, tint, soldier.scale, soldier.index, compactArmyMode);
         else drawPerson(soldier.x, soldier.y, tint, soldier.scale, soldier.index);
       }
 
@@ -2205,7 +2218,7 @@
     }
 
     function drawParticles() {
-      const particlesToDraw = mobileSafeMode && state.particles.length > 40 ? state.particles.filter((_, i) => i % 2 === 0) : state.particles;
+      const particlesToDraw = (mobileSafeMode || (lowPowerMobileMode && state.squad > 45)) && state.particles.length > 20 ? state.particles.filter((_, i) => i % 2 === 0) : state.particles;
       for (const particle of particlesToDraw) {
         const alpha = Math.max(0, particle.life / 0.18);
         const size = particle.size || 8;

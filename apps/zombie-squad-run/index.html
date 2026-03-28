@@ -145,12 +145,31 @@
       margin-top: 14px;
       text-align: left;
     }
+    .shop-hero {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 12px;
+      margin-top: 14px;
+      text-align: left;
+    }
     .shop-card {
       background: rgba(15, 23, 42, 0.92);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 18px;
       padding: 14px;
       box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
+    }
+    .shop-card.featured {
+      background: linear-gradient(135deg, rgba(245,158,11,.24), rgba(15,23,42,.98));
+      border-color: rgba(250,204,21,.28);
+    }
+    .shop-card.balance {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(59,130,246,.18), rgba(15,23,42,.98));
     }
     .shop-card h4 {
       margin: 0 0 6px;
@@ -164,6 +183,24 @@
       margin: 0 0 10px;
       color: var(--muted);
       font-size: 14px;
+    }
+    .coin-big {
+      font-size: 42px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .balance-value {
+      font-size: 34px;
+      font-weight: 900;
+      color: #fde68a;
+    }
+    .featured-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-weight: 900;
+      font-size: 19px;
     }
     .shop-badge {
       display: inline-flex;
@@ -199,6 +236,7 @@
       .content { grid-template-columns: 1fr; }
       .controls { border-left: 0; border-top: 1px solid rgba(148,163,184,.12); }
       canvas { height: 560px; }
+      .shop-hero { grid-template-columns: 1fr; }
       .touch-row { display: flex; }
     }
     @media (max-width: 560px) {
@@ -334,6 +372,7 @@
     let missionProgress = Number(localStorage.getItem('zombie-squad-run-mission-progress') || 0);
     let youtubeVisitClaimed = localStorage.getItem('zombie-squad-run-youtube-visit') === 'claimed';
     let youtubeSubscribeClaimed = localStorage.getItem('zombie-squad-run-youtube-subscribe') === 'claimed';
+    let starterPackClaimed = localStorage.getItem('zombie-squad-run-starter-pack') === 'claimed';
     const MISSIONS = [
       { label: 'Break 3 walls', target: 3, event: 'walls' },
       { label: 'Recruit 8 survivors', target: 8, event: 'survivors' },
@@ -355,6 +394,7 @@
       localStorage.setItem('zombie-squad-run-mission-progress', String(missionProgress));
       localStorage.setItem('zombie-squad-run-youtube-visit', youtubeVisitClaimed ? 'claimed' : 'open');
       localStorage.setItem('zombie-squad-run-youtube-subscribe', youtubeSubscribeClaimed ? 'claimed' : 'open');
+      localStorage.setItem('zombie-squad-run-starter-pack', starterPackClaimed ? 'claimed' : 'open');
     }
 
     function activeMission() { return MISSIONS[missionIndex % MISSIONS.length]; }
@@ -387,18 +427,22 @@
       return `
         <div class="message">
           <h2>Money Button</h2>
-          <p>The QR link has been upgraded into a mobile-style shop with reward cards.</p>
-          <div class="shop-grid">
-            <div class="shop-card">
-              <h4>
-                <span>💰 Coin Pack</span>
-                <span class="shop-badge">Instant</span>
-              </h4>
-              <p>Featured pack for players who want a fast refill before the next run.</p>
+          <p>The QR link has been upgraded into a brighter mobile-style shop.</p>
+          <div class="shop-hero">
+            <div class="shop-card featured">
+              <div class="featured-title"><span>🔥</span><span>Featured Starter Pack</span></div>
+              <p>Instantly add 100 coins and a little momentum before the next wave.</p>
               <div class="cta-row">
-                <button class="warn">Buy 100 Coins</button>
+                <button class="warn" onclick="window.buyStarterPack()" ${starterPackClaimed ? 'disabled' : ''}>${starterPackClaimed ? 'Starter Pack Claimed' : 'Buy 100 Coins'}</button>
               </div>
             </div>
+            <div class="shop-card balance">
+              <div class="coin-big">🪙</div>
+              <div class="balance-value">${state.coins}</div>
+              <p>Current coin balance</p>
+            </div>
+          </div>
+          <div class="shop-grid">
             <div class="shop-card">
               <h4>
                 <span>▶️ YouTube Visit Reward</span>
@@ -845,6 +889,22 @@
     buySquadBtn.addEventListener('click', () => { if (state.coins >= 8) { state.coins -= 8; state.squad += 3; bankCoins = state.coins; saveMeta(); syncHud(); } });
     buyReviveBtn.addEventListener('click', () => { if (state.coins >= 15) { state.coins -= 15; state.revives += 1; bankCoins = state.coins; saveMeta(); syncHud(); } });
 
+    window.buyStarterPack = function() {
+      if (starterPackClaimed) {
+        overlay.innerHTML = moneyPanelMarkup();
+        return;
+      }
+      addCoins(100);
+      starterPackClaimed = true;
+      saveMeta();
+      overlay.innerHTML = `
+        <div class="message">
+          <h2>Starter Pack Added</h2>
+          <p>Your featured pack added <strong>100 coins</strong> to the run.</p>
+          <button onclick="window.openMoneyPanel()">Back To Shop</button>
+        </div>`;
+      syncHud();
+    };
     window.openYoutubeReward = function() {
       if (youtubeVisitClaimed) {
         overlay.innerHTML = moneyPanelMarkup();

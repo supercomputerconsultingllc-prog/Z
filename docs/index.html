@@ -1233,17 +1233,19 @@
       if (!noVibrate && navigator.vibrate && volumeLevel > 0) navigator.vibrate(12);
       if (!silent) playShotSound(state.firepower + powerBoost);
       const laneX = LANES[laneIndex];
-      const bulletCount = state.firepower + powerBoost;
+      const requestedCount = state.firepower + powerBoost;
+      const crowdSafeMode = mobileSafeMode || state.squad >= 120 || state.bullets.length > 90;
+      const bulletCount = Math.max(1, Math.min(requestedCount, crowdSafeMode ? 4 : 7));
       const effectivePower = state.firepower + powerBoost;
       const profile = weaponProfile(effectivePower);
       for (let i = 0; i < bulletCount; i++) {
         const spreadBase = bulletCount > 1 ? (i - (bulletCount - 1) / 2) : 0;
-        const drift = spreadBase * profile.spread;
+        const drift = spreadBase * profile.spread * (crowdSafeMode ? 0.85 : 1);
         state.bullets.push({
-          x: laneX + spreadBase * 10,
+          x: laneX + spreadBase * (crowdSafeMode ? 14 : 10),
           y: 600,
           speed: 560 + speedBoost + profile.speed,
-          damage: profile.damage + powerBoost * 0.16,
+          damage: (profile.damage + powerBoost * 0.16) * (requestedCount / bulletCount),
           glow: powerBoost > 0 || effectivePower >= 4,
           style: profile.shape,
           color: profile.color,
@@ -1253,9 +1255,9 @@
           ring: profile.ring,
           radius: profile.size,
           drift,
-          splash: profile.splash,
+          splash: crowdSafeMode ? Math.max(0, profile.splash * 0.8) : profile.splash,
           pierce: profile.pierce,
-          chain: profile.chain,
+          chain: crowdSafeMode ? Math.min(profile.chain, 1) : profile.chain,
           hits: 0
         });
       }
@@ -1394,7 +1396,8 @@
       }
       state.bullets = state.bullets.filter(b => b.y > -30 && b.x > -40 && b.x < canvas.width + 40);
       for (const obj of state.objects) obj.y += state.speed * (obj.speedFactor || 1) * dt;
-      for (const bullet of state.bullets) {
+      const collisionBullets = mobileSafeMode && state.bullets.length > 100 ? state.bullets.filter((_, i) => i % 2 === 0) : state.bullets;
+      for (const bullet of collisionBullets) {
         for (const obj of state.objects) {
           if (obj.hp <= 0) continue;
           if (Math.abs(bullet.x - obj.x) < obj.size * 0.55 && Math.abs(bullet.y - obj.y) < obj.size * 0.55) {

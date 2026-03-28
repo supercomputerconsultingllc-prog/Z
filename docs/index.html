@@ -809,10 +809,10 @@
     function openAvatarPanel() {
       state.paused = true;
       const avatars = [
-        { id: 'default', name: 'Default Trooper', cost: 0, note: 'Classic blue squad look.' },
-        { id: 'ranger', name: 'Ranger Helmet', cost: 2, note: 'Forest green field gear.' },
-        { id: 'commander', name: 'Blue Commander', cost: 4, note: 'Sharper blue command trim.' },
-        { id: 'gold', name: 'Gold Minigun Hero', cost: 8, note: 'Gold armor for elite runs.' }
+        { id: 'default', name: 'Default Trooper', cost: 0, note: 'Classic blue squad look.', colors: ['#bfdbfe', '#60a5fa', '#1d4ed8'] },
+        { id: 'ranger', name: 'Ranger Helmet', cost: 2, note: 'Forest green field gear.', colors: ['#bbf7d0', '#4ade80', '#166534'] },
+        { id: 'commander', name: 'Blue Commander', cost: 4, note: 'Sharper blue command trim.', colors: ['#dbeafe', '#60a5fa', '#1e40af'] },
+        { id: 'gold', name: 'Gold Minigun Hero', cost: 8, note: 'Gold armor for elite runs.', colors: ['#fde68a', '#fbbf24', '#92400e'] }
       ];
       overlay.innerHTML = `
         <div class="message settings-page">
@@ -823,6 +823,7 @@
               <h4>Currency Exchange</h4>
               <p><strong>25 coins = 1 avatar coin</strong></p>
               <p>You have <strong>${state.coins}</strong> coins and <strong>${avatarCoins}</strong> avatar coins.</p>
+              <p class="mini-note">Equipped now: <strong>${avatars.find(a => a.id === selectedAvatar)?.name || 'Default Trooper'}</strong></p>
               <button class="warn" id="tradeAvatarCoinBtn" style="width:auto;">Trade 25 Coins For 1 Avatar Coin</button>
             </div>
             <div class="settings-card">
@@ -831,13 +832,16 @@
                 ${avatars.map(avatar => {
                   const unlocked = unlockedAvatars.includes(avatar.id);
                   const selected = selectedAvatar === avatar.id;
-                  return `<div style="border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;">
+                  return `<div style="border:1px solid ${selected ? 'rgba(250,204,21,.55)' : 'rgba(255,255,255,.08)'};border-radius:14px;padding:12px;background:${selected ? 'rgba(250,204,21,.08)' : 'rgba(255,255,255,.02)'};">
                     <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
                       <strong>${avatar.name}</strong>
                       <span class="pill" style="margin:0;">${unlocked ? (selected ? 'Equipped' : 'Unlocked') : `${avatar.cost} AC`}</span>
                     </div>
+                    <div style="display:flex;gap:8px;margin:8px 0 2px;">
+                      ${avatar.colors.map(color => `<span style="width:18px;height:18px;border-radius:999px;background:${color};display:inline-block;border:1px solid rgba(255,255,255,.18);"></span>`).join('')}
+                    </div>
                     <p class="mini-note" style="margin:8px 0 0;">${avatar.note}</p>
-                    <button class="secondary avatar-action-btn" data-avatar="${avatar.id}" style="width:auto;">${unlocked ? (selected ? 'Equipped' : 'Equip') : `Unlock for ${avatar.cost}`}</button>
+                    <button class="secondary avatar-action-btn" data-avatar="${avatar.id}" style="width:auto;">${unlocked ? (selected ? 'Equipped Now' : 'Equip Avatar') : `Unlock for ${avatar.cost} Avatar Coins`}</button>
                   </div>`;
                 }).join('')}
               </div>

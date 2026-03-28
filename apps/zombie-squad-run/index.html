@@ -1649,40 +1649,56 @@
       const total = Math.max(0, state.squad);
       if (!total) return;
 
-      const centerX = canvas.width / 2;
-      const baseY = 628;
-      const armyMode = total >= 220;
-      const ultraArmyMode = total >= 420;
-      const maxDraw = ultraArmyMode ? Math.min(total, mobileSafeMode ? 260 : 420) : Math.min(total, mobileSafeMode ? 190 : 280);
-      const step = total > maxDraw ? total / maxDraw : 1;
-      const crowdRadiusX = ultraArmyMode ? 290 : armyMode ? 248 : 220;
-      const crowdRadiusY = ultraArmyMode ? 134 : armyMode ? 120 : 108;
-      const minScale = ultraArmyMode ? 0.055 : armyMode ? 0.075 : total > 150 ? 0.1 : 0.12;
-      const maxScale = ultraArmyMode ? 0.34 : armyMode ? 0.46 : 0.9;
-      const visibleSoldiers = [];
-      const marchPhase = performance.now() * 0.004;
+      const crowdWidth = 760;
+      const crowdHeight = 270;
+      const startY = 636;
+      const normalRowCap = 12;
+      const armyMode = total >= 300;
+      const ultraArmyMode = total >= 500;
+      const minScale = ultraArmyMode ? 0.022 : armyMode ? 0.03 : total > 220 ? 0.045 : total > 140 ? 0.055 : total > 80 ? 0.065 : 0.08;
+      const maxScale = ultraArmyMode ? 0.34 : armyMode ? 0.5 : 0.95;
+      const baseBodyWidth = armyMode ? 8 : 18;
+      const baseBodyHeight = armyMode ? 10 : 24;
 
-      const crowdGlow = ctx.createRadialGradient(centerX, 600, 24, centerX, 600, crowdRadiusX + 44);
-      crowdGlow.addColorStop(0, armyMode ? 'rgba(96,165,250,0.28)' : 'rgba(96,165,250,0.18)');
+      const maxColumnsThatFit = Math.max(1, Math.floor(crowdWidth / Math.max(baseBodyWidth * minScale, 1)) + 1);
+      let columns;
+      let rows;
+      if (ultraArmyMode) {
+        columns = Math.min(total, maxColumnsThatFit, 36);
+        rows = Math.max(1, Math.ceil(total / columns));
+      } else if (armyMode) {
+        columns = Math.min(total, maxColumnsThatFit, 26);
+        rows = Math.max(1, Math.ceil(total / columns));
+      } else {
+        columns = Math.min(total, maxColumnsThatFit, normalRowCap);
+        rows = Math.max(1, Math.ceil(total / normalRowCap));
+      }
+
+      const rawGapX = columns > 1 ? crowdWidth / Math.max(columns - 1, 1) : crowdWidth;
+      const rawGapY = rows > 1 ? crowdHeight / Math.max(rows - 1, 1) : crowdHeight;
+      const scale = Math.max(minScale, Math.min(maxScale, rawGapX / baseBodyWidth, rawGapY / baseBodyHeight));
+      const gapY = rows > 1 ? crowdHeight / Math.max(rows - 1, 1) : 0;
+      const visibleSoldiers = [];
+
+      const marchPhase = performance.now() * 0.004;
+      const crowdGlow = ctx.createRadialGradient(canvas.width / 2, 585, 20, canvas.width / 2, 585, armyMode ? 300 : 260);
+      crowdGlow.addColorStop(0, armyMode ? 'rgba(96,165,250,0.24)' : 'rgba(96,165,250,0.18)');
       crowdGlow.addColorStop(1, 'rgba(96,165,250,0)');
       ctx.fillStyle = crowdGlow;
       ctx.beginPath();
-      ctx.ellipse(centerX, 603 + (armyMode ? Math.sin(marchPhase) * 2.5 : 0), crowdRadiusX + 16, crowdRadiusY + 18, 0, 0, Math.PI * 2);
+      ctx.ellipse(canvas.width / 2, 590 + (armyMode ? Math.sin(marchPhase) * 3 : 0), armyMode ? 300 : 280, armyMode ? 132 + Math.sin(marchPhase * 1.3) * 4 : 120, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      let drawIndex = 0;
-      for (let n = 1; n <= total; n += step) {
-        const i = Math.floor(n - 1);
-        const t = total <= 1 ? 0 : i / (total - 1);
-        const angle = i * 2.399963229728653;
-        const squash = 0.72 + 0.28 * t;
-        const radius = Math.sqrt(t);
-        const x = centerX + Math.cos(angle) * crowdRadiusX * radius * squash;
-        const y = baseY - Math.sin(angle) * crowdRadiusY * radius;
-        const clampedY = Math.min(baseY, y);
-        const depth = (baseY - clampedY) / Math.max(crowdRadiusY, 1);
-        const scale = Math.max(minScale, Math.min(maxScale, maxScale - depth * (armyMode ? 0.08 : 0.14)));
-        visibleSoldiers.push({ x, y: clampedY, scale, depth, index: drawIndex++ });
+      for (let i = 0; i < total; i++) {
+        const row = Math.floor(i / columns);
+        const col = i % columns;
+        const rowStartIndex = row * columns;
+        const rowCount = Math.min(columns, total - rowStartIndex);
+        const rowSlotWidth = crowdWidth / Math.max(rowCount, 1);
+        const rowLeft = (canvas.width - crowdWidth) / 2;
+        const x = rowLeft + rowSlotWidth * (col + 0.5);
+        const y = startY - row * gapY;
+        visibleSoldiers.push({ x, y, row, col, rowCount });
       }
 
       const bannerGradient = ctx.createLinearGradient(0, 0, 220, 0);
@@ -1699,16 +1715,16 @@
 
       visibleSoldiers.sort((a, b) => a.y - b.y);
       for (const soldier of visibleSoldiers) {
-        const tint = soldier.index % 4 === 0 ? '#60a5fa' : soldier.index % 4 === 1 ? '#93c5fd' : soldier.index % 4 === 2 ? '#3b82f6' : '#2563eb';
-        if (armyMode) drawTinySoldier(soldier.x, soldier.y, tint, soldier.scale, soldier.index);
-        else drawPerson(soldier.x, soldier.y, tint, soldier.scale, soldier.index);
+        const tint = soldier.row % 4 === 0 ? '#60a5fa' : soldier.row % 4 === 1 ? '#93c5fd' : soldier.row % 4 === 2 ? '#3b82f6' : '#2563eb';
+        if (armyMode) drawTinySoldier(soldier.x, soldier.y, tint, scale, soldier.row);
+        else drawPerson(soldier.x, soldier.y, tint, scale, soldier.row);
       }
 
       ctx.fillStyle = 'rgba(15,23,42,.88)';
-      ctx.fillRect(18, 162, 350, 36);
+      ctx.fillRect(18, 162, 300, 36);
       ctx.fillStyle = '#cbd5e1';
       ctx.font = 'bold 16px system-ui';
-      ctx.fillText(`Squad ${total} • Dense bottom crowd`, 32, 185);
+      ctx.fillText(`Squad ${total} • Rows ${rows} • Per row ${columns}`, 32, 185);
     }
 
     function drawObjects() {

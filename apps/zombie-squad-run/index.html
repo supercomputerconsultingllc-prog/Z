@@ -2307,15 +2307,22 @@
           ctx.fillStyle='#fee2e2'; ctx.font='bold 14px system-ui'; ctx.textAlign='center'; ctx.fillText('HUSK',obj.x,obj.y-30);
         } else if (obj.type === 'wall') {
           drawObjectGroundShadow(obj, 34, 8, 0.32);
-          addRimLight(obj.x, obj.y, 70, 'rgba(248,113,113,ALPHA)', 0.12);
-          const wallGrad = ctx.createLinearGradient(obj.x, obj.y - 30, obj.x, obj.y + 30);
-          wallGrad.addColorStop(0, '#fecaca');
-          wallGrad.addColorStop(0.45, '#dc2626');
+          addRimLight(obj.x, obj.y, 76, 'rgba(248,113,113,ALPHA)', 0.14);
+          const wallGrad = ctx.createLinearGradient(obj.x - 52, obj.y - 30, obj.x + 52, obj.y + 30);
+          wallGrad.addColorStop(0, '#fee2e2');
+          wallGrad.addColorStop(0.25, '#f87171');
+          wallGrad.addColorStop(0.6, '#dc2626');
           wallGrad.addColorStop(1, '#7f1d1d');
           ctx.fillStyle = wallGrad;
-          ctx.fillRect(obj.x-52,obj.y-30,104,60);
-          ctx.strokeStyle='#fee2e2'; ctx.lineWidth=3; ctx.strokeRect(obj.x-52,obj.y-30,104,60);
-          ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1.5;
+          ctx.beginPath();
+          ctx.roundRect(obj.x-52,obj.y-30,104,60,8);
+          ctx.fill();
+          ctx.fillStyle = 'rgba(255,255,255,0.14)';
+          ctx.beginPath();
+          ctx.roundRect(obj.x-46,obj.y-24,92,10,6);
+          ctx.fill();
+          ctx.strokeStyle='#fff1f2'; ctx.lineWidth=3; ctx.stroke();
+          ctx.strokeStyle='rgba(255,255,255,.16)'; ctx.lineWidth=1.5;
           for (let row = 0; row < 3; row++) {
             const y = obj.y - 20 + row * 18;
             ctx.beginPath(); ctx.moveTo(obj.x - 52, y); ctx.lineTo(obj.x + 52, y); ctx.stroke();
@@ -2324,6 +2331,23 @@
             const x = obj.x - 39 + col * 26 + ((Math.floor(obj.hp) + col) % 2 ? 8 : 0);
             ctx.beginPath(); ctx.moveTo(x, obj.y - 30); ctx.lineTo(x, obj.y + 30); ctx.stroke();
           }
+          const emblemGrad = ctx.createLinearGradient(obj.x - 18, obj.y - 10, obj.x + 18, obj.y + 18);
+          emblemGrad.addColorStop(0, '#fff7ed');
+          emblemGrad.addColorStop(1, '#fecaca');
+          ctx.fillStyle = emblemGrad;
+          ctx.beginPath();
+          ctx.moveTo(obj.x, obj.y - 12);
+          ctx.lineTo(obj.x + 16, obj.y - 2);
+          ctx.lineTo(obj.x + 10, obj.y + 16);
+          ctx.lineTo(obj.x - 10, obj.y + 16);
+          ctx.lineTo(obj.x - 16, obj.y - 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = '#7f1d1d';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.fillStyle = '#991b1b';
+          ctx.font='bold 16px system-ui'; ctx.textAlign='center'; ctx.fillText('W',obj.x,obj.y+7);
           const chipCount = Math.min(8, Math.max(1, 8 - Math.ceil(obj.hp)));
           ctx.fillStyle = '#fecaca';
           for (let i = 0; i < chipCount; i++) {
@@ -2335,9 +2359,20 @@
             ctx.fillRect(-3, -3, 6, 6);
             ctx.restore();
           }
-          ctx.fillStyle='#fee2e2'; ctx.font='bold 22px system-ui'; ctx.textAlign='center'; ctx.fillText(String(Math.ceil(obj.hp)),obj.x,obj.y-38);
+          ctx.fillStyle='#fff1f2'; ctx.font='bold 22px system-ui'; ctx.textAlign='center'; ctx.fillText(String(Math.ceil(obj.hp)),obj.x,obj.y-38);
         } else if (obj.type === 'coin') {
-          ctx.fillStyle = COLORS.coin; ctx.beginPath(); ctx.arc(obj.x,obj.y,18,0,Math.PI*2); ctx.fill();
+          addRimLight(obj.x, obj.y, 28, 'rgba(250,204,21,ALPHA)', 0.22);
+          const coinGrad = ctx.createRadialGradient(obj.x - 5, obj.y - 6, 2, obj.x, obj.y, 20);
+          coinGrad.addColorStop(0, '#fef9c3');
+          coinGrad.addColorStop(0.38, '#fde047');
+          coinGrad.addColorStop(0.72, '#f59e0b');
+          coinGrad.addColorStop(1, '#92400e');
+          ctx.fillStyle = coinGrad;
+          ctx.beginPath(); ctx.arc(obj.x,obj.y,18,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle = '#fffbeb'; ctx.lineWidth = 2.2; ctx.stroke();
+          ctx.beginPath(); ctx.arc(obj.x,obj.y,13,0,Math.PI*2); ctx.strokeStyle='rgba(120,53,15,0.45)'; ctx.lineWidth=1.6; ctx.stroke();
+          ctx.fillStyle = 'rgba(255,255,255,0.22)';
+          ctx.beginPath(); ctx.ellipse(obj.x - 5, obj.y - 6, 6, 3.5, -0.35, 0, Math.PI * 2); ctx.fill();
           ctx.fillStyle = '#78350f'; ctx.font='bold 18px system-ui'; ctx.textAlign='center'; ctx.fillText('$',obj.x,obj.y+6);
         }
       }

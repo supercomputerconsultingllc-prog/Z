@@ -968,31 +968,53 @@
       }
     }
 
-    function drawPerson(x,y,color) {
-      ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x,y-10,8,0,Math.PI*2); ctx.fill();
-      ctx.fillRect(x-6,y-2,12,22); ctx.fillRect(x-12,y+2,8,4); ctx.fillRect(x+4,y+2,8,4);
+    function drawPerson(x, y, color, scale = 1) {
+      const head = 8 * scale;
+      const bodyW = 12 * scale;
+      const bodyH = 22 * scale;
+      const armW = 8 * scale;
+      const armH = 4 * scale;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y - 10 * scale, head, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillRect(x - bodyW / 2, y - 2 * scale, bodyW, bodyH);
+      ctx.fillRect(x - bodyW / 2 - armW * 0.75, y + 2 * scale, armW, armH);
+      ctx.fillRect(x + bodyW / 2 - armW * 0.25, y + 2 * scale, armW, armH);
     }
 
     function drawSquad() {
-      const maxVisibleRows = 22;
-      const maxVisibleSoldiers = maxVisibleRows * 3;
-      const visibleCount = Math.min(state.squad, maxVisibleSoldiers);
-      for (let i=0;i<visibleCount;i++) {
-        const lane = i % 3;
-        const row = Math.floor(i / 3);
-        const laneOffset = lane === 1 ? 0 : (lane === 0 ? -10 : 10);
-        const x = LANES[lane] + laneOffset;
-        const y = 620 - row * 18;
-        drawPerson(x,y,'#60a5fa');
+      const total = Math.max(0, state.squad);
+      if (!total) return;
+
+      const crowdWidth = 520;
+      const crowdHeight = 250;
+      const startX = canvas.width / 2 - crowdWidth / 2;
+      const startY = 635;
+      const columns = Math.max(6, Math.ceil(Math.sqrt(total * 1.25)));
+      const rows = Math.max(2, Math.ceil(total / columns));
+      const gapX = Math.max(6, Math.min(24, crowdWidth / Math.max(columns - 1, 1)));
+      const gapY = Math.max(6, Math.min(18, crowdHeight / Math.max(rows - 1, 1)));
+      const scale = Math.max(0.22, Math.min(0.95, Math.min(gapX / 18, gapY / 20)));
+      const usableWidth = gapX * Math.max(columns - 1, 0);
+      const xOffset = (crowdWidth - usableWidth) / 2;
+
+      for (let i = 0; i < total; i++) {
+        const row = Math.floor(i / columns);
+        const col = i % columns;
+        const jitter = row % 2 === 0 ? 0 : gapX * 0.22;
+        const x = startX + xOffset + col * gapX + jitter;
+        const y = startY - row * gapY;
+        if (y < 360) break;
+        drawPerson(x, y, '#60a5fa', scale);
       }
-      if (state.squad > visibleCount) {
-        ctx.fillStyle = 'rgba(15,23,42,.88)';
-        ctx.fillRect(20, 112, 170, 42);
-        ctx.fillStyle = '#bfdbfe';
-        ctx.font = 'bold 20px system-ui';
-        ctx.textAlign = 'left';
-        ctx.fillText(`Reserve +${state.squad - visibleCount}`, 32, 139);
-      }
+
+      ctx.fillStyle = 'rgba(15,23,42,.88)';
+      ctx.fillRect(20, 112, 178, 46);
+      ctx.fillStyle = '#bfdbfe';
+      ctx.font = 'bold 20px system-ui';
+      ctx.textAlign = 'left';
+      ctx.fillText(`Soldiers ${state.squad}`, 32, 141);
     }
 
     function drawObjects() {

@@ -364,12 +364,17 @@
             <span class="badge">Weapon-tier squad</span>
             <span class="badge">Night survival run</span>
           </div>
+          <p><strong>Hold the road. Build the squad. Melt the undead.</strong></p>
           <p>Run with your squad, blast the right lane, smash boss walls before impact, and stack stronger weapons every round.</p>
           <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best} &nbsp; <strong>Tier:</strong> ${weaponTierName(state.firepower)}</p>
           <div class="badge-line">
             <span class="badge">Tap lane to fire</span>
             <span class="badge">Crates = stronger guns</span>
             <span class="badge">Walls = squad damage</span>
+          </div>
+          <div class="badge-line">
+            <span class="badge">Elite zombies appear at higher rewards</span>
+            <span class="badge">Boss walls punish bad timing</span>
           </div>
           <button data-action="start">🚀 Start Run</button>
         </div>`;
@@ -1009,13 +1014,23 @@
 
     function drawBullets() {
       for (const bullet of state.bullets) {
-        const glow = ctx.createRadialGradient(bullet.x, bullet.y, 1, bullet.x, bullet.y, 10);
-        glow.addColorStop(0, 'rgba(255,255,255,0.95)');
+        const trail = ctx.createLinearGradient(bullet.x, bullet.y + 20, bullet.x, bullet.y - 20);
+        trail.addColorStop(0, 'rgba(253,224,71,0)');
+        trail.addColorStop(1, 'rgba(253,224,71,0.55)');
+        ctx.strokeStyle = trail;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(bullet.x, bullet.y + 18);
+        ctx.lineTo(bullet.x, bullet.y - 14);
+        ctx.stroke();
+
+        const glow = ctx.createRadialGradient(bullet.x, bullet.y, 1, bullet.x, bullet.y, 12);
+        glow.addColorStop(0, 'rgba(255,255,255,0.98)');
         glow.addColorStop(0.35, 'rgba(253,224,71,0.95)');
         glow.addColorStop(1, 'rgba(253,224,71,0)');
         ctx.fillStyle = glow;
         ctx.beginPath();
-        ctx.arc(bullet.x, bullet.y, 10, 0, Math.PI * 2);
+        ctx.arc(bullet.x, bullet.y, 12, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.fillStyle = COLORS.bullet;
@@ -1039,7 +1054,7 @@
       const mission = activeMission();
       ctx.fillStyle='rgba(15,23,42,.78)';
       ctx.beginPath();
-      ctx.roundRect(18,18,470,118,18);
+      ctx.roundRect(18,18,500,126,18);
       ctx.fill();
       ctx.strokeStyle = 'rgba(125,211,252,0.18)';
       ctx.lineWidth = 1.5;
@@ -1048,6 +1063,7 @@
       ctx.fillStyle='#94a3b8'; ctx.font='16px system-ui'; ctx.fillText('Contra-style lane action. Boss walls, zombie waves, weapon upgrades.',36,80);
       ctx.fillStyle='#86efac'; ctx.font='bold 14px system-ui'; ctx.fillText(`Tier: ${weaponTierName(state.firepower)}  •  Wave ${state.wave}`,36,102);
       ctx.fillStyle='#fef08a'; ctx.font='bold 13px system-ui'; ctx.fillText(`Objective: ${mission.label} (${Math.min(missionProgress, mission.target)}/${mission.target})`,36,122);
+      ctx.fillStyle='#fca5a5'; ctx.font='bold 12px system-ui'; ctx.fillText('Tip: Elite zombies glow harder, boss walls hit harder.',36,140);
     }
 
     function render() {

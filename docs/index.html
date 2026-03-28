@@ -1909,6 +1909,18 @@
       ctx.restore();
     }
 
+    function drawZombiePack(x, y, count = 3, scale = 1) {
+      const total = Math.max(2, Math.min(7, Math.ceil(count)));
+      for (let i = 0; i < total; i++) {
+        const row = Math.floor(i / 3);
+        const col = i % 3;
+        const ox = (col - 1) * 12 * scale + (row % 2 ? 6 * scale : 0);
+        const oy = row * 14 * scale;
+        const memberScale = scale * (0.74 - row * 0.08 - i * 0.015);
+        drawZombie(x + ox, y + oy, Math.max(0.46, memberScale), i + row, 'shield');
+      }
+    }
+
     function drawLootZombie(x, y, scale = 1) {
       const carcassGlow = ctx.createRadialGradient(x, y - 4 * scale, 3, x, y, 34 * scale);
       carcassGlow.addColorStop(0, 'rgba(239,68,68,0.26)');
@@ -2075,10 +2087,8 @@
           drawZombie(obj.x, obj.y, 0.88, 2, 'runner');
           ctx.fillStyle='#ffedd5'; ctx.font='bold 15px system-ui'; ctx.textAlign='center'; ctx.fillText('FAST',obj.x,obj.y-38);
         } else if (obj.type === 'shield') {
-          drawObjectGroundShadow(obj, 16, 5.5, 0.3);
-          drawZombie(obj.x, obj.y, 1.04, 3, 'shield');
-          ctx.strokeStyle='#e2e8f0'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(obj.x, obj.y + 2, 22, 0, Math.PI * 2); ctx.stroke();
-          ctx.fillStyle='#f8fafc'; ctx.font='bold 18px system-ui'; ctx.textAlign='center'; ctx.fillText(String(Math.ceil(obj.hp)),obj.x,obj.y-34);
+          drawObjectGroundShadow(obj, 22, 7, 0.3);
+          drawZombiePack(obj.x, obj.y - 6, obj.hp, 1);
         } else if (obj.type === 'boss') {
           drawObjectGroundShadow(obj, 28, 9, 0.34);
           const bossPulse = 0.72 + Math.sin(performance.now() * 0.006) * 0.18;

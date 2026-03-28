@@ -519,6 +519,7 @@
     let hitFlash = 0;
     let bossWave = false;
     let missionPopup = null;
+    let crowdCache = null;
     const impactDecals = [];
     const shellCasings = [];
     const muzzleFlashes = [];
@@ -1147,6 +1148,7 @@
         lastTime: performance.now(), coins: 0, revives: 1, usedRevive: false, distanceCoinsTick: 0,
         minigunCharge: 100, minigunActiveUntil: 0, lastMinigunBurst: 0
       };
+      crowdCache = null;
       bankCoins = 0;
       localStorage.setItem('zombie-squad-run-coins', '0');
       syncHud();
@@ -2126,6 +2128,55 @@
       ctx.restore();
     }
 
+    function buildCrowdCache(visibleSoldiers, centerX, baseY, crowdRadiusX, crowdRadiusY) {
+      if (!visibleSoldiers.length) return null;
+      const offscreen = document.createElement('canvas');
+      offscreen.width = canvas.width;
+      offscreen.height = canvas.height;
+      const octx = offscreen.getContext('2d');
+      octx.imageSmoothingEnabled = true;
+      const glow = octx.createRadialGradient(centerX, 594, 30, centerX, 594, crowdRadiusX + 35);
+      glow.addColorStop(0, 'rgba(96,165,250,0.22)');
+      glow.addColorStop(1, 'rgba(96,165,250,0)');
+      octx.fillStyle = glow;
+      octx.beginPath();
+      octx.ellipse(centerX, 596, crowdRadiusX + 8, crowdRadiusY + 12, 0, 0, Math.PI * 2);
+      octx.fill();
+      octx.fillStyle = 'rgba(37,99,235,0.16)';
+      octx.beginPath();
+      octx.ellipse(centerX, 604, crowdRadiusX * 0.94, crowdRadiusY * 0.82, 0, 0, Math.PI * 2);
+      octx.fill();
+      visibleSoldiers.sort((a, b) => a.y - b.y);
+      for (const soldier of visibleSoldiers) {
+        const tint = soldier.index % 4 === 0 ? '#60a5fa' : soldier.index % 4 === 1 ? '#93c5fd' : soldier.index % 4 === 2 ? '#3b82f6' : '#2563eb';
+        const bodyW = Math.max(1.6, 6.4 * Math.max(0.06, soldier.scale * 0.9));
+        const bodyH = Math.max(2.4, 9.6 * Math.max(0.06, soldier.scale * 0.9));
+        const head = Math.max(1.2, 3 * Math.max(0.06, soldier.scale * 0.9));
+        octx.fillStyle = 'rgba(15,23,42,0.24)';
+        octx.beginPath();
+        octx.ellipse(soldier.x, soldier.y + bodyH * 0.9, bodyW, Math.max(0.9, 1.8 * soldier.scale), 0, 0, Math.PI * 2);
+        octx.fill();
+        const miniGrad = octx.createLinearGradient(soldier.x - bodyW / 2, soldier.y - bodyH * 0.4, soldier.x + bodyW / 2, soldier.y + bodyH);
+        miniGrad.addColorStop(0, '#bfdbfe');
+        miniGrad.addColorStop(0.45, tint);
+        miniGrad.addColorStop(1, '#1e3a8a');
+        octx.fillStyle = miniGrad;
+        octx.beginPath();
+        octx.roundRect(soldier.x - bodyW / 2, soldier.y - bodyH * 0.45, bodyW, bodyH, Math.max(0.8, 1.2 * soldier.scale));
+        octx.fill();
+        octx.fillStyle = 'rgba(255,255,255,0.14)';
+        octx.fillRect(soldier.x - bodyW * 0.24, soldier.y - bodyH * 0.18, bodyW * 0.14, bodyH * 0.56);
+        const headGrad = octx.createRadialGradient(soldier.x - head * 0.3, soldier.y - bodyH * 0.75, 0.2, soldier.x, soldier.y - bodyH * 0.6, head * 1.08);
+        headGrad.addColorStop(0, '#fff7ed');
+        headGrad.addColorStop(1, '#d6a36a');
+        octx.fillStyle = headGrad;
+        octx.beginPath();
+        octx.arc(soldier.x, soldier.y - bodyH * 0.6, head, 0, Math.PI * 2);
+        octx.fill();
+      }
+      return offscreen;
+    }
+
     function drawSquad() {
       const total = Math.max(0, state.squad);
       if (!total) return;
@@ -2134,7 +2185,7 @@
       const baseY = 622;
       const crowdRadiusX = total >= 500 ? 320 : total >= 250 ? 285 : total >= 100 ? 245 : 205;
       const crowdRadiusY = total >= 500 ? 150 : total >= 250 ? 138 : total >= 100 ? 124 : 108;
-      const perfCrowd = lowPowerMobileMode && total > 50;
+      const perfCrowd = lowPowerMobileMode && total > 40;
       const armyMode = total >= 260;
       const ultraArmyMode = total >= 500;
       const compactArmyMode = total >= 220;
@@ -2187,12 +2238,22 @@
       ctx.textAlign = 'left';
       ctx.fillText(`Soldiers ${state.squad}`, 32, 141);
 
-      visibleSoldiers.sort((a, b) => a.y - b.y);
-      for (const soldier of visibleSoldiers) {
-        const tint = soldier.index % 4 === 0 ? '#60a5fa' : soldier.index % 4 === 1 ? '#93c5fd' : soldier.index % 4 === 2 ? '#3b82f6' : '#2563eb';
-        if (perfCrowd) drawTinySoldier(soldier.x, soldier.y, tint, Math.max(0.06, soldier.scale * 0.9), soldier.index, true);
-        else if (armyMode) drawTinySoldier(soldier.x, soldier.y, tint, soldier.scale, soldier.index, compactArmyMode);
-        else drawPerson(soldier.x, soldier.y, tint, soldier.scale, soldier.index);
+      if (perfCrowd) {
+        const cacheKey = `${Math.round(crowdRadiusX)}:${Math.round(crowdRadiusY)}:${visibleSoldiers.length}:${Math.floor(total / 8)}`;
+        if (!crowdCache || crowdCache.key !== cacheKey) {
+          crowdCache = { key: cacheKey, canvas: buildCrowdCache(visibleSoldiers.slice(), centerX, baseY, crowdRadiusX, crowdRadiusY) };
+        }
+        if (crowdCache?.canvas) {
+          const sway = Math.sin(marchPhase) * 2.2;
+          ctx.drawImage(crowdCache.canvas, 0, sway);
+        }
+      } else {
+        visibleSoldiers.sort((a, b) => a.y - b.y);
+        for (const soldier of visibleSoldiers) {
+          const tint = soldier.index % 4 === 0 ? '#60a5fa' : soldier.index % 4 === 1 ? '#93c5fd' : soldier.index % 4 === 2 ? '#3b82f6' : '#2563eb';
+          if (armyMode) drawTinySoldier(soldier.x, soldier.y, tint, soldier.scale, soldier.index, compactArmyMode);
+          else drawPerson(soldier.x, soldier.y, tint, soldier.scale, soldier.index);
+        }
       }
 
       ctx.fillStyle = 'rgba(15,23,42,.88)';

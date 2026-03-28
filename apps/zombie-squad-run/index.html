@@ -83,6 +83,14 @@
       padding: 10px;
       font-size: 13px;
       font-weight: 900;
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    }
+    .battle-side-btn.ready {
+      box-shadow: 0 0 0 2px rgba(254,202,202,.22), 0 0 24px rgba(248,113,113,.55), 0 18px 36px rgba(0,0,0,.32);
+      filter: saturate(1.2);
+    }
+    .battle-side-btn:active {
+      transform: scale(.96);
     }
     .battle-side-btn .big { font-size: 28px; line-height: 1; }
     .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
@@ -724,6 +732,7 @@
       state.paused = true;
       state.bullets = [];
       state.objects = [];
+      state.particles = [];
       state.minigunCharge = 100;
       state.minigunActiveUntil = 0;
       state.distance = 0;
@@ -823,7 +832,7 @@
     function resetGame() {
       state = {
         squad: 8, firepower: 1, distance: 0, wave: 1, speed: 190,
-        bullets: [], objects: [], spawnTimer: 0, running: true, paused: true, gameOver: false,
+        bullets: [], objects: [], particles: [], spawnTimer: 0, running: true, paused: true, gameOver: false,
         lastTime: performance.now(), coins: bankCoins, revives: 1, usedRevive: false, distanceCoinsTick: 0,
         minigunCharge: 100, minigunActiveUntil: 0
       };
@@ -849,13 +858,20 @@
 
     function addCoins(n) { state.coins += n; bankCoins = state.coins; saveMeta(); updateMission('coins', n); }
 
-    function fireAtLane(laneIndex) {
+    function fireAtLane(laneIndex, powerBoost = 0, speedBoost = 0) {
       if (!state.running || state.paused || state.gameOver) return;
       if (navigator.vibrate && volumeLevel > 0) navigator.vibrate(12);
       playTone(920, 0.06, 'square', 1.2);
       const laneX = LANES[laneIndex];
-      for (let i = 0; i < state.firepower; i++) {
-        state.bullets.push({ x: laneX + (i - (state.firepower - 1) / 2) * 10, y: 600, speed: 560 });
+      const bulletCount = state.firepower + powerBoost;
+      for (let i = 0; i < bulletCount; i++) {
+        state.bullets.push({
+          x: laneX + (i - (bulletCount - 1) / 2) * 10,
+          y: 600,
+          speed: 560 + speedBoost,
+          damage: 1 + powerBoost * 0.2,
+          glow: powerBoost > 0
+        });
       }
     }
 
@@ -877,9 +893,10 @@
       state.speed = 190 + state.wave * 8;
       state.minigunCharge = Math.min(100, state.minigunCharge + dt * 8);
       if (state.minigunActiveUntil > performance.now()) {
-        for (const laneX of LANES) {
-          state.bullets.push({ x: laneX + rand(-10, 10), y: 610, speed: 720 });
+        for (let lane = 0; lane < LANES.length; lane++) {
+          fireAtLane(lane, 3, 220);
         }
+        if (Math.random() < 0.35) playTone(150 + rand(0, 40), 0.05, 'sawtooth', 0.8);
       }
       const distanceCoins = Math.floor(state.distance / 100);
       if (distanceCoins > state.distanceCoinsTick) { addCoins(distanceCoins - state.distanceCoinsTick); state.distanceCoinsTick = distanceCoins; }
@@ -892,7 +909,8 @@
         for (const obj of state.objects) {
           if (obj.hp <= 0) continue;
           if (Math.abs(bullet.x - obj.x) < obj.size * 0.55 && Math.abs(bullet.y - obj.y) < obj.size * 0.55) {
-            obj.hp -= 1;
+            obj.hp -= bullet.damage || 1;
+            state.particles.push({ x: obj.x, y: obj.y, life: 0.18, color: bullet.glow ? '#fde68a' : '#f8fafc' });
             bullet.y = -100;
             if (obj.hp <= 0) handleDestroyed(obj);
             break;
@@ -900,6 +918,8 @@
         }
       }
       state.bullets = state.bullets.filter(b => b.y > -20);
+      for (const particle of state.particles) particle.life -= dt;
+      state.particles = state.particles.filter(p => p.life > 0);
       for (const obj of state.objects) {
         if (obj.y >= 570) {
           if (obj.type === 'wall' && obj.hp > 0) state.squad -= obj.hp;
@@ -968,19 +988,34 @@
       }
     }
 
-    function drawPerson(x, y, color, scale = 1) {
+    function drawPerson(x, y, color, scale = 1, depth = 0) {
       const head = 8 * scale;
       const bodyW = 12 * scale;
       const bodyH = 22 * scale;
       const armW = 8 * scale;
       const armH = 4 * scale;
-      ctx.fillStyle = color;
+      const legH = 9 * scale;
+      const gunW = 10 * scale;
+      const gunH = 3 * scale;
+      const shade = 18 + Math.min(80, depth * 4);
+      ctx.save();
+      ctx.translate(0, Math.sin((x + y + depth * 13) * 0.03) * scale * 1.1);
+      ctx.fillStyle = `rgb(${96 - shade * 0.15}, ${165 - shade * 0.1}, ${250 - shade * 0.05})`;
       ctx.beginPath();
       ctx.arc(x, y - 10 * scale, head, 0, Math.PI * 2);
       ctx.fill();
+      ctx.fillStyle = color;
       ctx.fillRect(x - bodyW / 2, y - 2 * scale, bodyW, bodyH);
+      ctx.fillStyle = '#0f172a';
       ctx.fillRect(x - bodyW / 2 - armW * 0.75, y + 2 * scale, armW, armH);
       ctx.fillRect(x + bodyW / 2 - armW * 0.25, y + 2 * scale, armW, armH);
+      ctx.fillRect(x + bodyW * 0.2, y + 3 * scale, gunW, gunH);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(x - bodyW * 0.35, y + bodyH - 1 * scale, bodyW * 0.28, legH);
+      ctx.fillRect(x + bodyW * 0.07, y + bodyH - 1 * scale, bodyW * 0.28, legH);
+      ctx.fillStyle = '#dbeafe';
+      ctx.fillRect(x - bodyW * 0.18, y + 4 * scale, bodyW * 0.36, 3 * scale);
+      ctx.restore();
     }
 
     function drawSquad() {
@@ -999,6 +1034,7 @@
       const usableWidth = gapX * Math.max(columns - 1, 0);
       const xOffset = (crowdWidth - usableWidth) / 2;
 
+      const visibleSoldiers = [];
       for (let i = 0; i < total; i++) {
         const row = Math.floor(i / columns);
         const col = i % columns;
@@ -1006,7 +1042,13 @@
         const x = startX + xOffset + col * gapX + jitter;
         const y = startY - row * gapY;
         if (y < 360) break;
-        drawPerson(x, y, '#60a5fa', scale);
+        visibleSoldiers.push({ x, y, row });
+      }
+
+      visibleSoldiers.sort((a, b) => a.y - b.y);
+      for (const soldier of visibleSoldiers) {
+        const tint = soldier.row % 3 === 0 ? '#60a5fa' : soldier.row % 3 === 1 ? '#93c5fd' : '#3b82f6';
+        drawPerson(soldier.x, soldier.y, tint, scale, soldier.row);
       }
 
       ctx.fillStyle = 'rgba(15,23,42,.88)';
@@ -1037,8 +1079,28 @@
     }
 
     function drawBullets() {
-      ctx.fillStyle=COLORS.bullet;
-      for (const bullet of state.bullets) { ctx.beginPath(); ctx.arc(bullet.x,bullet.y,5,0,Math.PI*2); ctx.fill(); }
+      for (const bullet of state.bullets) {
+        ctx.fillStyle = bullet.glow ? '#fde68a' : COLORS.bullet;
+        if (bullet.glow) {
+          ctx.shadowColor = '#facc15';
+          ctx.shadowBlur = 12;
+        }
+        ctx.beginPath();
+        ctx.arc(bullet.x, bullet.y, bullet.glow ? 6 : 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    function drawParticles() {
+      for (const particle of state.particles) {
+        ctx.globalAlpha = Math.max(0, particle.life / 0.18);
+        ctx.fillStyle = particle.color;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, 8 * particle.life / 0.18, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
     }
 
     function drawHint() {
@@ -1046,12 +1108,15 @@
       ctx.fillStyle='#e5e7eb'; ctx.font='bold 24px system-ui'; ctx.textAlign='left'; ctx.fillText('Zombie Squad Run',36,52);
       ctx.fillStyle='#94a3b8'; ctx.font='16px system-ui'; ctx.fillText('Shoot zombies and crates. Break walls. Stack your squad.',36,80);
       ctx.fillStyle='rgba(15,23,42,.82)'; ctx.fillRect(canvas.width - 170, 20, 140, 58);
-      ctx.fillStyle='#fecaca'; ctx.font='bold 14px system-ui'; ctx.fillText('MINIGUN', canvas.width - 154, 44);
+      ctx.fillStyle=state.minigunCharge >= 100 ? '#fca5a5' : '#fecaca'; ctx.font='bold 14px system-ui'; ctx.fillText('MINIGUN', canvas.width - 154, 44);
       ctx.fillStyle='#fff'; ctx.font='bold 24px system-ui'; ctx.fillText(`${Math.floor(state.minigunCharge)}%`, canvas.width - 154, 68);
+      ctx.fillStyle='rgba(255,255,255,.12)'; ctx.fillRect(canvas.width - 154, 76, 112, 8);
+      ctx.fillStyle=state.minigunCharge >= 100 ? '#ef4444' : '#f59e0b'; ctx.fillRect(canvas.width - 154, 76, 112 * (state.minigunCharge / 100), 8);
+      minigunBtn.classList.toggle('ready', state.minigunCharge >= 100 && !state.paused && !state.gameOver);
     }
 
     function render() {
-      drawRoad(); drawSquad(); drawObjects(); drawBullets(); drawHint();
+      drawRoad(); drawSquad(); drawObjects(); drawBullets(); drawParticles(); drawHint();
       if (state.paused && !state.gameOver && !overlay.innerHTML) {
         ctx.fillStyle='rgba(0,0,0,.45)'; ctx.fillRect(0,0,canvas.width,canvas.height);
         ctx.fillStyle='#fff'; ctx.font='bold 42px system-ui'; ctx.textAlign='center'; ctx.fillText('Paused',canvas.width/2,canvas.height/2);

@@ -683,24 +683,33 @@
       if (!ctxAudio) return;
       if (ctxAudio.state === 'suspended') ctxAudio.resume();
       const now = ctxAudio.currentTime + 0.02;
-      const stepDur = 0.19;
-      const root = state ? 146 + Math.min(24, state.wave) : 146;
       const intensity = musicIntensity();
-      const mountainKing = [0, 1, 3, 5, 3, 1, 0, -1, 0, 1, 3, 5, 6, 5, 3, 1];
-      const bassOffsets = [0, 0, -5, 0, -7, -5, -8, -7, 0, 0, -5, 0, -7, -5, -8, -7];
+      const root = state ? 164 + Math.min(18, state.wave * 0.8) : 164;
+      const stepDur = 0.175;
+      const mountainKingPhrase = [
+        { note: 0, len: 1 }, { note: 2, len: 1 }, { note: 3, len: 1 }, { note: 5, len: 1 },
+        { note: 7, len: 1 }, { note: 3, len: 1 }, { note: 7, len: 1 }, { note: 6, len: 1 },
+        { note: 3, len: 1 }, { note: 6, len: 1 }, { note: 5, len: 1 }, { note: 2, len: 1 },
+        { note: 5, len: 1 }, { note: 3, len: 1 }, { note: 2, len: 1 }, { note: -2, len: 1 }
+      ];
+      const bassOffsets = [0, 0, -5, -5, -3, -3, -5, -5, -7, -7, -5, -5, -8, -8, -7, -7];
+      const accentPattern = [1, 0, 0.15, 0, 0.35, 0, 0.22, 0, 0.92, 0, 0.16, 0, 0.42, 0, 0.16, 0];
 
       for (let i = 0; i < 16; i++) {
         const stepTime = now + i * stepDur;
-        const note = mountainKing[(musicStep + i) % mountainKing.length];
+        const phraseStep = mountainKingPhrase[(musicStep + i) % mountainKingPhrase.length];
         const bass = bassOffsets[(musicStep + i) % bassOffsets.length];
-        const melodyFreq = root * Math.pow(2, note / 12);
+        const accent = accentPattern[(musicStep + i) % accentPattern.length];
+        const melodyFreq = root * Math.pow(2, phraseStep.note / 12);
         const bassFreq = (root * 0.5) * Math.pow(2, bass / 12);
-        playMusicNote(bassFreq, stepTime, 0.22, 'sawtooth', 0.9 * intensity);
-        playMusicNote(melodyFreq, stepTime, 0.14, 'square', 0.36 * intensity);
-        if (i % 4 === 0) playKick(stepTime, 1.4 * intensity);
-        if (i % 4 === 2) playNoiseHit(stepTime, 0.05, 0.45 * intensity);
+        const noteLen = stepDur * (0.72 + phraseStep.len * 0.18);
+        playMusicNote(bassFreq, stepTime, stepDur * 0.88, 'sawtooth', 0.72 * intensity);
+        playMusicNote(melodyFreq, stepTime, noteLen, 'square', (0.28 + accent * 0.22) * intensity);
+        if (accent > 0.3) playMusicNote(melodyFreq * 2, stepTime, stepDur * 0.24, 'triangle', 0.08 * intensity);
+        if (i % 4 === 0) playKick(stepTime, (1.2 + accent * 0.4) * intensity);
+        if (i % 2 === 1) playNoiseHit(stepTime, 0.04, (0.16 + accent * 0.18) * intensity);
       }
-      musicStep = (musicStep + 16) % 16;
+      musicStep = (musicStep + 16) % mountainKingPhrase.length;
     }
 
     function startMusicLoop() {
@@ -708,7 +717,7 @@
       scheduleMusicBar();
       musicTimer = setInterval(() => {
         if (!document.hidden && !state?.paused && !state?.gameOver) scheduleMusicBar();
-      }, 3040);
+      }, 2800);
     }
 
     function stopMusicLoop() {

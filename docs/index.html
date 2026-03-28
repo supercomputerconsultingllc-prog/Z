@@ -1650,49 +1650,49 @@
       if (!total) return;
 
       const centerX = canvas.width / 2;
-      const baseY = 626;
-      const crowdRadiusX = total >= 260 ? 250 : total >= 140 ? 220 : 190;
-      const crowdRadiusY = total >= 260 ? 112 : total >= 140 ? 102 : 92;
-      const armyMode = total >= 220;
-      const maxDraw = Math.min(total, mobileSafeMode ? 180 : 260);
-      const step = total > maxDraw ? total / maxDraw : 1;
-      const minScale = armyMode ? 0.07 : total > 150 ? 0.1 : 0.12;
-      const maxScale = armyMode ? 0.34 : 0.9;
+      const baseY = 622;
+      const crowdRadiusX = total >= 500 ? 320 : total >= 250 ? 285 : total >= 100 ? 245 : 205;
+      const crowdRadiusY = total >= 500 ? 150 : total >= 250 ? 138 : total >= 100 ? 124 : 108;
+      const armyMode = total >= 260;
+      const ultraArmyMode = total >= 500;
+      const minScale = ultraArmyMode ? 0.028 : armyMode ? 0.04 : total > 120 ? 0.06 : total > 60 ? 0.075 : 0.1;
+      const maxScale = ultraArmyMode ? 0.28 : armyMode ? 0.42 : 0.92;
       const visibleSoldiers = [];
       const marchPhase = performance.now() * 0.004;
 
-      const crowdGlow = ctx.createRadialGradient(centerX, 598, 20, centerX, 598, crowdRadiusX + 36);
-      crowdGlow.addColorStop(0, armyMode ? 'rgba(96,165,250,0.24)' : 'rgba(96,165,250,0.18)');
+      const crowdGlow = ctx.createRadialGradient(centerX, 592, 30, centerX, 592, crowdRadiusX + 35);
+      crowdGlow.addColorStop(0, armyMode ? 'rgba(96,165,250,0.26)' : 'rgba(96,165,250,0.18)');
       crowdGlow.addColorStop(1, 'rgba(96,165,250,0)');
       ctx.fillStyle = crowdGlow;
       ctx.beginPath();
-      ctx.ellipse(centerX, 602, crowdRadiusX + 14, crowdRadiusY + 14, 0, 0, Math.PI * 2);
+      ctx.ellipse(centerX, 594 + (armyMode ? Math.sin(marchPhase) * 3 : 0), crowdRadiusX + 10, crowdRadiusY + 14, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      let drawIndex = 0;
-      for (let n = 1; n <= total; n += step) {
-        const i = Math.floor(n - 1);
-        const t = total <= 1 ? 0 : i / (total - 1);
-        const angle = i * 2.399963229728653;
-        const radius = Math.sqrt(t);
-        const x = centerX + Math.cos(angle) * crowdRadiusX * radius * 0.92;
-        const y = Math.min(baseY, baseY - Math.abs(Math.sin(angle)) * crowdRadiusY * radius);
+      for (let i = 0; i < total; i++) {
+        const t = total === 1 ? 0 : i / Math.max(total - 1, 1);
+        const ringBias = Math.sqrt(t);
+        const angle = i * 2.399963229728653 + Math.sin(i * 0.35 + marchPhase) * 0.05;
+        const radiusX = ringBias * crowdRadiusX;
+        const radiusY = ringBias * crowdRadiusY;
+        let x = centerX + Math.cos(angle) * radiusX;
+        let y = baseY - Math.sin(angle) * radiusY;
+        y = Math.min(baseY, y);
         const depth = (baseY - y) / Math.max(crowdRadiusY, 1);
-        const scale = Math.max(minScale, Math.min(maxScale, maxScale - depth * 0.1));
-        visibleSoldiers.push({ x, y, scale, index: drawIndex++ });
+        const scale = Math.max(minScale, Math.min(maxScale, maxScale - depth * (armyMode ? 0.14 : 0.2)));
+        visibleSoldiers.push({ x, y, depth, scale, index: i });
       }
 
       const bannerGradient = ctx.createLinearGradient(0, 0, 220, 0);
       bannerGradient.addColorStop(0, 'rgba(15,23,42,.96)');
       bannerGradient.addColorStop(1, 'rgba(30,64,175,.78)');
       ctx.fillStyle = bannerGradient;
-      ctx.fillRect(18, 544, 240, 50);
+      ctx.fillRect(18, 108, 210, 50);
       ctx.strokeStyle = 'rgba(147,197,253,.35)';
-      ctx.strokeRect(18, 544, 240, 50);
+      ctx.strokeRect(18, 108, 210, 50);
       ctx.fillStyle = '#eff6ff';
       ctx.font = 'bold 22px system-ui';
       ctx.textAlign = 'left';
-      ctx.fillText(`Soldiers ${state.squad}`, 32, 577);
+      ctx.fillText(`Soldiers ${state.squad}`, 32, 141);
 
       visibleSoldiers.sort((a, b) => a.y - b.y);
       for (const soldier of visibleSoldiers) {
@@ -1702,10 +1702,10 @@
       }
 
       ctx.fillStyle = 'rgba(15,23,42,.88)';
-      ctx.fillRect(18, 598, 300, 36);
+      ctx.fillRect(18, 162, 320, 36);
       ctx.fillStyle = '#cbd5e1';
       ctx.font = 'bold 16px system-ui';
-      ctx.fillText(`Squad ${total} • Bottom spread`, 32, 621);
+      ctx.fillText(`Squad ${total} • Circular mass • Bottom anchored`, 32, 185);
     }
 
     function drawObjects() {

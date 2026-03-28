@@ -143,6 +143,7 @@
       <div class="stat"><span class="label">Revives</span><span class="value" id="reviveStat">1</span></div>
       <div class="stat"><span class="label">Best</span><span class="value" id="bestStat">0</span></div>
       <div class="stat"><span class="label">Mission</span><span class="value" id="missionStat">1/3</span></div>
+      <div class="stat"><span class="label">Minigun</span><span class="value" id="minigunStat">Ready</span></div>
     </section>
 
     <section class="content">
@@ -184,6 +185,7 @@
           <h3>Controls</h3>
           <p>Mouse/touch: shoot selected lane.</p>
           <p>Keyboard: <strong>1</strong>, <strong>2</strong>, <strong>3</strong> shoot left, center, right.</p>
+          <button class="warn" id="minigunBtn">🌀 Use Minigun</button>
           <button id="restartBtn">Restart Run</button>
           <button class="secondary" id="pauseBtn">Pause</button>
           <button class="secondary" id="soundBtn">Sound: On</button>
@@ -218,8 +220,10 @@
     const waveStat = document.getElementById('waveStat');
     const bestStat = document.getElementById('bestStat');
     const missionStat = document.getElementById('missionStat');
+    const minigunStat = document.getElementById('minigunStat');
     const coinStat = document.getElementById('coinStat');
     const reviveStat = document.getElementById('reviveStat');
+    const minigunBtn = document.getElementById('minigunBtn');
     const restartBtn = document.getElementById('restartBtn');
     const pauseBtn = document.getElementById('pauseBtn');
     const soundBtn = document.getElementById('soundBtn');
@@ -384,7 +388,8 @@
       state = {
         squad: 8, firepower: 1, distance: 0, wave: 1, speed: 190,
         bullets: [], objects: [], spawnTimer: 0, running: true, paused: true, gameOver: false,
-        lastTime: performance.now(), coins: bankCoins, revives: 1, usedRevive: false, distanceCoinsTick: 0
+        lastTime: performance.now(), coins: bankCoins, revives: 1, usedRevive: false, distanceCoinsTick: 0,
+        minigunReadyWave: 1, minigunUsed: false
       };
       syncHud();
       syncMissionHud();
@@ -413,6 +418,9 @@
       coinStat.textContent = state.coins;
       reviveStat.textContent = state.revives;
       weaponTierText.textContent = `Weapon tier: ${weaponTierName(state.firepower)}`;
+      minigunStat.textContent = state.minigunUsed ? 'Used' : 'Ready';
+      minigunBtn.disabled = state.minigunUsed || state.paused || state.gameOver;
+      minigunBtn.textContent = state.minigunUsed ? '🌀 Minigun Used' : '🌀 Use Minigun';
       syncShopButtons();
       if (state.distance > best) { best = Math.floor(state.distance); bestStat.textContent = best; saveMeta(); }
       syncMissionHud();
@@ -481,6 +489,23 @@
       }
     }
 
+    function useMinigun() {
+      if (!state || state.paused || state.gameOver || state.minigunUsed) return;
+      state.minigunUsed = true;
+      const baseY = 590;
+      for (let lane = 0; lane < 3; lane++) {
+        for (let i = -3; i <= 3; i++) {
+          state.bullets.push({ x: LANES[lane] + i * 8, y: baseY - Math.abs(i) * 6, speed: 720 });
+        }
+        spawnBurst(LANES[lane], 594, 'rgba(250,204,21,0.95)', 18, 150);
+      }
+      cameraShake = Math.max(cameraShake, 10);
+      playTone(180, 0.1, 'sawtooth', 0.03);
+      playTone(240, 0.12, 'square', 0.025);
+      showShopFeedback(`Wave ${state.wave} minigun unleashed.`, true);
+      syncHud();
+    }
+
     function spawnObject() {
       const lane = rand(0, 2);
       const roll = Math.random();
@@ -512,7 +537,14 @@
 
       if (!state.running || state.paused || state.gameOver) return;
       state.distance += dt * (state.speed / 12);
+      const prevWave = state.wave;
       state.wave = 1 + Math.floor(state.distance / 180);
+      if (state.wave !== prevWave) {
+        state.minigunUsed = false;
+        state.minigunReadyWave = state.wave;
+        showShopFeedback(`Wave ${state.wave}: Minigun reloaded.`, true);
+        playTone(700, 0.12, 'triangle', 0.018);
+      }
       state.speed = 190 + state.wave * 8;
       const distanceCoins = Math.floor(state.distance / 100);
       if (distanceCoins > state.distanceCoinsTick) { addCoins(distanceCoins - state.distanceCoinsTick); state.distanceCoinsTick = distanceCoins; }
@@ -1159,8 +1191,9 @@
       else if (action === 'rewarded-revive') window.mockRewardedReviveOffer();
     });
     window.addEventListener('keydown', e => { if (e.key==='1') fireAtLane(0); if (e.key==='2') fireAtLane(1); if (e.key==='3') fireAtLane(2); });
+    minigunBtn.addEventListener('click', () => useMinigun());
     restartBtn.addEventListener('click', () => window.restartZombieRun());
-    pauseBtn.addEventListener('click', () => { state.paused=!state.paused; pauseBtn.textContent=state.paused?'Resume':'Pause'; });
+    pauseBtn.addEventListener('click', () => { state.paused=!state.paused; pauseBtn.textContent=state.paused?'Resume':'Pause'; syncHud(); });
     laneLeftBtn.addEventListener('click', () => fireAtLane(0));
     laneCenterBtn.addEventListener('click', () => fireAtLane(1));
     laneRightBtn.addEventListener('click', () => fireAtLane(2));

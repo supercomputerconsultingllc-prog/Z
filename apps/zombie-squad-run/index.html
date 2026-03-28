@@ -898,8 +898,8 @@
         }
         if (Math.random() < 0.35) playTone(150 + rand(0, 40), 0.05, 'sawtooth', 0.8);
       }
-      const distanceCoins = Math.floor(state.distance / 100);
-      if (distanceCoins > state.distanceCoinsTick) { addCoins(distanceCoins - state.distanceCoinsTick); state.distanceCoinsTick = distanceCoins; }
+      const roundCoins = Math.floor(state.distance / 180) * 2;
+      if (roundCoins > state.distanceCoinsTick) { addCoins(roundCoins - state.distanceCoinsTick); state.distanceCoinsTick = roundCoins; }
       state.spawnTimer -= dt;
       if (state.spawnTimer <= 0) { spawnObject(); state.spawnTimer = Math.max(0.32, 1.05 - state.wave * 0.03); }
       for (const bullet of state.bullets) bullet.y -= bullet.speed * dt;

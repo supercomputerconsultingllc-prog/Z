@@ -85,6 +85,60 @@
       background: rgba(34,197,94,.12); color: #86efac; margin-right: 6px; margin-bottom: 6px;
     }
     .shop-btn { width: auto; margin: 6px 6px 0 0; padding: 12px 16px; font-size: 14px; min-height: 44px; }
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .action-btn {
+      width: 100%;
+      margin-top: 0;
+      min-height: 108px;
+      border-radius: 22px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(180deg, rgba(59,130,246,.96), rgba(30,64,175,.96));
+      color: white;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    }
+    .action-btn.enhance {
+      background: linear-gradient(180deg, rgba(245,158,11,.96), rgba(180,83,9,.96));
+      color: #fff7ed;
+    }
+    .action-btn.settings {
+      background: linear-gradient(180deg, rgba(71,85,105,.96), rgba(30,41,59,.98));
+      color: #e2e8f0;
+    }
+    .action-icon { font-size: 34px; line-height: 1; }
+    .action-label { font-size: 15px; font-weight: 800; }
+    .action-sub { font-size: 12px; opacity: 0.85; text-align: center; }
+    .panel-list {
+      margin: 12px 0 0;
+      padding-left: 18px;
+      color: var(--ink);
+    }
+    .panel-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 12px 0;
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .panel-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--blue);
+    }
+    .mini-note {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
     .touch-row { display: none; gap: 10px; padding: 0 16px 16px; background: rgba(255,255,255,0.03); }
     .touch-btn { flex: 1; min-height: 52px; font-size: 16px; }
     @media (max-width: 920px) {
@@ -141,6 +195,26 @@
           <button class="shop-btn warn" id="buyReviveBtn">+1 Revive (15)</button>
         </div>
         <div class="card">
+          <h3>Quick actions</h3>
+          <div class="action-grid">
+            <button class="action-btn money" id="moneyBtn" aria-label="Open money options">
+              <span class="action-icon">💸</span>
+              <span class="action-label">Money</span>
+              <span class="action-sub">Tap the cash button instead of the QR link</span>
+            </button>
+            <button class="action-btn enhance" id="enhanceBtn" aria-label="Open character enhancement">
+              <span class="action-icon">🔫</span>
+              <span class="action-label">Character Boost</span>
+              <span class="action-sub">Open enhancements and gun log</span>
+            </button>
+            <button class="action-btn settings" id="settingsBtn" aria-label="Open settings">
+              <span class="action-icon">⚙️</span>
+              <span class="action-label">Settings</span>
+              <span class="action-sub">Volume, brightening, and controls</span>
+            </button>
+          </div>
+        </div>
+        <div class="card">
           <h3>Monetization hooks</h3>
           <span class="pill">Rewarded revive</span>
           <span class="pill">Premium squads</span>
@@ -186,6 +260,9 @@
     const buyGunBtn = document.getElementById('buyGunBtn');
     const buySquadBtn = document.getElementById('buySquadBtn');
     const buyReviveBtn = document.getElementById('buyReviveBtn');
+    const moneyBtn = document.getElementById('moneyBtn');
+    const enhanceBtn = document.getElementById('enhanceBtn');
+    const settingsBtn = document.getElementById('settingsBtn');
     const laneLeftBtn = document.getElementById('laneLeftBtn');
     const laneCenterBtn = document.getElementById('laneCenterBtn');
     const laneRightBtn = document.getElementById('laneRightBtn');
@@ -197,6 +274,9 @@
     let best = Number(localStorage.getItem('zombie-squad-run-best') || 0);
     let bankCoins = Number(localStorage.getItem('zombie-squad-run-coins') || 0);
     let soundOn = localStorage.getItem('zombie-squad-run-sound') !== 'off';
+    let volumeLevel = Number(localStorage.getItem('zombie-squad-run-volume') || 70);
+    let brightnessLevel = Number(localStorage.getItem('zombie-squad-run-brightness') || 100);
+    let controlsMode = localStorage.getItem('zombie-squad-run-controls') || 'tap';
     let missionIndex = Number(localStorage.getItem('zombie-squad-run-mission-index') || 0);
     let missionProgress = Number(localStorage.getItem('zombie-squad-run-mission-progress') || 0);
     const MISSIONS = [
@@ -213,11 +293,118 @@
       localStorage.setItem('zombie-squad-run-best', String(best));
       localStorage.setItem('zombie-squad-run-coins', String(bankCoins));
       localStorage.setItem('zombie-squad-run-sound', soundOn ? 'on' : 'off');
+      localStorage.setItem('zombie-squad-run-volume', String(volumeLevel));
+      localStorage.setItem('zombie-squad-run-brightness', String(brightnessLevel));
+      localStorage.setItem('zombie-squad-run-controls', controlsMode);
       localStorage.setItem('zombie-squad-run-mission-index', String(missionIndex));
       localStorage.setItem('zombie-squad-run-mission-progress', String(missionProgress));
     }
 
     function activeMission() { return MISSIONS[missionIndex % MISSIONS.length]; }
+
+    function applyDisplaySettings() {
+      canvas.style.filter = `brightness(${brightnessLevel}%)`;
+    }
+
+    function applyControlsMode() {
+      const touchRow = document.querySelector('.touch-row');
+      touchRow.style.display = controlsMode === 'buttons' ? 'flex' : '';
+      touchRow.style.opacity = controlsMode === 'buttons' ? '1' : '';
+    }
+
+    function controlSummary() {
+      return controlsMode === 'buttons'
+        ? 'On-screen lane buttons are emphasized for play.'
+        : 'Tap or click any lane, keyboard 1 to 3 still works.';
+    }
+
+    function gunLogItems() {
+      return [
+        `Current firepower: Lv.${state.firepower}`,
+        `Squad armor boost: +${Math.max(0, state.squad - 8)}`,
+        `Revive stock: ${state.revives}`
+      ];
+    }
+
+    function openMoneyPanel() {
+      state.paused = true;
+      overlay.innerHTML = `
+        <div class="message">
+          <h2>Money Button</h2>
+          <p>The QR link now opens from this cash button, like the shirt button style you asked for.</p>
+          <ul class="panel-list">
+            <li>Buy 100 coins</li>
+            <li>Starter bundle with revive</li>
+            <li>Premium squad skin pack</li>
+          </ul>
+          <p class="mini-note">Hook this button up to your real payment flow when you are ready.</p>
+          <button onclick="window.closeOverlayAndResume()">Close</button>
+        </div>`;
+    }
+
+    function openEnhancementPanel() {
+      state.paused = true;
+      overlay.innerHTML = `
+        <div class="message">
+          <h2>Character Enhancement</h2>
+          <p>Use this panel for powerups, costumes, and the gun log.</p>
+          <ul class="panel-list">${gunLogItems().map(item => `<li>${item}</li>`).join('')}</ul>
+          <p class="mini-note">Next upgrade unlocks a wider shot spread and stronger wall damage.</p>
+          <button onclick="window.closeOverlayAndResume()">Close</button>
+        </div>`;
+    }
+
+    function openSettingsPanel() {
+      state.paused = true;
+      overlay.innerHTML = `
+        <div class="message">
+          <h2>Settings</h2>
+          <div class="panel-row">
+            <span>Volume</span>
+            <input id="volumeRange" type="range" min="0" max="100" value="${volumeLevel}">
+            <strong id="volumeValue">${volumeLevel}%</strong>
+          </div>
+          <div class="panel-row">
+            <span>Brightening</span>
+            <input id="brightnessRange" type="range" min="70" max="140" value="${brightnessLevel}">
+            <strong id="brightnessValue">${brightnessLevel}%</strong>
+          </div>
+          <div class="panel-row">
+            <span>Controls</span>
+            <button class="secondary" id="controlsModeBtn" style="width:auto;margin-top:0;">${controlsMode === 'buttons' ? 'Buttons' : 'Tap / Keys'}</button>
+          </div>
+          <p class="mini-note" id="controlsHelp">${controlSummary()}</p>
+          <button onclick="window.closeOverlayAndResume()">Done</button>
+        </div>`;
+
+      const volumeRange = document.getElementById('volumeRange');
+      const volumeValue = document.getElementById('volumeValue');
+      const brightnessRange = document.getElementById('brightnessRange');
+      const brightnessValue = document.getElementById('brightnessValue');
+      const controlsModeBtn = document.getElementById('controlsModeBtn');
+      const controlsHelp = document.getElementById('controlsHelp');
+
+      volumeRange.addEventListener('input', () => {
+        volumeLevel = Number(volumeRange.value);
+        volumeValue.textContent = `${volumeLevel}%`;
+        saveMeta();
+      });
+
+      brightnessRange.addEventListener('input', () => {
+        brightnessLevel = Number(brightnessRange.value);
+        brightnessValue.textContent = `${brightnessLevel}%`;
+        applyDisplaySettings();
+        saveMeta();
+      });
+
+      controlsModeBtn.addEventListener('click', () => {
+        controlsMode = controlsMode === 'buttons' ? 'tap' : 'buttons';
+        controlsModeBtn.textContent = controlsMode === 'buttons' ? 'Buttons' : 'Tap / Keys';
+        controlsHelp.textContent = controlSummary();
+        applyControlsMode();
+        saveMeta();
+      });
+    }
 
     function syncMissionHud() {
       const mission = activeMission();
@@ -388,7 +575,7 @@
 
     function fireAtLane(laneIndex) {
       if (!state.running || state.paused || state.gameOver) return;
-      if (navigator.vibrate) navigator.vibrate(12);
+      if (navigator.vibrate && volumeLevel > 0) navigator.vibrate(12);
       const laneX = LANES[laneIndex];
       for (let i = 0; i < state.firepower; i++) {
         state.bullets.push({ x: laneX + (i - (state.firepower - 1) / 2) * 10, y: 600, speed: 560 });
@@ -559,6 +746,9 @@
     window.addEventListener('keydown', e => { if (e.key==='1') fireAtLane(0); if (e.key==='2') fireAtLane(1); if (e.key==='3') fireAtLane(2); });
     restartBtn.addEventListener('click', () => window.restartZombieRun());
     pauseBtn.addEventListener('click', () => { state.paused=!state.paused; pauseBtn.textContent=state.paused?'Resume':'Pause'; });
+    moneyBtn.addEventListener('click', openMoneyPanel);
+    enhanceBtn.addEventListener('click', openEnhancementPanel);
+    settingsBtn.addEventListener('click', openSettingsPanel);
     laneLeftBtn.addEventListener('click', () => fireAtLane(0));
     laneCenterBtn.addEventListener('click', () => fireAtLane(1));
     laneRightBtn.addEventListener('click', () => fireAtLane(2));
@@ -584,6 +774,8 @@
     });
     titleBtn.addEventListener('click', () => showTitleScreen());
 
+    applyDisplaySettings();
+    applyControlsMode();
     resetGame();
     requestAnimationFrame(tick);
   </script>

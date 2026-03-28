@@ -451,6 +451,9 @@
 
     let state;
     let audioCtx = null;
+    let musicEnabled = localStorage.getItem('zombie-squad-run-music') !== 'off';
+    let musicTimer = null;
+    let musicStep = 0;
     let best = Number(localStorage.getItem('zombie-squad-run-best') || 0);
     let bankCoins = Number(localStorage.getItem('zombie-squad-run-coins') || 0);
     let avatarCoins = Number(localStorage.getItem('zombie-squad-run-avatar-coins') || 0);
@@ -478,6 +481,7 @@
       localStorage.setItem('zombie-squad-run-coins', String(bankCoins));
       localStorage.setItem('zombie-squad-run-avatar-coins', String(avatarCoins));
       localStorage.setItem('zombie-squad-run-sound', soundOn ? 'on' : 'off');
+      localStorage.setItem('zombie-squad-run-music', musicEnabled ? 'on' : 'off');
       localStorage.setItem('zombie-squad-run-volume', String(volumeLevel));
       localStorage.setItem('zombie-squad-run-brightness', String(brightnessLevel));
       localStorage.setItem('zombie-squad-run-controls', controlsMode);
@@ -514,6 +518,115 @@
       gain.connect(ctxAudio.destination);
       osc.start(now);
       osc.stop(now + duration);
+    }
+
+    function playKick(time, gainBoost = 1) {
+      if (!musicEnabled || volumeLevel <= 0) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      const osc = ctxAudio.createOscillator();
+      const gain = ctxAudio.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(140, time);
+      osc.frequency.exponentialRampToValueAtTime(42, time + 0.18);
+      gain.gain.setValueAtTime((volumeLevel / 100) * 0.08 * gainBoost, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.18);
+      osc.connect(gain);
+      gain.connect(ctxAudio.destination);
+      osc.start(time);
+      osc.stop(time + 0.18);
+    }
+
+    function playNoiseHit(time, duration = 0.08, gainBoost = 0.45) {
+      if (!musicEnabled || volumeLevel <= 0) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      const buffer = ctxAudio.createBuffer(1, ctxAudio.sampleRate * duration, ctxAudio.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+      const source = ctxAudio.createBufferSource();
+      const filter = ctxAudio.createBiquadFilter();
+      const gain = ctxAudio.createGain();
+      source.buffer = buffer;
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(1600, time);
+      gain.gain.setValueAtTime((volumeLevel / 100) * 0.05 * gainBoost, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctxAudio.destination);
+      source.start(time);
+    }
+
+    function playMusicNote(freq, time, duration, type = 'triangle', gainBoost = 0.22) {
+      if (!musicEnabled || volumeLevel <= 0) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      const osc = ctxAudio.createOscillator();
+      const gain = ctxAudio.createGain();
+      const filter = ctxAudio.createBiquadFilter();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, time);
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(type === 'sawtooth' ? 1800 : 1200, time);
+      gain.gain.setValueAtTime((volumeLevel / 100) * 0.028 * gainBoost, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctxAudio.destination);
+      osc.start(time);
+      osc.stop(time + duration);
+    }
+
+    function musicIntensity() {
+      const waveBoost = Math.min(1.8, state ? state.wave / 6 : 0.5);
+      const minigunBoost = state && state.minigunActiveUntil > performance.now() ? 0.9 : 0;
+      return 0.75 + waveBoost + minigunBoost;
+    }
+
+    function scheduleMusicBar() {
+      if (!musicEnabled || !soundOn) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      if (ctxAudio.state === 'suspended') ctxAudio.resume();
+      const now = ctxAudio.currentTime + 0.02;
+      const stepDur = 0.22;
+      const root = state ? 92 + Math.min(26, state.wave * 2) : 96;
+      const bassLine = [0, 0, 3, 0, 5, 3, 7, 5];
+      const leadLine = [12, 10, 12, 15, 17, 15, 12, 10];
+      const intensity = musicIntensity();
+
+      for (let i = 0; i < 8; i++) {
+        const stepTime = now + i * stepDur;
+        const bassFreq = root * Math.pow(2, bassLine[(musicStep + i) % bassLine.length] / 12);
+        playMusicNote(bassFreq, stepTime, 0.18, 'sawtooth', 0.65 * intensity);
+        playMusicNote(bassFreq * 2, stepTime, 0.34, 'triangle', 0.25 * intensity);
+
+        if (i % 2 === 0) {
+          const leadFreq = root * Math.pow(2, leadLine[(musicStep + i) % leadLine.length] / 12);
+          playMusicNote(leadFreq * 2, stepTime, 0.16, 'square', 0.24 * intensity);
+        }
+        if (i % 4 === 0) playKick(stepTime, 1.1 * intensity);
+        if (i % 2 === 1) playNoiseHit(stepTime, 0.06, 0.6 * intensity);
+      }
+      musicStep = (musicStep + 8) % 8;
+    }
+
+    function startMusicLoop() {
+      if (musicTimer || !musicEnabled) return;
+      scheduleMusicBar();
+      musicTimer = setInterval(scheduleMusicBar, 1760);
+    }
+
+    function stopMusicLoop() {
+      if (!musicTimer) return;
+      clearInterval(musicTimer);
+      musicTimer = null;
+    }
+
+    function refreshMusicState() {
+      if (musicEnabled && soundOn) startMusicLoop();
+      else stopMusicLoop();
     }
 
     function applyDisplaySettings() {
@@ -686,6 +799,14 @@
               </div>
               <p class="mini-note">Turn the battle sounds on or off without leaving the page.</p>
             </div>
+            <div class="settings-card">
+              <h4>Music</h4>
+              <div class="panel-row">
+                <span>Epic Music</span>
+                <button class="secondary" id="musicToggleBtn" style="width:auto;margin-top:0;">${musicEnabled ? 'On' : 'Off'}</button>
+              </div>
+              <p class="mini-note">Layered bass, lead, drums, and wave-based intensity.</p>
+            </div>
           </div>
           <button onclick="window.closeOverlayAndResume()">Done</button>
         </div>`;
@@ -699,6 +820,7 @@
       const controlsHelp = document.getElementById('controlsHelp');
       const testAudioBtn = document.getElementById('testAudioBtn');
       const soundToggleBtn = document.getElementById('soundToggleBtn');
+      const musicToggleBtn = document.getElementById('musicToggleBtn');
 
       volumeRange.addEventListener('input', () => {
         volumeLevel = Number(volumeRange.value);
@@ -726,12 +848,21 @@
         soundOn = !soundOn;
         soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
         soundToggleBtn.textContent = soundOn ? 'On' : 'Off';
+        refreshMusicState();
+        saveMeta();
+      });
+
+      musicToggleBtn.addEventListener('click', () => {
+        musicEnabled = !musicEnabled;
+        musicToggleBtn.textContent = musicEnabled ? 'On' : 'Off';
+        refreshMusicState();
         saveMeta();
       });
 
       testAudioBtn.addEventListener('click', () => {
         playTone(660, 0.08, 'square', 1.6);
         setTimeout(() => playTone(880, 0.1, 'sawtooth', 1.4), 70);
+        scheduleMusicBar();
       });
     }
 
@@ -1382,26 +1513,28 @@
       syncHud();
     };
     window.closeOverlayAndResume = function() { overlay.innerHTML=''; state.paused=false; };
-    window.startZombieRun = function() { overlay.innerHTML=''; state.paused=false; state.running=true; state.gameOver=false; };
+    window.startZombieRun = function() { overlay.innerHTML=''; state.paused=false; state.running=true; state.gameOver=false; refreshMusicState(); };
     window.mockRewardedReviveOffer = function() {
       state.coins += 5;
       bankCoins = state.coins;
       saveMeta();
       resetGame();
     };
-    window.restartZombieRun = function() { bankCoins = state.coins; saveMeta(); resetGame(); pauseBtn.textContent='Pause'; };
+    window.restartZombieRun = function() { bankCoins = state.coins; saveMeta(); resetGame(); pauseBtn.textContent='Pause'; refreshMusicState(); };
 
     soundBtn.addEventListener('click', () => {
       soundOn = !soundOn;
       soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
       if (soundOn) playTone(720, 0.08, 'triangle', 1.3);
+      refreshMusicState();
       saveMeta();
     });
-    titleBtn.addEventListener('click', () => showTitleScreen());
+    titleBtn.addEventListener('click', () => { showTitleScreen(); refreshMusicState(); });
 
     applyDisplaySettings();
     applyControlsMode();
     resetGame();
+    refreshMusicState();
     requestAnimationFrame(tick);
   </script>
 </body>

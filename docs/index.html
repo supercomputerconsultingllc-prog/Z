@@ -1098,9 +1098,10 @@
       state = {
         squad: 8, firepower: 1, distance: 0, wave: 1, speed: 190,
         bullets: [], objects: [], particles: [], spawnTimer: 0, running: true, paused: true, gameOver: false,
-        lastTime: performance.now(), coins: bankCoins, revives: 1, usedRevive: false, distanceCoinsTick: 0,
+        lastTime: performance.now(), coins: 0, revives: 1, usedRevive: false, distanceCoinsTick: 0,
         minigunCharge: 100, minigunActiveUntil: 0, lastMinigunBurst: 0
       };
+      bankCoins = 0;
       syncHud();
       syncMissionHud();
       if (sceneMode) {

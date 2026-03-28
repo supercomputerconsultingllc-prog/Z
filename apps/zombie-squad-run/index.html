@@ -395,6 +395,11 @@
               <span class="action-label">Settings</span>
               <span class="action-sub">Volume, brightness, and controls</span>
             </button>
+            <button class="action-btn money" id="youtubeBtn" aria-label="Open YouTube reward">
+              <span class="action-icon">▶️</span>
+              <span class="action-label">YouTube</span>
+              <span class="action-sub">Open channel and claim the visit reward</span>
+            </button>
           </div>
         </div>
         <div class="card">
@@ -449,6 +454,7 @@
     const enhanceBtn = document.getElementById('enhanceBtn');
     const avatarBtn = document.getElementById('avatarBtn');
     const settingsBtn = document.getElementById('settingsBtn');
+    const youtubeBtn = document.getElementById('youtubeBtn');
     const laneLeftBtn = document.getElementById('laneLeftBtn');
     const laneCenterBtn = document.getElementById('laneCenterBtn');
     const laneRightBtn = document.getElementById('laneRightBtn');
@@ -1392,13 +1398,13 @@
       const crowdWidth = 560;
       const crowdHeight = 270;
       const startY = 636;
-      const minScale = 0.08;
+      const minScale = total > 220 ? 0.045 : total > 140 ? 0.055 : total > 80 ? 0.065 : 0.08;
       const maxScale = 0.95;
       const baseBodyWidth = 18;
       const baseBodyHeight = 24;
 
-      const maxColumnsThatFit = Math.max(1, Math.floor(crowdWidth / (baseBodyWidth * minScale)) + 1);
-      const targetRows = Math.max(2, Math.ceil(Math.sqrt(total) / 1.35));
+      const maxColumnsThatFit = Math.max(1, Math.floor(crowdWidth / Math.max(baseBodyWidth * minScale, 1)) + 1);
+      const targetRows = Math.max(2, Math.ceil(Math.sqrt(total) / (total > 220 ? 2.3 : total > 140 ? 2.05 : total > 80 ? 1.75 : 1.35)));
       const columns = Math.max(1, Math.min(maxColumnsThatFit, Math.ceil(total / targetRows)));
       const rows = Math.max(1, Math.ceil(total / columns));
 
@@ -1597,6 +1603,10 @@
     enhanceBtn.addEventListener('click', openEnhancementPanel);
     avatarBtn.addEventListener('click', openAvatarPanel);
     settingsBtn.addEventListener('click', openSettingsPanel);
+    youtubeBtn.addEventListener('click', () => {
+      state.paused = true;
+      window.openYoutubeReward();
+    });
     laneLeftBtn.addEventListener('click', () => fireAtLane(0));
     laneCenterBtn.addEventListener('click', () => fireAtLane(1));
     laneRightBtn.addEventListener('click', () => fireAtLane(2));
@@ -1626,21 +1636,28 @@
         overlay.innerHTML = moneyPanelMarkup();
         return;
       }
-      const opened = window.open(YOUTUBE_CHANNEL_URL, '_blank', 'noopener,noreferrer');
-      if (!opened) {
-        window.location.href = YOUTUBE_CHANNEL_URL;
-        return;
-      }
       addCoins(100);
       youtubeVisitClaimed = true;
       saveMeta();
+      syncHud();
+
+      const opened = window.open(YOUTUBE_CHANNEL_URL, '_blank', 'noopener,noreferrer');
+      if (!opened) {
+        overlay.innerHTML = `
+          <div class="message">
+            <h2>YouTube Reward Added</h2>
+            <p>You received <strong>100 coins</strong>. Your browser blocked the popup, so use the button below to open <strong>@ColtRT-e5n2h</strong>.</p>
+            <button class="warn" onclick="window.location.href='${YOUTUBE_CHANNEL_URL}'">Open YouTube Channel</button>
+            <button class="secondary" onclick="window.closeOverlayAndResume()">Back To Run</button>
+          </div>`;
+        return;
+      }
       overlay.innerHTML = `
         <div class="message">
           <h2>YouTube Reward Added</h2>
           <p>You opened <strong>@ColtRT-e5n2h</strong> and received 100 coins.</p>
           <button onclick="window.openMoneyPanel()">Back To Shop</button>
         </div>`;
-      syncHud();
     };
     window.claimSubscribeReward = function() {
       if (youtubeSubscribeClaimed) {

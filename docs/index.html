@@ -521,8 +521,6 @@
     let squadPrice = Number(localStorage.getItem('zombie-squad-run-squad-price') || 8);
     let revivePrice = Number(localStorage.getItem('zombie-squad-run-revive-price') || 15);
     const mobileSafeMode = window.innerWidth <= 920 || ('ontouchstart' in window);
-    let emergencyPerfMode = false;
-    let perfWarningUntil = 0;
     let lastShotSoundAt = 0;
     let lastEffectSoundAt = 0;
     let screenShake = 0;
@@ -1261,8 +1259,8 @@
       if (!silent) playShotSound(state.firepower + powerBoost);
       const laneX = LANES[laneIndex];
       const requestedCount = state.firepower + powerBoost;
-      const crowdSafeMode = emergencyPerfMode || mobileSafeMode || state.squad >= 120 || state.bullets.length > 90;
-      const bulletCount = Math.max(1, Math.min(requestedCount, crowdSafeMode ? 3 : 7));
+      const crowdSafeMode = mobileSafeMode || state.squad >= 120 || state.bullets.length > 90;
+      const bulletCount = Math.max(1, Math.min(requestedCount, crowdSafeMode ? 4 : 7));
       const effectivePower = state.firepower + powerBoost;
       const profile = weaponProfile(effectivePower);
       for (let i = 0; i < bulletCount; i++) {
@@ -1298,10 +1296,10 @@
     }
 
     function trimRuntimeLoad() {
-      const crowdSafeMode = emergencyPerfMode || (state && state.squad >= 120);
-      const maxObjects = mobileSafeMode ? (crowdSafeMode ? 8 : 16) : (crowdSafeMode ? 12 : 26);
-      const maxBullets = mobileSafeMode ? (crowdSafeMode ? 45 : 120) : (crowdSafeMode ? 70 : 220);
-      const maxParticles = mobileSafeMode ? (crowdSafeMode ? 18 : 70) : (crowdSafeMode ? 30 : 150);
+      const crowdSafeMode = state && state.squad >= 120;
+      const maxObjects = mobileSafeMode ? (crowdSafeMode ? 12 : 16) : (crowdSafeMode ? 18 : 26);
+      const maxBullets = mobileSafeMode ? (crowdSafeMode ? 90 : 120) : (crowdSafeMode ? 140 : 220);
+      const maxParticles = mobileSafeMode ? (crowdSafeMode ? 45 : 70) : (crowdSafeMode ? 90 : 150);
       if (state.objects.length > maxObjects) state.objects.splice(0, state.objects.length - maxObjects);
       if (state.bullets.length > maxBullets) state.bullets.splice(0, state.bullets.length - maxBullets);
       if (state.particles.length > maxParticles) state.particles.splice(0, state.particles.length - maxParticles);
@@ -1413,9 +1411,9 @@
       if (roundCoins > state.distanceCoinsTick) { addCoins(roundCoins - state.distanceCoinsTick); state.distanceCoinsTick = roundCoins; }
       state.spawnTimer -= dt;
       if (state.spawnTimer <= 0) {
-        const objectCap = emergencyPerfMode ? 7 : mobileSafeMode ? (state.squad >= 120 ? 10 : 12) : (state.squad >= 120 ? 14 : 20);
+        const objectCap = mobileSafeMode ? (state.squad >= 120 ? 10 : 12) : (state.squad >= 120 ? 14 : 20);
         if (state.objects.length < objectCap) spawnObject();
-        state.spawnTimer = Math.max(emergencyPerfMode ? 0.9 : mobileSafeMode ? (state.squad >= 120 ? 0.66 : 0.54) : (state.squad >= 120 ? 0.48 : 0.38), 1.05 - state.wave * 0.03);
+        state.spawnTimer = Math.max(mobileSafeMode ? (state.squad >= 120 ? 0.66 : 0.54) : (state.squad >= 120 ? 0.48 : 0.38), 1.05 - state.wave * 0.03);
       }
       for (const bullet of state.bullets) {
         bullet.y -= bullet.speed * dt;
@@ -1771,7 +1769,7 @@
     }
 
     function drawBullets() {
-      const bulletsToDraw = (mobileSafeMode || emergencyPerfMode) && state.bullets.length > 50 ? state.bullets.filter((_, i) => i % 2 === 0) : state.bullets;
+      const bulletsToDraw = mobileSafeMode && state.bullets.length > 90 ? state.bullets.filter((_, i) => i % 2 === 0) : state.bullets;
       for (const bullet of bulletsToDraw) {
         ctx.save();
         ctx.shadowColor = bullet.trail || bullet.color || '#facc15';
@@ -1832,7 +1830,7 @@
     }
 
     function drawParticles() {
-      const particlesToDraw = (mobileSafeMode || emergencyPerfMode) && state.particles.length > 20 ? state.particles.filter((_, i) => i % 2 === 0) : state.particles;
+      const particlesToDraw = mobileSafeMode && state.particles.length > 40 ? state.particles.filter((_, i) => i % 2 === 0) : state.particles;
       for (const particle of particlesToDraw) {
         const alpha = Math.max(0, particle.life / 0.18);
         const size = particle.size || 8;
@@ -1886,14 +1884,6 @@
         ctx.fillStyle = `rgba(255,255,255,${Math.min(0.22, hitFlash)})`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
-      if (perfWarningUntil > performance.now()) {
-        ctx.fillStyle='rgba(15,23,42,.72)';
-        ctx.fillRect(canvas.width / 2 - 170, 110, 340, 48);
-        ctx.fillStyle='#fde68a';
-        ctx.font='bold 18px system-ui';
-        ctx.textAlign='center';
-        ctx.fillText('Performance mode enabled', canvas.width / 2, 140);
-      }
       if (state.paused && !state.gameOver && !overlay.innerHTML) {
         ctx.fillStyle='rgba(0,0,0,.45)'; ctx.fillRect(0,0,canvas.width,canvas.height);
         ctx.fillStyle='#fff'; ctx.font='bold 42px system-ui'; ctx.textAlign='center'; ctx.fillText('Paused',canvas.width/2,canvas.height/2);
@@ -1908,15 +1898,13 @@
         render();
       } catch (err) {
         console.error('Zombie Squad Run tick error', err);
-        emergencyPerfMode = true;
-        perfWarningUntil = performance.now() + 3000;
-        soundtrackAudio.pause();
-        if (state) {
-          state.particles = [];
-          state.bullets = state.bullets.slice(-20);
-          state.objects = state.objects.slice(-8);
-          state.spawnTimer = Math.max(state.spawnTimer || 0, 0.8);
-        }
+        state.paused = true;
+        overlay.innerHTML = `
+          <div class="message">
+            <h2>Performance pause</h2>
+            <p>The game hit a runtime issue and paused instead of crashing. Restart the run to continue.</p>
+            <button onclick="window.restartZombieRun()">Restart Run</button>
+          </div>`;
       }
       requestAnimationFrame(tick);
     }

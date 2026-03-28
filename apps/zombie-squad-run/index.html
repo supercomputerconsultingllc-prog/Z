@@ -859,11 +859,11 @@
     function addCoins(n) { state.coins += n; bankCoins = state.coins; saveMeta(); updateMission('coins', n); }
 
     function weaponProfile(powerLevel) {
-      if (powerLevel <= 1) return { color: '#fde047', core: '#fff8c5', size: 5, trail: '#fef08a', shape: 'round' };
-      if (powerLevel <= 2) return { color: '#38bdf8', core: '#e0f2fe', size: 5.5, trail: '#7dd3fc', shape: 'pulse' };
-      if (powerLevel <= 4) return { color: '#a78bfa', core: '#f3e8ff', size: 6, trail: '#c4b5fd', shape: 'plasma' };
-      if (powerLevel <= 6) return { color: '#fb7185', core: '#ffe4e6', size: 6.5, trail: '#fda4af', shape: 'laser' };
-      return { color: '#f59e0b', core: '#fffbeb', size: 7, trail: '#fdba74', shape: 'minigun' };
+      if (powerLevel <= 1) return { color: '#fde047', core: '#fff8c5', size: 5, trail: '#fef08a', shape: 'round', muzzle: '#fff7ae', ring: '#facc15' };
+      if (powerLevel <= 2) return { color: '#38bdf8', core: '#e0f2fe', size: 5.5, trail: '#7dd3fc', shape: 'pulse', muzzle: '#a5f3fc', ring: '#38bdf8' };
+      if (powerLevel <= 4) return { color: '#a78bfa', core: '#f3e8ff', size: 6, trail: '#c4b5fd', shape: 'plasma', muzzle: '#ddd6fe', ring: '#8b5cf6' };
+      if (powerLevel <= 6) return { color: '#fb7185', core: '#ffe4e6', size: 6.5, trail: '#fda4af', shape: 'laser', muzzle: '#fecdd3', ring: '#e11d48' };
+      return { color: '#f59e0b', core: '#fffbeb', size: 7, trail: '#fdba74', shape: 'minigun', muzzle: '#fed7aa', ring: '#ea580c' };
     }
 
     function fireAtLane(laneIndex, powerBoost = 0, speedBoost = 0) {
@@ -885,9 +885,12 @@
           color: profile.color,
           core: profile.core,
           trail: profile.trail,
+          muzzle: profile.muzzle,
+          ring: profile.ring,
           radius: profile.size
         });
       }
+      state.particles.push({ x: laneX, y: 602, life: 0.09, color: profile.muzzle, ring: profile.ring, burst: true, size: 14 + effectivePower * 1.5 });
     }
 
     function spawnObject() {
@@ -925,7 +928,7 @@
           if (obj.hp <= 0) continue;
           if (Math.abs(bullet.x - obj.x) < obj.size * 0.55 && Math.abs(bullet.y - obj.y) < obj.size * 0.55) {
             obj.hp -= bullet.damage || 1;
-            state.particles.push({ x: obj.x, y: obj.y, life: 0.18, color: bullet.glow ? '#fde68a' : '#f8fafc' });
+            state.particles.push({ x: obj.x, y: obj.y, life: 0.18, color: bullet.glow ? '#fde68a' : '#f8fafc', ring: bullet.ring || '#ffffff', size: (bullet.radius || 5) * 2 });
             bullet.y = -100;
             if (obj.hp <= 0) handleDestroyed(obj);
             break;
@@ -1037,12 +1040,17 @@
       ctx.fillRect(x - helmetW / 2, y - 18 * scale, helmetW, helmetH);
       ctx.fillStyle = '#93c5fd';
       ctx.fillRect(x - helmetW * 0.25, y - 16.5 * scale, helmetW * 0.5, 1.5 * scale);
+      ctx.fillStyle = '#eff6ff';
+      ctx.fillRect(x - helmetW * 0.08, y - 14.8 * scale, helmetW * 0.16, 1.3 * scale);
 
       const bodyGradient = ctx.createLinearGradient(x, y - 2 * scale, x, y + bodyH);
-      bodyGradient.addColorStop(0, '#93c5fd');
+      bodyGradient.addColorStop(0, '#bfdbfe');
+      bodyGradient.addColorStop(0.55, '#93c5fd');
       bodyGradient.addColorStop(1, color);
       ctx.fillStyle = bodyGradient;
       ctx.fillRect(x - bodyW / 2, y - 2 * scale, bodyW, bodyH);
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.fillRect(x - bodyW * 0.34, y, bodyW * 0.18, bodyH * 0.72);
 
       ctx.fillStyle = '#dbeafe';
       ctx.fillRect(x - bodyW * 0.18, y + 4 * scale, bodyW * 0.36, 3 * scale);
@@ -1057,10 +1065,15 @@
       ctx.fillRect(x + bodyW * 0.2, y + 3 * scale, gunW, gunH);
       ctx.fillStyle = '#f8fafc';
       ctx.fillRect(x + bodyW * 0.2 + gunW * 0.62, y + 3.4 * scale, gunW * 0.22, gunH * 0.4);
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(x + bodyW * 0.05, y + 4.2 * scale, gunW * 0.24, gunH * 0.6);
 
       ctx.fillStyle = '#1e293b';
       ctx.fillRect(x - bodyW * 0.35, y + bodyH - 1 * scale, bodyW * 0.28, legH);
       ctx.fillRect(x + bodyW * 0.07, y + bodyH - 1 * scale, bodyW * 0.28, legH);
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(x - bodyW * 0.37, y + bodyH + legH - 2 * scale, bodyW * 0.32, 2 * scale);
+      ctx.fillRect(x + bodyW * 0.05, y + bodyH + legH - 2 * scale, bodyW * 0.32, 2 * scale);
 
       ctx.shadowBlur = 0;
       ctx.restore();
@@ -1080,6 +1093,14 @@
       const gapY = Math.max(5, Math.min(18, crowdHeight / Math.max(rows - 1, 1)));
       const scale = Math.max(0.2, Math.min(1, Math.min(gapX / 17, gapY / 21)));
       const visibleSoldiers = [];
+
+      const crowdGlow = ctx.createRadialGradient(canvas.width / 2, 585, 20, canvas.width / 2, 585, 260);
+      crowdGlow.addColorStop(0, 'rgba(96,165,250,0.18)');
+      crowdGlow.addColorStop(1, 'rgba(96,165,250,0)');
+      ctx.fillStyle = crowdGlow;
+      ctx.beginPath();
+      ctx.ellipse(canvas.width / 2, 590, 280, 120, 0, 0, Math.PI * 2);
+      ctx.fill();
 
       for (let row = 0; row < rows; row++) {
         const widthFactor = 0.48 + (row / Math.max(rows - 1, 1)) * 0.52;
@@ -1114,6 +1135,14 @@
       for (const soldier of visibleSoldiers) {
         const tint = soldier.row % 4 === 0 ? '#60a5fa' : soldier.row % 4 === 1 ? '#93c5fd' : soldier.row % 4 === 2 ? '#3b82f6' : '#2563eb';
         drawPerson(soldier.x, soldier.y, tint, scale, soldier.row);
+      }
+
+      if (visibleSoldiers.length < total) {
+        ctx.fillStyle = 'rgba(15,23,42,.88)';
+        ctx.fillRect(18, 162, 210, 36);
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = 'bold 16px system-ui';
+        ctx.fillText(`Visible ${visibleSoldiers.length} of ${total}`, 32, 185);
       }
     }
 
@@ -1178,11 +1207,30 @@
 
     function drawParticles() {
       for (const particle of state.particles) {
-        ctx.globalAlpha = Math.max(0, particle.life / 0.18);
+        const alpha = Math.max(0, particle.life / 0.18);
+        const size = particle.size || 8;
+        ctx.globalAlpha = alpha;
         ctx.fillStyle = particle.color;
         ctx.beginPath();
-        ctx.arc(particle.x, particle.y, 8 * particle.life / 0.18, 0, Math.PI * 2);
+        ctx.arc(particle.x, particle.y, size * particle.life / 0.18, 0, Math.PI * 2);
         ctx.fill();
+        if (particle.ring) {
+          ctx.strokeStyle = particle.ring;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, size * 0.8 * particle.life / 0.18, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        if (particle.burst) {
+          ctx.strokeStyle = particle.ring || '#fff';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(particle.x - size * 0.6, particle.y);
+          ctx.lineTo(particle.x + size * 0.6, particle.y);
+          ctx.moveTo(particle.x, particle.y - size * 0.6);
+          ctx.lineTo(particle.x, particle.y + size * 0.6);
+          ctx.stroke();
+        }
       }
       ctx.globalAlpha = 1;
     }

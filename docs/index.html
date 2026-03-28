@@ -9,6 +9,10 @@
   <link rel="apple-touch-icon" href="./icon.svg">
   <meta name="theme-color" content="#0b1220">
   <meta name="description" content="Contra-style zombie lane shooter with weapon upgrades, boss walls, and cinematic night survival.">
+  <meta property="og:title" content="Zombie Squad Run">
+  <meta property="og:description" content="Contra-style zombie lane shooter with weapon upgrades, boss walls, and cinematic night survival.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="./icon.svg">
   <style>
     :root {
       --bg: #0b1220;
@@ -297,6 +301,11 @@
           </div>
           <p>Run with your squad, blast the right lane, smash boss walls before impact, and stack stronger weapons every round.</p>
           <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best} &nbsp; <strong>Tier:</strong> ${weaponTierName(state.firepower)}</p>
+          <div class="badge-line">
+            <span class="badge">Tap lane to fire</span>
+            <span class="badge">Crates = stronger guns</span>
+            <span class="badge">Walls = squad damage</span>
+          </div>
           <button data-action="start">🚀 Start Run</button>
         </div>`;
     }
@@ -536,6 +545,17 @@
       fog.addColorStop(1, 'rgba(15,23,42,0.0)');
       ctx.fillStyle = fog;
       ctx.fillRect(0, horizonY - 30, canvas.width, 160);
+
+      for (let i = 0; i < 7; i++) {
+        const lx = 46 + i * 118;
+        const pulse = 0.45 + 0.2 * Math.sin((state.distance / 32) + i);
+        ctx.fillStyle = `rgba(248,250,252,${pulse})`;
+        ctx.fillRect(lx, horizonY + 18, 3, 58);
+        ctx.fillStyle = 'rgba(56,189,248,0.16)';
+        ctx.beginPath();
+        ctx.arc(lx + 1.5, horizonY + 20, 14, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       for (let i=0;i<3;i++) {
         const x = 80 + i*240;
@@ -781,6 +801,12 @@
         ctx.arc(x, y - 14, 34, 0, Math.PI * 2);
         ctx.fill();
       }
+      if (reward >= 3) {
+        ctx.fillStyle = '#bef264';
+        ctx.font = 'bold 10px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText('ELITE', x, y - 46);
+      }
       ctx.fillStyle='rgba(220,252,231,0.92)';
       ctx.font='bold 15px system-ui';
       ctx.textAlign='center';
@@ -895,9 +921,10 @@
     }
 
     function drawHint() {
+      const mission = activeMission();
       ctx.fillStyle='rgba(15,23,42,.78)';
       ctx.beginPath();
-      ctx.roundRect(18,18,420,98,18);
+      ctx.roundRect(18,18,470,118,18);
       ctx.fill();
       ctx.strokeStyle = 'rgba(125,211,252,0.18)';
       ctx.lineWidth = 1.5;
@@ -905,6 +932,7 @@
       ctx.fillStyle='#e5e7eb'; ctx.font='bold 24px system-ui'; ctx.textAlign='left'; ctx.fillText('Zombie Squad Run',36,52);
       ctx.fillStyle='#94a3b8'; ctx.font='16px system-ui'; ctx.fillText('Contra-style lane action. Boss walls, zombie waves, weapon upgrades.',36,80);
       ctx.fillStyle='#86efac'; ctx.font='bold 14px system-ui'; ctx.fillText(`Tier: ${weaponTierName(state.firepower)}  •  Wave ${state.wave}`,36,102);
+      ctx.fillStyle='#fef08a'; ctx.font='bold 13px system-ui'; ctx.fillText(`Objective: ${mission.label} (${Math.min(missionProgress, mission.target)}/${mission.target})`,36,122);
     }
 
     function render() {

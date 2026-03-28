@@ -139,6 +139,59 @@
       font-size: 13px;
       color: var(--muted);
     }
+    .shop-grid {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+      text-align: left;
+    }
+    .shop-card {
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
+    }
+    .shop-card h4 {
+      margin: 0 0 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 17px;
+    }
+    .shop-card p {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .shop-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      background: rgba(34,197,94,.14);
+      color: #86efac;
+    }
+    .shop-badge.locked {
+      background: rgba(148,163,184,.16);
+      color: #cbd5e1;
+    }
+    .shop-card .cta-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .shop-card .cta-row button {
+      width: auto;
+      margin-top: 0;
+      flex: 1 1 180px;
+    }
     .touch-row { display: none; gap: 10px; padding: 0 16px 16px; background: rgba(255,255,255,0.03); }
     .touch-btn { flex: 1; min-height: 52px; font-size: 16px; }
     @media (max-width: 920px) {
@@ -279,6 +332,8 @@
     let controlsMode = localStorage.getItem('zombie-squad-run-controls') || 'tap';
     let missionIndex = Number(localStorage.getItem('zombie-squad-run-mission-index') || 0);
     let missionProgress = Number(localStorage.getItem('zombie-squad-run-mission-progress') || 0);
+    let youtubeVisitClaimed = localStorage.getItem('zombie-squad-run-youtube-visit') === 'claimed';
+    let youtubeSubscribeClaimed = localStorage.getItem('zombie-squad-run-youtube-subscribe') === 'claimed';
     const MISSIONS = [
       { label: 'Break 3 walls', target: 3, event: 'walls' },
       { label: 'Recruit 8 survivors', target: 8, event: 'survivors' },
@@ -298,6 +353,8 @@
       localStorage.setItem('zombie-squad-run-controls', controlsMode);
       localStorage.setItem('zombie-squad-run-mission-index', String(missionIndex));
       localStorage.setItem('zombie-squad-run-mission-progress', String(missionProgress));
+      localStorage.setItem('zombie-squad-run-youtube-visit', youtubeVisitClaimed ? 'claimed' : 'open');
+      localStorage.setItem('zombie-squad-run-youtube-subscribe', youtubeSubscribeClaimed ? 'claimed' : 'open');
     }
 
     function activeMission() { return MISSIONS[missionIndex % MISSIONS.length]; }
@@ -326,24 +383,51 @@
       ];
     }
 
-    function openMoneyPanel() {
-      state.paused = true;
-      overlay.innerHTML = `
+    function moneyPanelMarkup() {
+      return `
         <div class="message">
           <h2>Money Button</h2>
-          <p>The QR link now opens from this cash button, like the shirt button style you asked for.</p>
-          <ul class="panel-list">
-            <li>Buy 100 coins</li>
-            <li>Starter bundle with revive</li>
-            <li>Premium squad skin pack</li>
-            <li>Visit YouTube channel for 100 coins</li>
-            <li>Subscribe reward banner for 1000 coins</li>
-          </ul>
-          <p class="mini-note">YouTube reward uses the channel link you provided. Real subscription verification still needs a backend or manual confirmation.</p>
-          <button class="warn" onclick="window.openYoutubeReward()">Get 100 Coins</button>
-          <button onclick="window.claimSubscribeReward()">I Subscribed, Claim 1000 Coins</button>
+          <p>The QR link has been upgraded into a mobile-style shop with reward cards.</p>
+          <div class="shop-grid">
+            <div class="shop-card">
+              <h4>
+                <span>💰 Coin Pack</span>
+                <span class="shop-badge">Instant</span>
+              </h4>
+              <p>Featured pack for players who want a fast refill before the next run.</p>
+              <div class="cta-row">
+                <button class="warn">Buy 100 Coins</button>
+              </div>
+            </div>
+            <div class="shop-card">
+              <h4>
+                <span>▶️ YouTube Visit Reward</span>
+                <span class="shop-badge ${youtubeVisitClaimed ? '' : 'locked'}">${youtubeVisitClaimed ? 'Unlocked' : 'Ready'}</span>
+              </h4>
+              <p>Open <strong>@ColtRT-e5n2h</strong> and receive 100 coins.</p>
+              <div class="cta-row">
+                <button class="warn" onclick="window.openYoutubeReward()" ${youtubeVisitClaimed ? 'disabled' : ''}>${youtubeVisitClaimed ? '100 Coins Claimed' : 'Get 100 Coins'}</button>
+              </div>
+            </div>
+            <div class="shop-card">
+              <h4>
+                <span>⭐ Subscribe Bonus</span>
+                <span class="shop-badge ${youtubeSubscribeClaimed ? '' : 'locked'}">${youtubeSubscribeClaimed ? 'Unlocked' : 'Honor System'}</span>
+              </h4>
+              <p>Subscribe to <strong>@ColtRT-e5n2h</strong> and claim a 1000-coin bonus.</p>
+              <div class="cta-row">
+                <button onclick="window.claimSubscribeReward()" ${youtubeSubscribeClaimed ? 'disabled' : ''}>${youtubeSubscribeClaimed ? '1000 Coins Claimed' : 'Claim 1000 Coins'}</button>
+              </div>
+            </div>
+          </div>
+          <p class="mini-note">The subscribe reward still uses honor-system claiming until you add real verification.</p>
           <button class="secondary" onclick="window.closeOverlayAndResume()">Close</button>
         </div>`;
+    }
+
+    function openMoneyPanel() {
+      state.paused = true;
+      overlay.innerHTML = moneyPanelMarkup();
     }
 
     function openEnhancementPanel() {
@@ -762,24 +846,36 @@
     buyReviveBtn.addEventListener('click', () => { if (state.coins >= 15) { state.coins -= 15; state.revives += 1; bankCoins = state.coins; saveMeta(); syncHud(); } });
 
     window.openYoutubeReward = function() {
+      if (youtubeVisitClaimed) {
+        overlay.innerHTML = moneyPanelMarkup();
+        return;
+      }
       window.open('https://www.youtube.com/@ColtRT-e5n2h', '_blank', 'noopener');
       addCoins(100);
+      youtubeVisitClaimed = true;
+      saveMeta();
       overlay.innerHTML = `
         <div class="message">
           <h2>YouTube Reward Added</h2>
           <p>You opened <strong>@ColtRT-e5n2h</strong> and received 100 coins.</p>
-          <button onclick="window.closeOverlayAndResume()">Back To Game</button>
+          <button onclick="window.openMoneyPanel()">Back To Shop</button>
         </div>`;
       syncHud();
     };
     window.claimSubscribeReward = function() {
+      if (youtubeSubscribeClaimed) {
+        overlay.innerHTML = moneyPanelMarkup();
+        return;
+      }
       addCoins(1000);
+      youtubeSubscribeClaimed = true;
+      saveMeta();
       overlay.innerHTML = `
         <div class="message">
           <h2>Subscription Reward Claimed</h2>
           <p>1000 coins were added for subscribing to <strong>@ColtRT-e5n2h</strong>.</p>
           <p class="mini-note">This is currently an honor-system reward until a real verification flow exists.</p>
-          <button onclick="window.closeOverlayAndResume()">Back To Game</button>
+          <button onclick="window.openMoneyPanel()">Back To Shop</button>
         </div>`;
       syncHud();
     };

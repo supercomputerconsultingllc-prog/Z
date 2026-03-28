@@ -1,0 +1,3128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Zombie Squad Run</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#0b1220">
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: rgba(17, 24, 39, 0.9);
+      --ink: #e5e7eb;
+      --muted: #94a3b8;
+      --accent: #22c55e;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --coin: #facc15;
+      --blue: #38bdf8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: radial-gradient(circle at top, #1f2937, var(--bg));
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    }
+    .app {
+      width: min(1140px, 100%);
+      background: rgba(2, 6, 23, 0.94);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 20px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.45);
+      overflow: hidden;
+    }
+    .topbar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 12px;
+      padding: 16px;
+      background: rgba(255,255,255,0.03);
+    }
+    .stat {
+      background: var(--panel);
+      border-radius: 16px;
+      padding: 12px;
+      text-align: center;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .stat .label { display: block; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+    .stat .value { display: block; font-size: 24px; font-weight: 800; margin-top: 4px; }
+    .content { display: grid; grid-template-columns: 1fr 320px; }
+    .canvas-wrap { position: relative; min-height: 680px; background: linear-gradient(180deg, #111827 0%, #0f172a 50%, #1e293b 100%); }
+    canvas { width: 100%; height: 680px; display: block; touch-action: manipulation; cursor: crosshair; }
+    .battle-side-ui {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      z-index: 4;
+    }
+    .battle-side-btn {
+      width: 86px;
+      min-height: 86px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(180deg, rgba(239,68,68,.96), rgba(127,29,29,.98));
+      color: white;
+      box-shadow: 0 18px 36px rgba(0,0,0,.32);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 900;
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      pointer-events: auto;
+      position: relative;
+      z-index: 4;
+    }
+    .battle-side-btn.ready {
+      box-shadow: 0 0 0 2px rgba(254,202,202,.22), 0 0 24px rgba(248,113,113,.55), 0 18px 36px rgba(0,0,0,.32);
+      filter: saturate(1.2);
+    }
+    .battle-side-btn:active {
+      transform: scale(.96);
+    }
+    .battle-side-btn .big { font-size: 28px; line-height: 1; }
+    .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+    .message {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 18px 22px;
+      border-radius: 16px;
+      text-align: center;
+      max-width: 520px;
+      pointer-events: auto;
+    }
+    .message.settings-page {
+      width: min(720px, calc(100% - 24px));
+      max-width: 720px;
+      text-align: left;
+      padding: 24px;
+    }
+    .message h1, .message h2 { margin: 0 0 10px; }
+    .message p { color: var(--muted); line-height: 1.45; }
+    .controls { padding: 16px; border-left: 1px solid rgba(148,163,184,.12); background: rgba(255,255,255,0.03); }
+    .card { background: var(--panel); border-radius: 16px; padding: 14px; margin-bottom: 14px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.04); }
+    h3 { margin: 0 0 10px; }
+    p, li { color: var(--muted); }
+    ul { margin: 0; padding-left: 20px; }
+    button {
+      border: 0; border-radius: 999px; padding: 13px 18px; background: var(--accent); color: #06210f;
+      font-weight: 800; cursor: pointer; width: 100%; font-size: 16px; margin-top: 8px;
+    }
+    button.secondary { background: #334155; color: white; }
+    button.warn { background: var(--warn); color: #1f2937; }
+    .pill {
+      display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
+      background: rgba(34,197,94,.12); color: #86efac; margin-right: 6px; margin-bottom: 6px;
+    }
+    .shop-btn { width: auto; margin: 6px 6px 0 0; padding: 12px 16px; font-size: 14px; min-height: 44px; }
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .action-btn {
+      width: 100%;
+      margin-top: 0;
+      min-height: 108px;
+      border-radius: 22px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(180deg, rgba(59,130,246,.96), rgba(30,64,175,.96));
+      color: white;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    }
+    .action-btn.enhance {
+      background: linear-gradient(180deg, rgba(245,158,11,.96), rgba(180,83,9,.96));
+      color: #fff7ed;
+    }
+    .action-btn.settings {
+      background: linear-gradient(180deg, rgba(71,85,105,.96), rgba(30,41,59,.98));
+      color: #e2e8f0;
+    }
+    .action-icon { font-size: 34px; line-height: 1; }
+    .action-label { font-size: 15px; font-weight: 800; }
+    .action-sub { font-size: 12px; opacity: 0.85; text-align: center; }
+    .panel-list {
+      margin: 12px 0 0;
+      padding-left: 18px;
+      color: var(--ink);
+    }
+    .panel-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 12px 0;
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .panel-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--blue);
+    }
+    .volume-bar-shell {
+      height: 16px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+      margin-top: 8px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .volume-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #22c55e, #facc15);
+      transition: width .12s ease;
+    }
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .settings-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 14px;
+    }
+    .settings-card h4 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+    .mini-note {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .shop-grid {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+      text-align: left;
+    }
+    .shop-hero {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 12px;
+      margin-top: 14px;
+      text-align: left;
+    }
+    .shop-card {
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
+    }
+    .shop-card.featured {
+      background: linear-gradient(135deg, rgba(245,158,11,.24), rgba(15,23,42,.98));
+      border-color: rgba(250,204,21,.28);
+    }
+    .shop-card.balance {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(59,130,246,.18), rgba(15,23,42,.98));
+    }
+    .shop-card h4 {
+      margin: 0 0 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 17px;
+    }
+    .shop-card p {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .coin-big {
+      font-size: 42px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .balance-value {
+      font-size: 34px;
+      font-weight: 900;
+      color: #fde68a;
+    }
+    .featured-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-weight: 900;
+      font-size: 19px;
+    }
+    .shop-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      background: rgba(34,197,94,.14);
+      color: #86efac;
+    }
+    .shop-badge.locked {
+      background: rgba(148,163,184,.16);
+      color: #cbd5e1;
+    }
+    .shop-card .cta-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .shop-card .cta-row button {
+      width: auto;
+      margin-top: 0;
+      flex: 1 1 180px;
+    }
+    .touch-row { display: none; gap: 10px; padding: 0 16px 16px; background: rgba(255,255,255,0.03); flex-wrap: wrap; }
+    .touch-btn { flex: 1 1 120px; min-height: 56px; font-size: 16px; }
+    .touch-btn.special {
+      flex: 1 1 140px;
+      background: linear-gradient(180deg, rgba(239,68,68,.96), rgba(127,29,29,.98));
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    .touch-btn.utility {
+      flex: 1 1 120px;
+      background: linear-gradient(180deg, rgba(71,85,105,.96), rgba(30,41,59,.98));
+      color: #e2e8f0;
+    }
+    .touch-btn .tiny-status {
+      display: block;
+      margin-top: 4px;
+      font-size: 11px;
+      opacity: 0.82;
+    }
+    @media (max-width: 920px) {
+      .topbar { grid-template-columns: repeat(4, 1fr); }
+      .content { grid-template-columns: 1fr; }
+      .controls { border-left: 0; border-top: 1px solid rgba(148,163,184,.12); }
+      canvas { height: 560px; }
+      .shop-hero { grid-template-columns: 1fr; }
+      .touch-row { display: flex; }
+    }
+    @media (max-width: 560px) {
+      .topbar { grid-template-columns: repeat(2, 1fr); }
+      .stat .value { font-size: 22px; }
+      .controls { padding: 12px; }
+      .settings-grid { grid-template-columns: 1fr; }
+      button { min-height: 46px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="topbar">
+      <div class="stat"><span class="label">Army</span><span class="value" id="squadStat">8</span></div>
+      <div class="stat"><span class="label">Firepower</span><span class="value" id="gunStat">1</span><span class="label" id="weaponNameStat" style="margin-top:6px;display:block;color:#cbd5e1;letter-spacing:.04em;text-transform:none;">Rifle</span></div>
+      <div class="stat"><span class="label">Distance</span><span class="value" id="distanceStat">0</span></div>
+      <div class="stat"><span class="label">Wave</span><span class="value" id="waveStat">1</span></div>
+      <div class="stat"><span class="label">Coins</span><span class="value" id="coinStat">0</span></div>
+      <div class="stat"><span class="label">Avatar Coins</span><span class="value" id="avatarCoinStat">0</span></div>
+      <div class="stat"><span class="label">Revives</span><span class="value" id="reviveStat">1</span></div>
+      <div class="stat"><span class="label">Best</span><span class="value" id="bestStat">0</span></div>
+    </section>
+
+    <section class="content">
+      <div class="canvas-wrap">
+        <canvas id="game" width="800" height="680"></canvas>
+        <div class="battle-side-ui">
+          <button class="battle-side-btn" id="floatingMinigunBtn" aria-label="Activate minigun" type="button">
+            <span class="big">🔥</span>
+            <span>Minigun</span>
+            <span class="battle-side-status" id="floatingMinigunStatus" style="font-size:11px;opacity:.86;">Tap when ready</span>
+          </button>
+          <button class="battle-side-btn" id="floatingSettingsBtn" aria-label="Open settings" type="button" style="background:linear-gradient(180deg, rgba(71,85,105,.96), rgba(30,41,59,.98));">
+            <span class="big">⚙️</span>
+            <span>Settings</span>
+            <span style="font-size:11px;opacity:.86;">Brightness + volume</span>
+          </button>
+        </div>
+        <div class="overlay" id="overlay"></div>
+      </div>
+
+      <aside class="controls">
+        <div class="card">
+          <h3>How it works</h3>
+          <ul>
+            <li>Tap or click a lane to fire there.</li>
+            <li>Shoot zombies to save and recruit survivors.</li>
+            <li>Blast infected husks to gain extra firepower.</li>
+            <li>Coins drop from clears and distance.</li>
+            <li>Break the wall before you hit it.</li>
+            <li>If the wall still has strength left, you lose that many squad members.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Upgrade shop</h3>
+          <p>Spend coins between runs or mid-run.</p>
+          <button class="shop-btn warn" id="buyGunBtn">+1 Firepower (10)</button>
+          <button class="shop-btn warn" id="buySquadBtn">+2 Squad (8)</button>
+          <button class="shop-btn warn" id="buyReviveBtn">+1 Revive (15)</button>
+        </div>
+        <div class="card">
+          <h3>Quick actions</h3>
+          <div class="action-grid">
+            <button class="action-btn money" id="moneyBtn" aria-label="Open money options">
+              <span class="action-icon">💸</span>
+              <span class="action-label">Money</span>
+              <span class="action-sub">Tap the cash button instead of the QR link</span>
+            </button>
+            <button class="action-btn enhance" id="enhanceBtn" aria-label="Open character enhancement">
+              <span class="action-icon">🔫</span>
+              <span class="action-label">Character Boost</span>
+              <span class="action-sub">Open enhancements and gun log</span>
+            </button>
+            <button class="action-btn enhance" id="avatarBtn" aria-label="Open avatar screen">
+              <span class="action-icon">🧑</span>
+              <span class="action-label">Avatars</span>
+              <span class="action-sub">Trade coins for avatar coins and unlock looks</span>
+            </button>
+            <button class="action-btn settings" id="settingsBtn" aria-label="Open settings">
+              <span class="action-icon">⚙️</span>
+              <span class="action-label">Settings</span>
+              <span class="action-sub">Volume, brightness, and controls</span>
+            </button>
+            <button class="action-btn money" id="youtubeBtn" aria-label="Open channel bonus">
+              <span class="action-icon">▶️</span>
+              <span class="action-label">Channel Bonus</span>
+              <span class="action-sub">Open the channel bonus page</span>
+            </button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Run Features</h3>
+          <span class="pill">Extra revive</span>
+          <span class="pill">Avatar unlocks</span>
+          <span class="pill">Weapon skins</span>
+          <span class="pill">Season levels</span>
+          <span class="pill">Ad-free unlock</span>
+        </div>
+        <div class="card">
+          <h3>Controls</h3>
+          <p>Mouse/touch: shoot selected lane.</p>
+          <p>Keyboard: <strong>1</strong>, <strong>2</strong>, <strong>3</strong> shoot left, center, right.</p>
+          <button id="restartBtn">Restart Run</button>
+          <button class="secondary" id="pauseBtn">Pause</button>
+          <button class="secondary" id="soundBtn">Sound: On</button>
+          <button class="secondary" id="titleBtn">Title Screen</button>
+        </div>
+      </aside>
+    </section>
+
+    <section class="touch-row">
+      <button class="secondary touch-btn" id="laneLeftBtn">⬅️ Shoot Left</button>
+      <button class="secondary touch-btn" id="laneCenterBtn">🎯 Shoot Center</button>
+      <button class="secondary touch-btn" id="laneRightBtn">➡️ Shoot Right</button>
+      <button class="touch-btn special" id="minigunBtn" aria-label="Activate minigun" type="button">🔥 Minigun<span class="tiny-status battle-side-status">Tap when ready</span></button>
+      <button class="touch-btn utility" id="battleSettingsBtn" aria-label="Open settings" type="button">⚙️ Settings<span class="tiny-status">Brightness, volume, controls</span></button>
+      <button class="touch-btn utility" id="battleYoutubeBtn" aria-label="Open bonus page" type="button">▶️ Bonus<span class="tiny-status">Open channel page</span></button>
+    </section>
+  </main>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const overlay = document.getElementById('overlay');
+    const squadStat = document.getElementById('squadStat');
+    const gunStat = document.getElementById('gunStat');
+    const weaponNameStat = document.getElementById('weaponNameStat');
+    const distanceStat = document.getElementById('distanceStat');
+    const waveStat = document.getElementById('waveStat');
+    const bestStat = document.getElementById('bestStat');
+    const coinStat = document.getElementById('coinStat');
+    const avatarCoinStat = document.getElementById('avatarCoinStat');
+    const reviveStat = document.getElementById('reviveStat');
+    const restartBtn = document.getElementById('restartBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const soundBtn = document.getElementById('soundBtn');
+    const titleBtn = document.getElementById('titleBtn');
+    const floatingMinigunBtn = document.getElementById('floatingMinigunBtn');
+    const floatingMinigunStatus = document.getElementById('floatingMinigunStatus');
+    const floatingSettingsBtn = document.getElementById('floatingSettingsBtn');
+    const buyGunBtn = document.getElementById('buyGunBtn');
+    const buySquadBtn = document.getElementById('buySquadBtn');
+    const buyReviveBtn = document.getElementById('buyReviveBtn');
+    const minigunBtn = document.getElementById('minigunBtn');
+    const moneyBtn = document.getElementById('moneyBtn');
+    const enhanceBtn = document.getElementById('enhanceBtn');
+    const avatarBtn = document.getElementById('avatarBtn');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const battleSettingsBtn = document.getElementById('battleSettingsBtn');
+    const battleYoutubeBtn = document.getElementById('battleYoutubeBtn');
+    const youtubeBtn = document.getElementById('youtubeBtn');
+    const laneLeftBtn = document.getElementById('laneLeftBtn');
+    const laneCenterBtn = document.getElementById('laneCenterBtn');
+    const laneRightBtn = document.getElementById('laneRightBtn');
+
+    const LANES = [180, 400, 620];
+    const COLORS = { road:'#334155', line:'#64748b', zombie:'#22c55e', wall:'#7c2d12', crate:'#2563eb', bullet:'#fde047', coin:'#facc15' };
+
+    let state;
+    let audioCtx = null;
+    let musicEnabled = localStorage.getItem('zombie-squad-run-music') !== 'off';
+    let musicTimer = null;
+    let musicStep = 0;
+    let best = Number(localStorage.getItem('zombie-squad-run-best') || 0);
+    let bankCoins = 0;
+    let avatarCoins = Number(localStorage.getItem('zombie-squad-run-avatar-coins') || 0);
+    let selectedAvatar = localStorage.getItem('zombie-squad-run-selected-avatar') || 'default';
+    let unlockedAvatars = JSON.parse(localStorage.getItem('zombie-squad-run-unlocked-avatars') || '["default"]');
+    let soundOn = localStorage.getItem('zombie-squad-run-sound') !== 'off';
+    let volumeLevel = Number(localStorage.getItem('zombie-squad-run-volume') || 140);
+    let brightnessLevel = Number(localStorage.getItem('zombie-squad-run-brightness') || 100);
+    let controlsMode = localStorage.getItem('zombie-squad-run-controls') || 'tap';
+    let missionIndex = Number(localStorage.getItem('zombie-squad-run-mission-index') || 0);
+    let missionProgress = Number(localStorage.getItem('zombie-squad-run-mission-progress') || 0);
+    let youtubeVisitClaimed = localStorage.getItem('zombie-squad-run-youtube-visit') === 'claimed';
+    let youtubeSubscribeClaimed = localStorage.getItem('zombie-squad-run-youtube-subscribe') === 'claimed';
+    let starterPackClaimed = localStorage.getItem('zombie-squad-run-starter-pack') === 'claimed';
+    let gunPrice = Number(localStorage.getItem('zombie-squad-run-gun-price') || 10);
+    let squadPrice = Number(localStorage.getItem('zombie-squad-run-squad-price') || 8);
+    let revivePrice = Number(localStorage.getItem('zombie-squad-run-revive-price') || 15);
+    const mobileSafeMode = window.innerWidth <= 920 || ('ontouchstart' in window);
+    const lowPowerMobileMode = mobileSafeMode || window.devicePixelRatio > 2;
+    let screenShake = 0;
+    let hitFlash = 0;
+    let bossWave = false;
+    let missionPopup = null;
+    let crowdCache = null;
+    const impactDecals = [];
+    const shellCasings = [];
+    const muzzleFlashes = [];
+    const MISSIONS = [
+      { label: 'Break 12 walls', target: 12, event: 'walls' },
+      { label: 'Recruit 32 survivors', target: 32, event: 'survivors' },
+      { label: 'Collect 80 coins', target: 80, event: 'coins' }
+    ];
+    bestStat.textContent = best;
+    soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
+
+    function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+    function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+    function saveMeta(){
+      localStorage.setItem('zombie-squad-run-best', String(best));
+      localStorage.setItem('zombie-squad-run-coins', String(bankCoins));
+      localStorage.setItem('zombie-squad-run-avatar-coins', String(avatarCoins));
+      localStorage.setItem('zombie-squad-run-selected-avatar', selectedAvatar);
+      localStorage.setItem('zombie-squad-run-unlocked-avatars', JSON.stringify(unlockedAvatars));
+      localStorage.setItem('zombie-squad-run-sound', soundOn ? 'on' : 'off');
+      localStorage.setItem('zombie-squad-run-music', musicEnabled ? 'on' : 'off');
+      localStorage.setItem('zombie-squad-run-volume', String(volumeLevel));
+      localStorage.setItem('zombie-squad-run-brightness', String(brightnessLevel));
+      localStorage.setItem('zombie-squad-run-controls', controlsMode);
+      localStorage.setItem('zombie-squad-run-mission-index', String(missionIndex));
+      localStorage.setItem('zombie-squad-run-mission-progress', String(missionProgress));
+      localStorage.setItem('zombie-squad-run-youtube-visit', youtubeVisitClaimed ? 'claimed' : 'open');
+      localStorage.setItem('zombie-squad-run-youtube-subscribe', youtubeSubscribeClaimed ? 'claimed' : 'open');
+      localStorage.setItem('zombie-squad-run-starter-pack', starterPackClaimed ? 'claimed' : 'open');
+      localStorage.setItem('zombie-squad-run-gun-price', String(gunPrice));
+      localStorage.setItem('zombie-squad-run-squad-price', String(squadPrice));
+      localStorage.setItem('zombie-squad-run-revive-price', String(revivePrice));
+    }
+
+    function activeMission() { return MISSIONS[missionIndex % MISSIONS.length]; }
+
+    function ensureAudio() {
+      if (audioCtx) return audioCtx;
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return null;
+      audioCtx = new AudioContextClass();
+      return audioCtx;
+    }
+
+    function playTone(freq, duration = 0.08, type = 'square', gainBoost = 1) {
+      if (!soundOn || volumeLevel <= 0) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      if (ctxAudio.state === 'suspended') ctxAudio.resume();
+      const osc = ctxAudio.createOscillator();
+      const gain = ctxAudio.createGain();
+      const now = ctxAudio.currentTime;
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime((volumeLevel / 100) * 0.08 * gainBoost, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      osc.connect(gain);
+      gain.connect(ctxAudio.destination);
+      osc.start(now);
+      osc.stop(now + duration);
+    }
+
+    function playShotSound(power = 1) {
+      if (!soundOn || volumeLevel <= 0) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      if (ctxAudio.state === 'suspended') ctxAudio.resume();
+      const now = ctxAudio.currentTime;
+
+      const bodyOsc = ctxAudio.createOscillator();
+      const bodyGain = ctxAudio.createGain();
+      bodyOsc.type = power >= 8 ? 'sawtooth' : 'triangle';
+      bodyOsc.frequency.setValueAtTime(190 + power * 10, now);
+      bodyOsc.frequency.exponentialRampToValueAtTime(92 + power * 4, now + 0.08);
+      bodyGain.gain.setValueAtTime((volumeLevel / 100) * 0.024 * Math.min(1.45, 0.9 + power * 0.04), now);
+      bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+      bodyOsc.connect(bodyGain);
+      bodyGain.connect(ctxAudio.destination);
+      bodyOsc.start(now);
+      bodyOsc.stop(now + 0.09);
+
+      const crackOsc = ctxAudio.createOscillator();
+      const crackGain = ctxAudio.createGain();
+      crackOsc.type = 'square';
+      crackOsc.frequency.setValueAtTime(820 + power * 28, now);
+      crackGain.gain.setValueAtTime((volumeLevel / 100) * 0.011, now);
+      crackGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
+      crackOsc.connect(crackGain);
+      crackGain.connect(ctxAudio.destination);
+      crackOsc.start(now);
+      crackOsc.stop(now + 0.045);
+    }
+
+    function playKick(time, gainBoost = 1) {
+      if (!musicEnabled || volumeLevel <= 0) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      const osc = ctxAudio.createOscillator();
+      const gain = ctxAudio.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(140, time);
+      osc.frequency.exponentialRampToValueAtTime(42, time + 0.18);
+      gain.gain.setValueAtTime((volumeLevel / 100) * 0.08 * gainBoost, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.18);
+      osc.connect(gain);
+      gain.connect(ctxAudio.destination);
+      osc.start(time);
+      osc.stop(time + 0.18);
+    }
+
+    function playNoiseHit(time, duration = 0.08, gainBoost = 0.45) {
+      if (!musicEnabled || volumeLevel <= 0) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      const buffer = ctxAudio.createBuffer(1, ctxAudio.sampleRate * duration, ctxAudio.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+      const source = ctxAudio.createBufferSource();
+      const filter = ctxAudio.createBiquadFilter();
+      const gain = ctxAudio.createGain();
+      source.buffer = buffer;
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(1600, time);
+      gain.gain.setValueAtTime((volumeLevel / 100) * 0.05 * gainBoost, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctxAudio.destination);
+      source.start(time);
+    }
+
+    function playMusicNote(freq, time, duration, type = 'triangle', gainBoost = 0.22) {
+      if (!musicEnabled || volumeLevel <= 0) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      const osc = ctxAudio.createOscillator();
+      const gain = ctxAudio.createGain();
+      const filter = ctxAudio.createBiquadFilter();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, time);
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(type === 'sawtooth' ? 1800 : 1200, time);
+      gain.gain.setValueAtTime((volumeLevel / 100) * 0.028 * gainBoost, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctxAudio.destination);
+      osc.start(time);
+      osc.stop(time + duration);
+    }
+
+    function musicIntensity() {
+      const waveBoost = Math.min(1.8, state ? state.wave / 6 : 0.5);
+      const minigunBoost = state && state.minigunActiveUntil > performance.now() ? 0.9 : 0;
+      return 0.75 + waveBoost + minigunBoost;
+    }
+
+    function scheduleMusicBar() {
+      if (!musicEnabled || !soundOn) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      if (ctxAudio.state === 'suspended') ctxAudio.resume();
+      const now = ctxAudio.currentTime + 0.02;
+      const stepDur = 0.19;
+      const root = state ? 146 + Math.min(24, state.wave) : 146;
+      const intensity = musicIntensity();
+      const mountainKing = [0, 1, 3, 5, 3, 1, 0, -1, 0, 1, 3, 5, 6, 5, 3, 1];
+      const bassOffsets = [0, 0, -5, 0, -7, -5, -8, -7, 0, 0, -5, 0, -7, -5, -8, -7];
+
+      for (let i = 0; i < 16; i++) {
+        const stepTime = now + i * stepDur;
+        const note = mountainKing[(musicStep + i) % mountainKing.length];
+        const bass = bassOffsets[(musicStep + i) % bassOffsets.length];
+        const melodyFreq = root * Math.pow(2, note / 12);
+        const bassFreq = (root * 0.5) * Math.pow(2, bass / 12);
+        playMusicNote(bassFreq, stepTime, 0.22, 'sawtooth', 0.9 * intensity);
+        playMusicNote(melodyFreq, stepTime, 0.14, 'square', 0.36 * intensity);
+        if (i % 4 === 0) playKick(stepTime, 1.4 * intensity);
+        if (i % 4 === 2) playNoiseHit(stepTime, 0.05, 0.45 * intensity);
+      }
+      musicStep = (musicStep + 16) % 16;
+    }
+
+    function startMusicLoop() {
+      if (musicTimer || !musicEnabled) return;
+      scheduleMusicBar();
+      musicTimer = setInterval(() => {
+        if (!document.hidden && !state?.paused && !state?.gameOver) scheduleMusicBar();
+      }, 3040);
+    }
+
+    function stopMusicLoop() {
+      if (!musicTimer) return;
+      clearInterval(musicTimer);
+      musicTimer = null;
+    }
+
+    function refreshMusicState() {
+      if (musicEnabled && soundOn) startMusicLoop();
+      else stopMusicLoop();
+    }
+
+    function applyDisplaySettings() {
+      canvas.style.filter = `brightness(${brightnessLevel}%)`;
+    }
+
+    function applyControlsMode() {
+      const touchRow = document.querySelector('.touch-row');
+      touchRow.style.display = controlsMode === 'buttons' ? 'flex' : '';
+      touchRow.style.opacity = controlsMode === 'buttons' ? '1' : '';
+    }
+
+    function controlSummary() {
+      return controlsMode === 'buttons'
+        ? 'On-screen lane buttons are emphasized for play.'
+        : 'Tap or click any lane, keyboard 1 to 3 still works.';
+    }
+
+    function gunLogItems() {
+      return [
+        `Current firepower: Lv.${state.firepower}`,
+        `Squad armor boost: +${Math.max(0, state.squad - 8)}`,
+        `Revive stock: ${state.revives}`
+      ];
+    }
+
+    const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@ColtRT-e5n2h';
+
+    function moneyPanelMarkup() {
+      return `
+        <div class="message settings-page">
+          <h2>Squad Shop</h2>
+          <p>Top up coins, claim channel rewards, and juice the next run.</p>
+          <div class="settings-grid">
+            <div class="settings-card" style="background:linear-gradient(135deg, rgba(245,158,11,.18), rgba(15,23,42,.96));">
+              <h4>🪙 Coin Wallet</h4>
+              <p><strong>${state.coins}</strong> run coins ready to spend.</p>
+              <p class="mini-note">Best when paired with firepower and revive upgrades.</p>
+            </div>
+            <div class="settings-card" style="background:linear-gradient(135deg, rgba(59,130,246,.18), rgba(15,23,42,.96));">
+              <h4>🔫 Current Loadout</h4>
+              <p><strong>${weaponProfile(state.firepower).name}</strong> at firepower level ${state.firepower}.</p>
+              <p class="mini-note">Next infected husk or upgrade will push you harder.</p>
+            </div>
+          </div>
+          <div class="shop-grid">
+            <div class="shop-card featured">
+              <h4><span>🔥 Featured Starter Pack</span><span class="shop-badge">100 Coins</span></h4>
+              <p>Instantly add 100 coins and a little momentum before the next wave.</p>
+              <div class="cta-row">
+                <button class="warn" onclick="window.buyStarterPack()" ${starterPackClaimed ? 'disabled' : ''}>${starterPackClaimed ? 'Starter Pack Claimed' : 'Buy 100 Coins'}</button>
+              </div>
+            </div>
+            <div class="shop-card">
+              <h4><span>▶️ YouTube Visit Reward</span><span class="shop-badge ${youtubeVisitClaimed ? '' : 'locked'}">${youtubeVisitClaimed ? 'Claimed' : 'Ready'}</span></h4>
+              <p>Open <strong>@ColtRT-e5n2h</strong> and receive 100 coins.</p>
+              <div class="cta-row">
+                <button class="warn" onclick="window.openYoutubeReward()" ${youtubeVisitClaimed ? 'disabled' : ''}>${youtubeVisitClaimed ? '100 Coins Claimed' : 'Open Channel + Claim'}</button>
+              </div>
+            </div>
+            <div class="shop-card">
+              <h4><span>⭐ Subscribe Bonus</span><span class="shop-badge ${youtubeSubscribeClaimed ? '' : 'locked'}">${youtubeSubscribeClaimed ? 'Claimed' : 'Honor System'}</span></h4>
+              <p>Subscribe to <strong>@ColtRT-e5n2h</strong> and claim a 1000-coin bonus.</p>
+              <div class="cta-row">
+                <button onclick="window.claimSubscribeReward()" ${youtubeSubscribeClaimed ? 'disabled' : ''}>${youtubeSubscribeClaimed ? '1000 Coins Claimed' : 'Claim 1000 Coins'}</button>
+              </div>
+            </div>
+          </div>
+          <p class="mini-note">Channel rewards are one-time bonuses. Subscribe still uses honor-system claiming until real verification exists.</p>
+          <button class="secondary" onclick="window.closeOverlayAndResume()">Close</button>
+        </div>`;
+    }
+
+    function openMoneyPanel() {
+      state.paused = true;
+      overlay.innerHTML = moneyPanelMarkup();
+    }
+
+    function openEnhancementPanel() {
+      state.paused = true;
+      overlay.innerHTML = `
+        <div class="message">
+          <h2>Character Enhancement</h2>
+          <p>Use this panel for powerups, costumes, and the gun log.</p>
+          <ul class="panel-list">${gunLogItems().map(item => `<li>${item}</li>`).join('')}</ul>
+          <p class="mini-note">Next upgrade unlocks a wider shot spread and stronger wall damage.</p>
+          <button onclick="window.closeOverlayAndResume()">Close</button>
+        </div>`;
+    }
+
+    function openAvatarPanel() {
+      state.paused = true;
+      const avatars = [
+        { id: 'default', name: 'Default Trooper', cost: 0, note: 'Classic blue squad look.', colors: ['#bfdbfe', '#60a5fa', '#1d4ed8'] },
+        { id: 'ranger', name: 'Ranger Helmet', cost: 2, note: 'Forest green field gear.', colors: ['#bbf7d0', '#4ade80', '#166534'] },
+        { id: 'commander', name: 'Blue Commander', cost: 4, note: 'Sharper blue command trim.', colors: ['#dbeafe', '#60a5fa', '#1e40af'] },
+        { id: 'gold', name: 'Gold Minigun Hero', cost: 8, note: 'Gold armor for elite runs.', colors: ['#fde68a', '#fbbf24', '#92400e'] }
+      ];
+      overlay.innerHTML = `
+        <div class="message settings-page">
+          <h2>Avatar Screen</h2>
+          <p>Trade regular coins for avatar coins, unlock avatars, then equip the one you want.</p>
+          <div class="settings-grid">
+            <div class="settings-card">
+              <h4>Currency Exchange</h4>
+              <p><strong>25 coins = 1 avatar coin</strong></p>
+              <p>You have <strong>${state.coins}</strong> coins and <strong>${avatarCoins}</strong> avatar coins.</p>
+              <p class="mini-note">Equipped now: <strong>${avatars.find(a => a.id === selectedAvatar)?.name || 'Default Trooper'}</strong></p>
+              <button class="warn" id="tradeAvatarCoinBtn" style="width:auto;">Trade 25 Coins For 1 Avatar Coin</button>
+            </div>
+            <div class="settings-card">
+              <h4>Avatar Unlocks</h4>
+              <div style="display:grid;gap:10px;">
+                ${avatars.map(avatar => {
+                  const unlocked = unlockedAvatars.includes(avatar.id);
+                  const selected = selectedAvatar === avatar.id;
+                  return `<div style="border:1px solid ${selected ? 'rgba(250,204,21,.55)' : 'rgba(255,255,255,.08)'};border-radius:14px;padding:12px;background:${selected ? 'rgba(250,204,21,.08)' : 'rgba(255,255,255,.02)'};">
+                    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
+                      <strong>${avatar.name}</strong>
+                      <span class="pill" style="margin:0;">${unlocked ? (selected ? 'Equipped' : 'Unlocked') : `${avatar.cost} AC`}</span>
+                    </div>
+                    <div style="display:flex;gap:8px;margin:8px 0 2px;">
+                      ${avatar.colors.map(color => `<span style="width:18px;height:18px;border-radius:999px;background:${color};display:inline-block;border:1px solid rgba(255,255,255,.18);"></span>`).join('')}
+                    </div>
+                    <p class="mini-note" style="margin:8px 0 0;">${avatar.note}</p>
+                    <button class="secondary avatar-action-btn" data-avatar="${avatar.id}" style="width:auto;">${unlocked ? (selected ? 'Equipped Now' : 'Equip Avatar') : `Unlock for ${avatar.cost} Avatar Coins`}</button>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+          <button class="secondary" onclick="window.closeOverlayAndResume()">Close</button>
+        </div>`;
+
+      const tradeAvatarCoinBtn = document.getElementById('tradeAvatarCoinBtn');
+      tradeAvatarCoinBtn.addEventListener('click', () => {
+        if (state.coins < 25) return;
+        state.coins -= 25;
+        bankCoins = state.coins;
+        avatarCoins += 1;
+        saveMeta();
+        syncHud();
+        openAvatarPanel();
+      });
+
+      document.querySelectorAll('.avatar-action-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const avatarId = btn.dataset.avatar;
+          const avatar = avatars.find(a => a.id === avatarId);
+          if (!avatar) return;
+          if (!unlockedAvatars.includes(avatarId)) {
+            if (avatarCoins < avatar.cost) return;
+            avatarCoins -= avatar.cost;
+            unlockedAvatars.push(avatarId);
+          }
+          selectedAvatar = avatarId;
+          saveMeta();
+          syncHud();
+          openAvatarPanel();
+        });
+      });
+    }
+
+    function openSettingsPanel() {
+      state.paused = true;
+      overlay.innerHTML = `
+        <div class="message settings-page">
+          <h2>Settings</h2>
+          <p>Adjust the game sound, screen brightness, and control style from one place.</p>
+          <div class="settings-grid">
+            <div class="settings-card">
+              <h4>Volume</h4>
+              <div class="panel-row">
+                <span>Master Audio</span>
+                <input id="volumeRange" type="range" min="0" max="200" value="${volumeLevel}">
+                <strong id="volumeValue">${volumeLevel}%</strong>
+              </div>
+              <div class="volume-bar-shell">
+                <div class="volume-bar-fill" id="volumeBarFill" style="width:${Math.min(volumeLevel, 200) / 2}%"></div>
+              </div>
+              <p class="mini-note">This now controls real game sound. It can go above 100% for extra punch.</p>
+              <button id="testAudioBtn" class="warn" style="width:auto;">Test Volume</button>
+            </div>
+            <div class="settings-card">
+              <h4>Display</h4>
+              <div class="panel-row">
+                <span>Brightness</span>
+                <input id="brightnessRange" type="range" min="70" max="140" value="${brightnessLevel}">
+                <strong id="brightnessValue">${brightnessLevel}%</strong>
+              </div>
+              <p class="mini-note">Raise this if the battlefield looks too dark.</p>
+            </div>
+            <div class="settings-card">
+              <h4>Controls</h4>
+              <div class="panel-row">
+                <span>Input Mode</span>
+                <button class="secondary" id="controlsModeBtn" style="width:auto;margin-top:0;">${controlsMode === 'buttons' ? 'Buttons' : 'Tap / Keys'}</button>
+              </div>
+              <p class="mini-note" id="controlsHelp">${controlSummary()}</p>
+            </div>
+            <div class="settings-card">
+              <h4>Sound Toggle</h4>
+              <div class="panel-row">
+                <span>Effects</span>
+                <button class="secondary" id="soundToggleBtn" style="width:auto;margin-top:0;">${soundOn ? 'On' : 'Off'}</button>
+              </div>
+              <p class="mini-note">Turn the battle sounds on or off without leaving the page.</p>
+            </div>
+            <div class="settings-card">
+              <h4>Music</h4>
+              <div class="panel-row">
+                <span>Epic Music</span>
+                <button class="secondary" id="musicToggleBtn" style="width:auto;margin-top:0;">${musicEnabled ? 'On' : 'Off'}</button>
+              </div>
+              <p class="mini-note">Layered bass, lead, drums, and wave-based intensity.</p>
+            </div>
+          </div>
+          <button onclick="window.closeOverlayAndResume()">Done</button>
+        </div>`;
+
+      const volumeRange = document.getElementById('volumeRange');
+      const volumeValue = document.getElementById('volumeValue');
+      const volumeBarFill = document.getElementById('volumeBarFill');
+      const brightnessRange = document.getElementById('brightnessRange');
+      const brightnessValue = document.getElementById('brightnessValue');
+      const controlsModeBtn = document.getElementById('controlsModeBtn');
+      const controlsHelp = document.getElementById('controlsHelp');
+      const testAudioBtn = document.getElementById('testAudioBtn');
+      const soundToggleBtn = document.getElementById('soundToggleBtn');
+      const musicToggleBtn = document.getElementById('musicToggleBtn');
+
+      volumeRange.addEventListener('input', () => {
+        volumeLevel = Number(volumeRange.value);
+        volumeValue.textContent = `${volumeLevel}%`;
+        volumeBarFill.style.width = `${Math.min(volumeLevel, 200) / 2}%`;
+        saveMeta();
+      });
+
+      brightnessRange.addEventListener('input', () => {
+        brightnessLevel = Number(brightnessRange.value);
+        brightnessValue.textContent = `${brightnessLevel}%`;
+        applyDisplaySettings();
+        saveMeta();
+      });
+
+      controlsModeBtn.addEventListener('click', () => {
+        controlsMode = controlsMode === 'buttons' ? 'tap' : 'buttons';
+        controlsModeBtn.textContent = controlsMode === 'buttons' ? 'Buttons' : 'Tap / Keys';
+        controlsHelp.textContent = controlSummary();
+        applyControlsMode();
+        saveMeta();
+      });
+
+      soundToggleBtn.addEventListener('click', () => {
+        soundOn = !soundOn;
+        soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
+        soundToggleBtn.textContent = soundOn ? 'On' : 'Off';
+        refreshMusicState();
+        saveMeta();
+      });
+
+      musicToggleBtn.addEventListener('click', () => {
+        musicEnabled = !musicEnabled;
+        musicToggleBtn.textContent = musicEnabled ? 'On' : 'Off';
+        refreshMusicState();
+        saveMeta();
+      });
+
+      testAudioBtn.addEventListener('click', () => {
+        playTone(660, 0.08, 'square', 1.6);
+        setTimeout(() => playTone(880, 0.1, 'sawtooth', 1.4), 70);
+        scheduleMusicBar();
+      });
+    }
+
+    function syncMissionHud() {}
+
+    function grantCoins(amount) {
+      state.coins += amount;
+      bankCoins = state.coins;
+      saveMeta();
+    }
+
+    function updateMission(eventName, amount = 1) {
+      const mission = activeMission();
+      if (mission.event !== eventName) return;
+      missionProgress += amount;
+      if (missionProgress >= mission.target) {
+        grantCoins(10);
+        missionIndex += 1;
+        missionProgress = 0;
+        missionPopup = {
+          title: 'Mission Complete',
+          label: mission.label,
+          reward: 10,
+          button: 'Continue',
+          rect: null
+        };
+        overlay.innerHTML = '';
+        state.paused = true;
+      }
+      saveMeta();
+      syncMissionHud();
+    }
+
+    function showTitleScreen() {
+      state.paused = true;
+      overlay.innerHTML = `
+        <div class="message">
+          <h1>Zombie Squad Run</h1>
+          <p>Run with your squad, shoot the right lane, smash walls before impact, and spend coins to upgrade your survival chances.</p>
+          <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best}</p>
+          <button onclick="window.startZombieRun()">Start Run</button>
+        </div>`;
+    }
+
+    function applyScenePreset(scene) {
+      overlay.innerHTML = '';
+      state.running = true;
+      state.gameOver = false;
+      state.paused = true;
+      state.bullets = [];
+      state.objects = [];
+      state.particles = [];
+      state.minigunCharge = 100;
+      state.minigunActiveUntil = 0;
+      state.lastMinigunBurst = 0;
+      state.distance = 0;
+      state.wave = 1;
+      state.speed = 190;
+      state.squad = 8;
+      state.firepower = 1;
+      state.coins = 42;
+      state.revives = 1;
+      state.usedRevive = false;
+      missionIndex = 0;
+      missionProgress = 1;
+
+      if (scene === 'title') {
+        bankCoins = 0;
+        best = Math.max(best, 312);
+        syncHud();
+        showTitleScreen();
+        return;
+      }
+
+      if (scene === 'action') {
+        state.paused = false;
+        state.distance = 228;
+        state.wave = 3;
+        state.squad = 11;
+        state.firepower = 2;
+        state.objects = [
+          { type:'zombie', lane:0, x:LANES[0], y:180, hp:4, reward:2, size:36 },
+          { type:'zombie', lane:1, x:LANES[1], y:260, hp:5, reward:3, size:36 },
+          { type:'coin', lane:2, x:LANES[2], y:230, hp:1, reward:4, size:24 },
+          { type:'crate', lane:1, x:LANES[1], y:110, hp:1, reward:1, size:32 }
+        ];
+        state.bullets = [
+          { x: LANES[1] - 8, y: 470, speed: 560 },
+          { x: LANES[1] + 8, y: 420, speed: 560 },
+          { x: LANES[0], y: 520, speed: 560 }
+        ];
+      } else if (scene === 'wall') {
+        state.paused = false;
+        state.distance = 386;
+        state.wave = 5;
+        state.squad = 14;
+        state.firepower = 3;
+        state.objects = [
+          { type:'wall', lane:1, x:LANES[1], y:220, hp:4, maxHp:4, reward:0, size:58 },
+          { type:'zombie', lane:0, x:LANES[0], y:150, hp:4, reward:2, size:36 },
+          { type:'zombie', lane:2, x:LANES[2], y:170, hp:4, reward:2, size:36 }
+        ];
+        state.bullets = [
+          { x: LANES[1] - 12, y: 470, speed: 560 },
+          { x: LANES[1], y: 430, speed: 560 },
+          { x: LANES[1] + 12, y: 390, speed: 560 }
+        ];
+      } else if (scene === 'shop') {
+        state.distance = 144;
+        state.wave = 2;
+        state.squad = 10;
+        state.firepower = 2;
+        state.coins = 63;
+        overlay.innerHTML = `
+          <div class="message">
+            <h2>Upgrade Window</h2>
+            <p>You have enough coins to buy firepower, squad size, or a safety revive before the next push.</p>
+            <button onclick="window.closeOverlayAndResume()">Back To Run</button>
+          </div>`;
+      } else if (scene === 'revive') {
+        state.distance = 542;
+        state.wave = 6;
+        state.squad = 4;
+        state.firepower = 3;
+        state.coins = 88;
+        state.revives = 0;
+        state.usedRevive = true;
+        state.objects = [
+          { type:'zombie', lane:1, x:LANES[1], y:140, hp:5, reward:3, size:36 },
+          { type:'wall', lane:2, x:LANES[2], y:250, hp:3, maxHp:3, reward:0, size:58 }
+        ];
+        overlay.innerHTML = `
+          <div class="message">
+            <h2>Squad Revived</h2>
+            <p>Your team barely made it. You spent one revive and returned with 4 squad members.</p>
+            <button onclick="window.closeOverlayAndResume()">Keep Running</button>
+          </div>`;
+      } else {
+        showTitleScreen();
+        return;
+      }
+
+      syncHud();
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const captureMode = params.get('capture') === '1';
+    const sceneMode = params.get('scene');
+
+    function resetGame() {
+      state = {
+        squad: 8, firepower: 1, distance: 0, wave: 1, speed: 190,
+        bullets: [], objects: [], particles: [], spawnTimer: 0, running: true, paused: true, gameOver: false,
+        lastTime: performance.now(), coins: 0, revives: 1, usedRevive: false, distanceCoinsTick: 0,
+        minigunCharge: 100, minigunActiveUntil: 0, lastMinigunBurst: 0, bossWarningUntil: 0
+      };
+      crowdCache = null;
+      bankCoins = 0;
+      localStorage.setItem('zombie-squad-run-coins', '0');
+      syncHud();
+      syncMissionHud();
+      if (sceneMode) {
+        applyScenePreset(sceneMode);
+      } else {
+        showTitleScreen();
+      }
+    }
+
+    function syncShopButtons() {
+      buyGunBtn.textContent = `+1 Firepower (${gunPrice})`;
+      buySquadBtn.textContent = `+2 Squad (${squadPrice})`;
+      buyReviveBtn.textContent = `+1 Revive (${revivePrice})`;
+    }
+
+    function syncHud() {
+      squadStat.textContent = state.squad;
+      gunStat.textContent = state.firepower;
+      weaponNameStat.textContent = weaponProfile(state.firepower).name;
+      distanceStat.textContent = Math.floor(state.distance);
+      waveStat.textContent = state.wave;
+      coinStat.textContent = state.coins;
+      avatarCoinStat.textContent = avatarCoins;
+      reviveStat.textContent = state.revives;
+      syncShopButtons();
+      if (state.distance > best) { best = Math.floor(state.distance); bestStat.textContent = best; saveMeta(); }
+      syncMissionHud();
+    }
+
+    function addCoins(n) { state.coins += n; bankCoins = state.coins; saveMeta(); updateMission('coins', n); }
+
+    function weaponProfile(powerLevel) {
+      if (powerLevel <= 2) return { name: 'Rifle', color: '#fde047', core: '#fff8c5', size: 5, trail: '#fef08a', shape: 'round', muzzle: '#fff7ae', ring: '#facc15', damage: 0.92 + Math.max(0, powerLevel - 1) * 0.07, spread: 0, pierce: 0, splash: 0, chain: 0, speed: 0 };
+      if (powerLevel <= 4) return { name: 'Pulse', color: '#38bdf8', core: '#e0f2fe', size: 5.5, trail: '#7dd3fc', shape: 'pulse', muzzle: '#a5f3fc', ring: '#38bdf8', damage: 1.02 + (powerLevel - 3) * 0.07, spread: 12, pierce: 0, splash: 0, chain: 0, speed: 20 };
+      if (powerLevel <= 6) return { name: 'Scatter', color: '#22c55e', core: '#dcfce7', size: 5.8, trail: '#86efac', shape: 'scatter', muzzle: '#bbf7d0', ring: '#16a34a', damage: 0.9 + (powerLevel - 5) * 0.07, spread: 26, pierce: 0, splash: 0, chain: 0, speed: 12 };
+      if (powerLevel <= 8) return { name: 'Plasma', color: '#a78bfa', core: '#f3e8ff', size: 6.5, trail: '#c4b5fd', shape: 'plasma', muzzle: '#ddd6fe', ring: '#8b5cf6', damage: 1.16 + (powerLevel - 7) * 0.09, spread: 18, pierce: 0, splash: 26 + (powerLevel - 7) * 5, chain: 0, speed: 32 };
+      if (powerLevel <= 10) return { name: 'Rail', color: '#fb7185', core: '#ffe4e6', size: 6.8, trail: '#fda4af', shape: 'laser', muzzle: '#fecdd3', ring: '#e11d48', damage: 1.34 + (powerLevel - 9) * 0.12, spread: 12, pierce: 1, splash: 0, chain: 0, speed: 92 };
+      if (powerLevel <= 11) return { name: 'Storm', color: '#06b6d4', core: '#cffafe', size: 7.4, trail: '#67e8f9', shape: 'arc', muzzle: '#a5f3fc', ring: '#0891b2', damage: 1.7, spread: 16, pierce: 1, splash: 18, chain: 1, speed: 110 };
+      return { name: 'Apocalypse Minigun', color: '#f59e0b', core: '#fffbeb', size: 8.2, trail: '#fdba74', shape: 'minigun', muzzle: '#fed7aa', ring: '#ea580c', damage: 2, spread: 22, pierce: 2, splash: 18, chain: 1, speed: 145 };
+    }
+
+    function applySplashDamage(cx, cy, radius, damage, ring, color) {
+      if (!radius || radius <= 0) return;
+      for (const obj of state.objects) {
+        if (obj.hp <= 0 || (obj.type !== 'zombie' && obj.type !== 'lootzombie' && obj.type !== 'wall' && obj.type !== 'crate')) continue;
+        const dx = obj.x - cx;
+        const dy = obj.y - cy;
+        const dist = Math.hypot(dx, dy);
+        if (dist <= radius) {
+          const falloff = Math.max(0.35, 1 - dist / Math.max(radius, 1));
+          obj.hp -= damage * falloff;
+          state.particles.push({ x: obj.x, y: obj.y, life: 0.16, color: color || '#fff', ring: ring || '#fff', size: 10 + radius * 0.12 });
+          if (obj.hp <= 0) handleDestroyed(obj);
+        }
+      }
+    }
+
+    function applyChainDamage(sourceObj, jumps, damage, ring, color) {
+      if (!sourceObj || jumps <= 0) return;
+      let current = sourceObj;
+      for (let i = 0; i < jumps; i++) {
+        let best = null;
+        let bestDist = Infinity;
+        for (const obj of state.objects) {
+          if (obj === current || obj.hp <= 0 || (obj.type !== 'zombie' && obj.type !== 'lootzombie' && obj.type !== 'wall')) continue;
+          const dist = Math.hypot(obj.x - current.x, obj.y - current.y);
+          if (dist < 120 && dist < bestDist) {
+            best = obj;
+            bestDist = dist;
+          }
+        }
+        if (!best) break;
+        state.particles.push({ x: (current.x + best.x) / 2, y: (current.y + best.y) / 2, life: 0.14, color: color || '#fff', ring: ring || '#fff', burst: true, size: 16 });
+        best.hp -= damage * Math.max(0.55, 0.82 - i * 0.14);
+        if (best.hp <= 0) handleDestroyed(best);
+        current = best;
+      }
+    }
+
+    function fireAtLane(laneIndex, powerBoost = 0, speedBoost = 0, options = {}) {
+      if (!state.running || state.paused || state.gameOver) return;
+      const { silent = false, noVibrate = false, muzzleScale = 1 } = options;
+      if (!noVibrate && navigator.vibrate && volumeLevel > 0) navigator.vibrate(12);
+      if (!silent) playShotSound(state.firepower + powerBoost);
+      const laneX = LANES[laneIndex];
+      const requestedCount = state.firepower + powerBoost;
+      const perfTier = squadPerfTier();
+      const crowdSafeMode = true;
+      const bulletCap = perfTier >= 3 ? 1 : perfTier >= 1 ? 2 : mobileSafeMode ? 2 : 3;
+      const bulletCount = Math.max(1, Math.min(requestedCount, bulletCap));
+      const effectivePower = state.firepower + powerBoost;
+      const profile = weaponProfile(effectivePower);
+      for (let i = 0; i < bulletCount; i++) {
+        const spreadBase = bulletCount > 1 ? (i - (bulletCount - 1) / 2) : 0;
+        const drift = spreadBase * profile.spread * (crowdSafeMode ? 0.85 : 1);
+        state.bullets.push({
+          x: laneX + spreadBase * (crowdSafeMode ? 14 : 10),
+          y: 600,
+          speed: 560 + speedBoost + profile.speed,
+          damage: (profile.damage + powerBoost * 0.16) * (requestedCount / bulletCount),
+          glow: powerBoost > 0 || effectivePower >= 4,
+          style: profile.shape,
+          color: profile.color,
+          core: profile.core,
+          trail: profile.trail,
+          muzzle: profile.muzzle,
+          ring: profile.ring,
+          radius: profile.size,
+          drift,
+          splash: crowdSafeMode ? Math.max(0, profile.splash * 0.8) : profile.splash,
+          pierce: profile.pierce,
+          chain: crowdSafeMode ? Math.min(profile.chain, 1) : profile.chain,
+          hits: 0
+        });
+      }
+      if (perfTier <= 2) state.particles.push({ x: laneX, y: 602, life: perfTier >= 1 ? 0.075 : 0.09, color: profile.muzzle, ring: perfTier >= 2 ? null : profile.ring, burst: perfTier <= 1, size: ((14 + effectivePower * 1.5) * muzzleScale) * (perfTier >= 1 ? 0.78 : 1) });
+      if (perfTier <= 1) pushMuzzleFlash(laneX + 16, 603, profile.muzzle, 0.09, ((12 + effectivePower * 1.7) * muzzleScale) * (perfTier >= 1 ? 0.78 : 1));
+      if (perfTier === 0) pushShell(laneX + 6, 606, profile.ring || '#fbbf24');
+      trimRuntimeLoad();
+    }
+
+    function addScreenShake(amount = 8, flash = 0.08) {
+      screenShake = Math.max(screenShake, amount);
+      hitFlash = Math.max(hitFlash, flash);
+    }
+
+    function squadPerfTier() {
+      const total = Math.max(0, state.squad || 0);
+      if (total >= 140) return 3;
+      if (total >= 90) return 2;
+      if (total >= 45) return 1;
+      return 0;
+    }
+
+    function trimRuntimeLoad() {
+      const perfTier = squadPerfTier();
+      const maxObjects = perfTier >= 2 ? 6 : mobileSafeMode ? 7 : 12;
+      const maxBullets = perfTier >= 3 ? 16 : perfTier >= 2 ? 22 : perfTier >= 1 ? 30 : mobileSafeMode ? 28 : 54;
+      const maxParticles = perfTier >= 3 ? 8 : perfTier >= 2 ? 10 : perfTier >= 1 ? 14 : mobileSafeMode ? 14 : 32;
+      if (state.objects.length > maxObjects) state.objects.splice(0, state.objects.length - maxObjects);
+      if (state.bullets.length > maxBullets) state.bullets.splice(0, state.bullets.length - maxBullets);
+      if (state.particles.length > maxParticles) state.particles.splice(0, state.particles.length - maxParticles);
+    }
+
+    function spawnBossWave() {
+      const lane = rand(0, 2);
+      bossWave = true;
+      state.bossWarningUntil = performance.now() + 1800;
+      state.objects.push({ type:'boss', lane, x:LANES[lane], y:-130, hp:22 + state.wave * 2, reward:6, size:82, speedFactor:0.65 });
+      state.objects.push({ type:'shield', lane:(lane + 1) % 3, x:LANES[(lane + 1) % 3], y:-90, hp:8 + Math.floor(state.wave * 0.8), reward:2, size:52, speedFactor:0.85 });
+      trimRuntimeLoad();
+      addScreenShake(18, 0.16);
+      hitFlash = Math.max(hitFlash, 0.14);
+      playTone(90, 0.26, 'sawtooth', 1.8);
+    }
+
+    function spawnObject() {
+      if (state.wave > 0 && state.wave % 6 === 0 && !bossWave && !state.objects.some(obj => obj.type === 'boss')) {
+        spawnBossWave();
+        return;
+      }
+      const lane = rand(0, 2);
+      const roll = Math.random();
+      let obj;
+      if (roll < 0.28) obj = { type:'zombie', lane, x:LANES[lane], y:-60, hp:rand(4, 6 + Math.floor(state.wave / 2)), reward:rand(1,2), size:36 };
+      else if (roll < 0.4) obj = { type:'lootzombie', lane, x:LANES[lane], y:-58, hp:rand(4, 6 + Math.floor(state.wave / 2)), reward:2, size:34, speedFactor:1.08 };
+      else if (roll < 0.52) {
+        const hp = rand(2, Math.max(4, 2 + Math.floor(state.wave/2)));
+        obj = { type:'wall', lane, x:LANES[lane], y:-80, hp, maxHp: hp, reward:0, size:58 };
+      }
+      else if (roll < 0.66) obj = { type:'runner', lane, x:LANES[lane], y:-55, hp:rand(3, 5 + Math.floor(state.wave / 3)), reward:1, size:28, speedFactor:1.45 };
+      else if (roll < 0.78) obj = { type:'shield', lane, x:LANES[lane], y:-70, hp:rand(6, 8 + Math.floor(state.wave / 2)), reward:2, size:48, speedFactor:0.9 };
+      else if (roll < 0.89) obj = { type:'crate', lane, x:LANES[lane], y:-50, hp:1, reward:1, size:32 };
+      else obj = { type:'coin', lane, x:LANES[lane], y:-40, hp:1, reward:rand(2,4), size:24 };
+      state.objects.push(obj);
+      trimRuntimeLoad();
+    }
+
+    function flashMinigunButton(message) {
+      [minigunBtn, floatingMinigunBtn].forEach(btn => btn && btn.classList.remove('ready'));
+      [minigunBtn?.querySelector('.battle-side-status'), floatingMinigunStatus].forEach(label => {
+        if (!label) return;
+        const original = label.dataset.original || label.textContent;
+        label.dataset.original = original;
+        label.textContent = message;
+      });
+      clearTimeout(flashMinigunButton.timer);
+      flashMinigunButton.timer = setTimeout(() => {
+        [minigunBtn?.querySelector('.battle-side-status'), floatingMinigunStatus].forEach(label => {
+          if (!label) return;
+          label.textContent = label.dataset.original || 'Tap when ready';
+        });
+      }, 700);
+    }
+
+    function activateMinigun(event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      if (state.paused) {
+        flashMinigunButton('Start run');
+        return;
+      }
+      if (state.gameOver) {
+        flashMinigunButton('Game over');
+        return;
+      }
+      if (state.minigunCharge < 100) {
+        flashMinigunButton(`${Math.floor(state.minigunCharge)}%`);
+        return;
+      }
+      const nowMs = performance.now();
+      state.minigunCharge = 0;
+      state.minigunActiveUntil = nowMs + 2600;
+      state.lastMinigunBurst = nowMs - 120;
+      playTone(140, 0.22, 'sawtooth', 2);
+
+      for (const obj of state.objects) {
+        if (obj.type === 'zombie' || obj.type === 'wall') {
+          obj.hp -= 3;
+          state.particles.push({ x: obj.x, y: obj.y, life: 0.22, color: '#fed7aa', ring: '#ea580c', burst: true, size: 18 });
+          if (obj.hp <= 0) handleDestroyed(obj);
+        }
+      }
+      state.objects = state.objects.filter(o => o.hp > 0 && o.y < 740);
+
+      for (let lane = 0; lane < LANES.length; lane++) {
+        fireAtLane(lane, 4, 260, { silent: true, noVibrate: true, muzzleScale: 1.1 });
+      }
+      flashMinigunButton('Firing');
+      syncHud();
+    }
+
+    function update(dt) {
+      if (!state.running || state.paused || state.gameOver) return;
+      state.distance += dt * (state.speed / 12);
+      state.wave = 1 + Math.floor(state.distance / 180);
+      state.speed = 186 + state.wave * 7.5;
+      state.minigunCharge = Math.min(100, state.minigunCharge + dt * 8);
+      screenShake = Math.max(0, screenShake - dt * 26);
+      hitFlash = Math.max(0, hitFlash - dt * 1.8);
+      const nowMs = performance.now();
+      if (state.minigunActiveUntil > nowMs) {
+        if (nowMs - state.lastMinigunBurst > 90) {
+          for (let lane = 0; lane < LANES.length; lane++) {
+            fireAtLane(lane, 4, 260, { silent: true, noVibrate: true, muzzleScale: 0.65 });
+          }
+          state.lastMinigunBurst = nowMs;
+          playTone(150 + rand(0, 40), 0.05, 'sawtooth', 0.55);
+        }
+      }
+      const roundCoins = Math.floor(state.distance / 180) * 2;
+      if (roundCoins > state.distanceCoinsTick) { addCoins(roundCoins - state.distanceCoinsTick); state.distanceCoinsTick = roundCoins; }
+      state.spawnTimer -= dt;
+      if (state.spawnTimer <= 0) {
+        const perfTier = squadPerfTier();
+        const objectCap = perfTier >= 2 ? 6 : mobileSafeMode ? 6 : 9;
+        if (state.objects.length < objectCap) spawnObject();
+        const earlyGrace = state.wave <= 3 ? 0.14 : state.wave <= 6 ? 0.08 : 0;
+        const spawnFloor = perfTier >= 2 ? 0.72 : mobileSafeMode ? 0.78 : 0.66;
+        state.spawnTimer = Math.max(spawnFloor, 1.22 - state.wave * 0.024 + earlyGrace + (bossWave ? 0.06 : 0));
+      }
+      for (const bullet of state.bullets) {
+        bullet.y -= bullet.speed * dt;
+        bullet.x += (bullet.drift || 0) * dt;
+      }
+      state.bullets = state.bullets.filter(b => b.y > -30 && b.x > -40 && b.x < canvas.width + 40);
+      for (const obj of state.objects) obj.y += state.speed * (obj.speedFactor || 1) * dt;
+      const collisionBullets = state.bullets.length > (mobileSafeMode ? 18 : 36) ? state.bullets.filter((_, i) => i % 2 === 0) : state.bullets;
+      for (const bullet of collisionBullets) {
+        for (const obj of state.objects) {
+          if (obj.hp <= 0) continue;
+          if (Math.abs(bullet.x - obj.x) < obj.size * 0.55 && Math.abs(bullet.y - obj.y) < obj.size * 0.55) {
+            obj.hp -= bullet.damage || 1;
+            addScreenShake(bullet.style === 'minigun' ? 4 : bullet.style === 'plasma' ? 6 : 3, bullet.style === 'plasma' ? 0.08 : 0.04);
+            state.particles.push({ x: obj.x, y: obj.y, life: 0.18, color: bullet.glow ? bullet.color || '#fde68a' : '#f8fafc', ring: bullet.ring || '#ffffff', size: (bullet.radius || 5) * 2.2, burst: bullet.style === 'arc' || bullet.style === 'plasma' });
+            if (bullet.splash) applySplashDamage(obj.x, obj.y, bullet.splash, (bullet.damage || 1) * 0.55, bullet.ring, bullet.color);
+            if (bullet.chain) applyChainDamage(obj, bullet.chain, bullet.damage || 1, bullet.ring, bullet.color);
+            bullet.hits = (bullet.hits || 0) + 1;
+            if (obj.hp <= 0) handleDestroyed(obj);
+            if (bullet.hits > (bullet.pierce || 0)) {
+              bullet.y = -100;
+              break;
+            }
+          }
+        }
+      }
+      state.bullets = state.bullets.filter(b => b.y > -20);
+      for (const particle of state.particles) particle.life -= dt;
+      const particleCap = mobileSafeMode ? 18 : 28;
+      state.particles = state.particles.filter(p => p.life > 0).slice(-particleCap);
+      for (const decal of impactDecals) decal.life -= dt;
+      while (impactDecals.length && impactDecals[0].life <= 0) impactDecals.shift();
+      for (const shell of shellCasings) {
+        shell.life -= dt;
+        shell.x += shell.vx * dt;
+        shell.y += shell.vy * dt;
+        shell.vy += 180 * dt;
+        shell.rot += shell.spin * dt;
+      }
+      while (shellCasings.length && shellCasings[0].life <= 0) shellCasings.shift();
+      for (const flash of muzzleFlashes) flash.life -= dt;
+      while (muzzleFlashes.length && muzzleFlashes[0].life <= 0) muzzleFlashes.shift();
+      for (const obj of state.objects) {
+        if (obj.y >= 570) {
+          if (obj.type === 'wall' && obj.hp > 0) state.squad -= obj.hp;
+          else if (obj.type === 'zombie' && obj.hp > 0) state.squad -= Math.max(1, obj.reward - 1);
+          else if (obj.type === 'lootzombie' && obj.hp > 0) state.squad -= Math.max(2, obj.reward);
+          else if (obj.type === 'runner' && obj.hp > 0) state.squad -= Math.max(2, obj.reward);
+          else if (obj.type === 'shield' && obj.hp > 0) state.squad -= Math.max(2, Math.ceil(obj.hp / 2));
+          else if (obj.type === 'boss' && obj.hp > 0) state.squad -= Math.max(6, Math.ceil(obj.hp / 2));
+          else if (obj.type === 'coin' && obj.hp > 0) addCoins(obj.reward);
+          if (obj.type === 'boss') bossWave = false;
+          if (obj.hp > 0 && obj.type !== 'coin') addScreenShake(obj.type === 'boss' ? 18 : 10, obj.type === 'boss' ? 0.16 : 0.08);
+          obj.hp = 0;
+        }
+      }
+      state.objects = state.objects.filter(o => o.hp > 0 && o.y < 740);
+      if (state.squad <= 0) maybeReviveOrEnd();
+      syncHud();
+    }
+
+    function handleDestroyed(obj) {
+      if (obj.type === 'zombie') {
+        const squadGain = Math.max(1, obj.reward);
+        state.squad += squadGain; addCoins(obj.reward); updateMission('survivors', squadGain); playTone(220, 0.12, 'sawtooth', 1.4);
+        pushDecal(obj.x, obj.y + 18, '#7f1d1d', 20, 3.5, 5);
+        pushDecal(obj.x - 12, obj.y + 10, '#991b1b', 11, 2.7, 3);
+        pushDecal(obj.x + 10, obj.y + 14, '#b91c1c', 7, 2.1, 1);
+      }
+      else if (obj.type === 'lootzombie') {
+        const squadGain = Math.max(1, obj.reward);
+        state.squad += squadGain; addCoins(obj.reward + 2); updateMission('survivors', squadGain); playTone(260, 0.12, 'triangle', 1.55);
+        pushDecal(obj.x, obj.y + 18, '#7f1d1d', 18, 3.3, 4);
+        pushDecal(obj.x - 10, obj.y + 12, '#991b1b', 10, 2.5, 2);
+        pushDecal(obj.x + 10, obj.y + 12, '#991b1b', 10, 2.5, 2);
+      }
+      else if (obj.type === 'runner') {
+        const squadGain = Math.max(1, obj.reward);
+        state.squad += squadGain; addCoins(obj.reward + 1); updateMission('survivors', squadGain); playTone(320, 0.08, 'triangle', 1.5);
+        pushDecal(obj.x, obj.y + 16, '#991b1b', 17, 3, 6);
+        pushDecal(obj.x + 10, obj.y + 8, '#b91c1c', 9, 2.3, 2);
+        pushDecal(obj.x - 9, obj.y + 12, '#7f1d1d', 8, 2.1, 2);
+      }
+      else if (obj.type === 'shield') {
+        const squadGain = Math.max(1, obj.reward - 1);
+        state.squad += squadGain; addCoins(obj.reward + 1); updateMission('survivors', squadGain); playTone(150, 0.14, 'square', 1.8);
+        pushDecal(obj.x, obj.y + 18, '#7f1d1d', 24, 4, 7);
+        pushDecal(obj.x - 14, obj.y + 12, '#991b1b', 12, 3, 4);
+        pushDecal(obj.x + 13, obj.y + 14, '#991b1b', 12, 3, 4);
+        pushDecal(obj.x, obj.y + 6, '#450a0a', 8, 2.2, 2);
+      }
+      else if (obj.type === 'boss') {
+        const squadGain = obj.reward + 3;
+        state.squad += squadGain; addCoins(obj.reward + 6); updateMission('survivors', squadGain); playTone(110, 0.26, 'sawtooth', 2.1); addScreenShake(16, 0.18); bossWave = false;
+        pushDecal(obj.x, obj.y + 28, '#450a0a', 32, 5.2, 8);
+        pushDecal(obj.x - 18, obj.y + 22, '#7f1d1d', 18, 4.1, 4);
+        pushDecal(obj.x + 20, obj.y + 26, '#7f1d1d', 18, 4.1, 4);
+      }
+      else if (obj.type === 'crate') {
+        state.firepower = Math.min(12, state.firepower + obj.reward); playTone(540, 0.1, 'triangle', 1.2);
+        pushDecal(obj.x, obj.y + 12, '#7f1d1d', 16, 3, 4);
+      }
+      else if (obj.type === 'coin') { addCoins(obj.reward); playTone(1100, 0.08, 'triangle', 1.3); }
+      else if (obj.type === 'wall') { updateMission('walls', 1); playTone(180, 0.16, 'square', 1.6); pushDecal(obj.x, obj.y + 26, '#78350f', 22, 2.8, 2); }
+    }
+
+    function maybeReviveOrEnd() {
+      if (state.revives > 0 && !state.usedRevive) {
+        state.revives -= 1;
+        state.usedRevive = true;
+        state.squad = 4;
+        overlay.innerHTML = `
+          <div class="message">
+            <h2>Squad Revived</h2>
+            <p>Your team barely made it. You spent one revive and returned with 4 squad members.</p>
+            <button onclick="window.closeOverlayAndResume()">Keep Running</button>
+          </div>`;
+        state.paused = true;
+        return;
+      }
+      endGame();
+    }
+
+    function endGame() {
+      state.gameOver = true;
+      state.running = false;
+      bankCoins = state.coins; saveMeta();
+      overlay.innerHTML = `
+        <div class="message">
+          <h2>Run Over</h2>
+          <p>Distance: <strong>${Math.floor(state.distance)}</strong> | Coins: <strong>${state.coins}</strong></p>
+          <p>Upgrade firepower, grow your squad, and save your revive for a brutal wall hit.</p>
+          <button onclick="window.mockRewardedReviveOffer()">Mock Rewarded Revive Offer</button>
+          <button onclick="window.restartZombieRun()">Play Again</button>
+        </div>`;
+      syncHud();
+    }
+
+    function drawRoad() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      const skylineDrift = (state.distance * 0.12) % canvas.height;
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      skyGrad.addColorStop(0, '#020617');
+      skyGrad.addColorStop(0.38, '#0f172a');
+      skyGrad.addColorStop(1, '#1e293b');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+
+      const horizonGlow = ctx.createRadialGradient(canvas.width / 2, 180, 20, canvas.width / 2, 180, 340);
+      horizonGlow.addColorStop(0, 'rgba(56,189,248,.14)');
+      horizonGlow.addColorStop(1, 'rgba(56,189,248,0)');
+      ctx.fillStyle = horizonGlow;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const moonGlow = ctx.createRadialGradient(canvas.width - 110, 110, 12, canvas.width - 110, 110, 86);
+      moonGlow.addColorStop(0, 'rgba(255,255,255,0.85)');
+      moonGlow.addColorStop(0.22, 'rgba(191,219,254,0.45)');
+      moonGlow.addColorStop(1, 'rgba(191,219,254,0)');
+      ctx.fillStyle = moonGlow;
+      ctx.beginPath();
+      ctx.arc(canvas.width - 110, 110, 86, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(241,245,249,0.9)';
+      ctx.beginPath();
+      ctx.arc(canvas.width - 110, 110, 26, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (!lowPowerMobileMode || state.squad < 60) {
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        for (let i = 0; i < 22; i++) {
+          const sx = (i * 53) % canvas.width;
+          const sy = 26 + ((i * 37 + skylineDrift * 0.7) % 180);
+          ctx.fillRect(sx, sy, 2, 2);
+        }
+      }
+
+      ctx.fillStyle = 'rgba(15,23,42,0.48)';
+      const farGlow = ctx.createLinearGradient(0, 180, canvas.width, 250);
+      farGlow.addColorStop(0, 'rgba(244,63,94,0.04)');
+      farGlow.addColorStop(0.5, 'rgba(56,189,248,0.06)');
+      farGlow.addColorStop(1, 'rgba(244,63,94,0.04)');
+      ctx.fillStyle = farGlow;
+      ctx.fillRect(0, 176, canvas.width, 90);
+
+      if (!lowPowerMobileMode || state.squad < 70) {
+        for (let i = 0; i < 4; i++) {
+          const cloudX = (canvas.width * 0.18) + i * 170 + Math.sin((state.distance * 0.003) + i) * 18;
+          const cloudY = 86 + i * 28;
+          const cloud = ctx.createRadialGradient(cloudX, cloudY, 8, cloudX, cloudY, 46);
+          cloud.addColorStop(0, 'rgba(148,163,184,0.08)');
+          cloud.addColorStop(1, 'rgba(148,163,184,0)');
+          ctx.fillStyle = cloud;
+          ctx.beginPath();
+          ctx.ellipse(cloudX, cloudY, 48, 16, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        for (let i = 0; i < 3; i++) {
+          const emberX = 120 + i * 220 + Math.sin(state.distance * 0.004 + i) * 16;
+          const emberY = 238 + (i % 2) * 18;
+          const ember = ctx.createRadialGradient(emberX, emberY, 2, emberX, emberY, 22);
+          ember.addColorStop(0, 'rgba(251,191,36,0.22)');
+          ember.addColorStop(0.45, 'rgba(248,113,113,0.12)');
+          ember.addColorStop(1, 'rgba(248,113,113,0)');
+          ctx.fillStyle = ember;
+          ctx.beginPath();
+          ctx.arc(emberX, emberY, 22, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.fillStyle = 'rgba(15,23,42,0.48)';
+      for (let i = 0; i < 6; i++) {
+        const w = 70 + i * 12;
+        const h = 120 + (i % 3) * 40;
+        const x = 35 + i * 108;
+        const y = 220 - h + ((skylineDrift + i * 31) % 24);
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = 'rgba(96,165,250,0.08)';
+        for (let row = 0; row < 4; row++) ctx.fillRect(x + 8, y + 12 + row * 24, w - 16, 4);
+        if (!lowPowerMobileMode || state.squad < 70) {
+          ctx.fillStyle = 'rgba(248,113,113,0.08)';
+          ctx.fillRect(x + w * 0.2, y + h * 0.18, Math.max(8, w * 0.16), 6 + (i % 2) * 2);
+          ctx.fillStyle = 'rgba(251,191,36,0.06)';
+          ctx.fillRect(x + w * 0.56, y + h * 0.42, Math.max(7, w * 0.12), 5 + ((i + 1) % 2) * 2);
+        }
+        ctx.fillStyle = 'rgba(15,23,42,0.48)';
+      }
+
+      for (let i=0;i<3;i++) {
+        const x = 80 + i*240;
+        const laneGrad = ctx.createLinearGradient(x, 0, x + 180, 0);
+        laneGrad.addColorStop(0, '#0f172a');
+        laneGrad.addColorStop(0.28, '#1e293b');
+        laneGrad.addColorStop(0.5, COLORS.road);
+        laneGrad.addColorStop(0.72, '#1e293b');
+        laneGrad.addColorStop(1, '#0f172a');
+        ctx.fillStyle = laneGrad;
+        ctx.fillRect(x,0,180,canvas.height);
+
+        const laneLight = ctx.createLinearGradient(x + 90, 0, x + 90, canvas.height);
+        laneLight.addColorStop(0, 'rgba(125,211,252,0.06)');
+        laneLight.addColorStop(0.45, 'rgba(255,255,255,0.02)');
+        laneLight.addColorStop(1, 'rgba(248,113,113,0.05)');
+        ctx.fillStyle = laneLight;
+        ctx.fillRect(x + 20, 0, 140, canvas.height);
+
+        ctx.fillStyle = 'rgba(255,255,255,.05)';
+        ctx.fillRect(x + 12, 0, 3, canvas.height);
+        ctx.fillRect(x + 165, 0, 3, canvas.height);
+
+        const laneSheen = ctx.createLinearGradient(x + 20, 0, x + 160, canvas.height);
+        laneSheen.addColorStop(0, 'rgba(255,255,255,0.025)');
+        laneSheen.addColorStop(0.45, 'rgba(255,255,255,0)');
+        laneSheen.addColorStop(1, 'rgba(14,165,233,0.03)');
+        ctx.fillStyle = laneSheen;
+        ctx.fillRect(x + 16, 0, 148, canvas.height);
+
+        ctx.strokeStyle = COLORS.line; ctx.lineWidth = 4;
+        for (let y=-40;y<canvas.height;y+=80) {
+          const dashY = (y+(state.distance*2))%80+y;
+          ctx.beginPath();
+          ctx.moveTo(x+90,dashY);
+          ctx.lineTo(x+90,dashY+40);
+          ctx.stroke();
+        }
+      }
+
+      drawRoadDecals();
+
+      const vignette = ctx.createRadialGradient(canvas.width / 2, canvas.height * 0.55, 180, canvas.width / 2, canvas.height * 0.55, 520);
+      vignette.addColorStop(0, 'rgba(255,255,255,0)');
+      vignette.addColorStop(1, 'rgba(2,6,23,0.34)');
+      ctx.fillStyle = vignette;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const roadReflect = ctx.createLinearGradient(0, canvas.height - 180, 0, canvas.height);
+      roadReflect.addColorStop(0, 'rgba(255,255,255,0)');
+      roadReflect.addColorStop(1, 'rgba(148,163,184,0.06)');
+      ctx.fillStyle = roadReflect;
+      ctx.fillRect(0, canvas.height - 180, canvas.width, 180);
+
+      ctx.fillStyle = 'rgba(2,6,23,.45)';
+      ctx.beginPath();
+      ctx.ellipse(canvas.width/2, canvas.height - 26, 360, 34, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function avatarPalette(color) {
+      if (selectedAvatar === 'ranger') return { armorTop: '#86efac', armorMid: '#4ade80', armorBottom: '#166534', helmet: '#3f6212', visor: '#dcfce7', accent: '#bbf7d0' };
+      if (selectedAvatar === 'commander') return { armorTop: '#bfdbfe', armorMid: '#60a5fa', armorBottom: '#1d4ed8', helmet: '#1e40af', visor: '#e0f2fe', accent: '#93c5fd' };
+      if (selectedAvatar === 'gold') return { armorTop: '#fde68a', armorMid: '#fbbf24', armorBottom: '#b45309', helmet: '#92400e', visor: '#fff7ed', accent: '#fcd34d' };
+      return { armorTop: '#bfdbfe', armorMid: '#93c5fd', armorBottom: color || '#2563eb', helmet: '#1d4ed8', visor: '#eff6ff', accent: '#dbeafe' };
+    }
+
+    function addRimLight(x, y, radius, color, alpha = 0.3) {
+      const glow = ctx.createRadialGradient(x, y, radius * 0.15, x, y, radius);
+      glow.addColorStop(0, color.replace('ALPHA', String(alpha)));
+      glow.addColorStop(1, color.replace('ALPHA', '0'));
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function addDirectionalLight(x, y, width, height, alpha = 0.12) {
+      const beam = ctx.createLinearGradient(x - width * 0.7, y - height * 0.8, x + width * 0.6, y + height * 0.9);
+      beam.addColorStop(0, `rgba(255,255,255,${alpha})`);
+      beam.addColorStop(0.4, `rgba(191,219,254,${alpha * 0.55})`);
+      beam.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = beam;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(-0.28);
+      ctx.fillRect(-width * 0.55, -height * 0.5, width * 1.1, height * 0.34);
+      ctx.restore();
+    }
+
+    function addSpecularSweep(x, y, width, height, alpha = 0.08) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      const sweep = ctx.createLinearGradient(x - width * 0.6, y - height * 0.8, x + width * 0.7, y + height * 0.9);
+      sweep.addColorStop(0, 'rgba(255,255,255,0)');
+      sweep.addColorStop(0.48, `rgba(255,255,255,${alpha})`);
+      sweep.addColorStop(0.58, `rgba(255,255,255,${alpha * 0.35})`);
+      sweep.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = sweep;
+      ctx.beginPath();
+      ctx.roundRect(x - width / 2, y - height / 2, width, height, Math.max(4, Math.min(width, height) * 0.18));
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function pushDecal(x, y, color = '#7f1d1d', size = 18, life = 2.8, spray = 0) {
+      impactDecals.push({ x, y, color, size, life, maxLife: life, rot: Math.random() * Math.PI * 2, spray });
+      const perfTier = squadPerfTier();
+      const maxDecals = perfTier >= 3 ? 14 : perfTier >= 2 ? 20 : perfTier >= 1 ? 28 : mobileSafeMode ? 28 : 54;
+      if (impactDecals.length > maxDecals) impactDecals.splice(0, impactDecals.length - maxDecals);
+    }
+
+    function pushShell(x, y, tint = '#fbbf24') {
+      shellCasings.push({ x, y, vx: 50 + Math.random() * 55, vy: -60 - Math.random() * 40, rot: Math.random() * Math.PI, spin: 4 + Math.random() * 3, life: 0.7, tint });
+      const perfTier = squadPerfTier();
+      const maxShells = perfTier >= 2 ? 0 : perfTier >= 1 ? 4 : mobileSafeMode ? 6 : 20;
+      if (shellCasings.length > maxShells) shellCasings.splice(0, shellCasings.length - maxShells);
+    }
+
+    function pushMuzzleFlash(x, y, color = '#fde68a', life = 0.08, size = 16) {
+      muzzleFlashes.push({ x, y, color, life, maxLife: life, size, seed: Math.random() * 10 });
+      const perfTier = squadPerfTier();
+      const maxFlashes = perfTier >= 2 ? 0 : perfTier >= 1 ? 4 : mobileSafeMode ? 5 : 16;
+      if (muzzleFlashes.length > maxFlashes) muzzleFlashes.splice(0, muzzleFlashes.length - maxFlashes);
+    }
+
+    function drawRoadDecals() {
+      for (const decal of impactDecals) {
+        const alpha = Math.max(0, decal.life / decal.maxLife) * 0.46;
+        ctx.save();
+        ctx.translate(decal.x, decal.y);
+        ctx.rotate(decal.rot);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = decal.color;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, decal.size, decal.size * 0.62, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(239,68,68,0.52)';
+        ctx.beginPath();
+        ctx.ellipse(-decal.size * 0.18, -decal.size * 0.08, decal.size * 0.42, decal.size * 0.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        if (decal.spray > 0) {
+          ctx.fillStyle = 'rgba(127,29,29,0.9)';
+          for (let i = 0; i < decal.spray; i++) {
+            const px = -decal.size * 0.4 + i * (decal.size * 0.16);
+            const py = ((i % 2) ? -1 : 1) * (decal.size * (0.28 + (i % 3) * 0.06));
+            ctx.beginPath();
+            ctx.arc(px, py, Math.max(1.6, decal.size * 0.09), 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.strokeStyle = 'rgba(239,68,68,0.4)';
+          ctx.lineWidth = Math.max(1.2, decal.size * 0.05);
+          ctx.beginPath();
+          ctx.moveTo(-decal.size * 0.55, -decal.size * 0.1);
+          ctx.lineTo(-decal.size * 1.05, -decal.size * 0.42);
+          ctx.moveTo(decal.size * 0.3, decal.size * 0.06);
+          ctx.lineTo(decal.size * 0.9, decal.size * 0.4);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawDepthFog() {
+      if (lowPowerMobileMode && state.squad > 60) return;
+      const fog = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      fog.addColorStop(0, 'rgba(148,163,184,0.12)');
+      fog.addColorStop(0.42, 'rgba(30,41,59,0.04)');
+      fog.addColorStop(1, 'rgba(2,6,23,0.22)');
+      ctx.fillStyle = fog;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function drawHeatHaze() {
+      if (lowPowerMobileMode && state.squad > 45) return;
+      for (let i = 0; i < 3; i++) {
+        const laneX = 170 + i * 240;
+        const haze = ctx.createLinearGradient(laneX, 250, laneX, 640);
+        haze.addColorStop(0, 'rgba(255,255,255,0)');
+        haze.addColorStop(0.45, 'rgba(255,255,255,0.025)');
+        haze.addColorStop(1, 'rgba(248,113,113,0.04)');
+        ctx.fillStyle = haze;
+        ctx.fillRect(laneX - 42 + Math.sin(performance.now() * 0.0018 + i) * 4, 250, 84, 390);
+      }
+    }
+
+    function drawShellCasings() {
+      if (lowPowerMobileMode && state.squad > 40) return;
+      for (const shell of shellCasings) {
+        ctx.save();
+        ctx.translate(shell.x, shell.y);
+        ctx.rotate(shell.rot);
+        ctx.globalAlpha = Math.max(0, shell.life / 0.7);
+        ctx.fillStyle = shell.tint;
+        ctx.fillRect(-4, -1.2, 8, 2.4);
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(2.2, -1.2, 1.8, 2.4);
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawMuzzleFlashes() {
+      if (lowPowerMobileMode && state.squad > 55) return;
+      for (const flash of muzzleFlashes) {
+        const a = Math.max(0, flash.life / flash.maxLife);
+        ctx.save();
+        ctx.globalAlpha = a;
+        ctx.translate(flash.x, flash.y);
+        const pulse = 1 + Math.sin(performance.now() * 0.03 + flash.seed) * 0.12;
+        const bloom = ctx.createRadialGradient(0, 0, 1, 0, 0, flash.size * 1.35);
+        bloom.addColorStop(0, 'rgba(255,255,255,0.34)');
+        bloom.addColorStop(0.45, flash.color);
+        bloom.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = bloom;
+        ctx.beginPath();
+        ctx.arc(0, 0, flash.size * 1.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = flash.color;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(8 * pulse, -flash.size * 0.42);
+        ctx.lineTo(flash.size * 1.15, 0);
+        ctx.lineTo(8 * pulse, flash.size * 0.42);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(flash.size * 0.55, -flash.size * 0.18);
+        ctx.lineTo(flash.size * 0.74, 0);
+        ctx.lineTo(flash.size * 0.55, flash.size * 0.18);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function addDirectionalLight(x, y, w, h, alpha = 0.2) {
+      const light = ctx.createLinearGradient(x - w * 0.6, y - h * 0.5, x + w * 0.7, y + h * 0.7);
+      light.addColorStop(0, `rgba(255,255,255,${alpha})`);
+      light.addColorStop(0.45, 'rgba(255,255,255,0.04)');
+      light.addColorStop(1, 'rgba(0,0,0,0.14)');
+      ctx.fillStyle = light;
+      ctx.beginPath();
+      ctx.roundRect(x - w / 2, y - h / 2, w, h, Math.max(2, Math.min(w, h) * 0.18));
+      ctx.fill();
+    }
+
+    function addSpecularSweep(x, y, w, h, strength = 0.12) {
+      const sweep = ctx.createLinearGradient(x - w * 0.5, y - h * 0.5, x + w * 0.4, y + h * 0.4);
+      sweep.addColorStop(0, `rgba(255,255,255,${strength})`);
+      sweep.addColorStop(0.35, 'rgba(255,255,255,0.03)');
+      sweep.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = sweep;
+      ctx.beginPath();
+      ctx.roundRect(x - w / 2, y - h / 2, w, h, Math.max(2, Math.min(w, h) * 0.18));
+      ctx.fill();
+    }
+
+    function drawPerson(x, y, color, scale = 1, depth = 0) {
+      const head = 8.5 * scale;
+      const bodyW = 15 * scale;
+      const bodyH = 26 * scale;
+      const shoulderW = 18 * scale;
+      const armW = 5.2 * scale;
+      const armH = 15 * scale;
+      const legW = 5 * scale;
+      const legH = 13 * scale;
+      const gunW = 16 * scale;
+      const gunH = 4.6 * scale;
+      const helmetW = 16 * scale;
+      const helmetH = 6 * scale;
+      const bob = Math.sin((x + y + depth * 13) * 0.03) * scale * 1.1;
+      ctx.save();
+      ctx.translate(0, bob);
+
+      ctx.shadowColor = 'rgba(0,0,0,0.28)';
+      ctx.shadowBlur = 10 * scale;
+      ctx.shadowOffsetY = 3 * scale;
+
+      ctx.fillStyle = 'rgba(15,23,42,0.48)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + bodyH + 8 * scale, 12 * scale, 4.6 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      const skinTone = depth % 4 === 0 ? '#f1c27d' : depth % 4 === 1 ? '#e0ac69' : depth % 4 === 2 ? '#c68642' : '#8d5524';
+      addRimLight(x, y - 4 * scale, 24 * scale, 'rgba(96,165,250,ALPHA)', 0.2);
+      const faceGrad = ctx.createRadialGradient(x - head * 0.4, y - 12.5 * scale, 1, x, y - 9.5 * scale, head * 1.22);
+      faceGrad.addColorStop(0, '#fffaf4');
+      faceGrad.addColorStop(0.45, skinTone);
+      faceGrad.addColorStop(1, '#7c4a27');
+      ctx.fillStyle = faceGrad;
+      ctx.beginPath();
+      ctx.arc(x, y - 10 * scale, head, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.22)';
+      ctx.beginPath();
+      ctx.ellipse(x - head * 0.25, y - 12 * scale, head * 0.24, head * 0.4, -0.45, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(x - 2.1 * scale, y - 10.2 * scale, 0.7 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 1.7 * scale, y - 10.2 * scale, 0.7 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+      ctx.lineWidth = Math.max(0.5, 0.7 * scale);
+      ctx.beginPath();
+      ctx.moveTo(x - 2.6 * scale, y - 6.7 * scale);
+      ctx.quadraticCurveTo(x, y - 5.6 * scale, x + 2.2 * scale, y - 6.6 * scale);
+      ctx.stroke();
+
+      const palette = avatarPalette(color);
+      ctx.lineWidth = Math.max(1.2, 1.4 * scale);
+      ctx.strokeStyle = 'rgba(226,232,240,0.18)';
+      ctx.fillStyle = palette.helmet;
+      ctx.beginPath();
+      ctx.roundRect(x - helmetW / 2, y - 19 * scale, helmetW, helmetH, 4 * scale);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = palette.accent;
+      ctx.fillRect(x - helmetW * 0.28, y - 17.1 * scale, helmetW * 0.56, 1.8 * scale);
+      addSpecularSweep(x, y - 16 * scale, helmetW * 0.92, helmetH * 0.92, 0.16);
+      ctx.fillStyle = palette.visor;
+      ctx.beginPath();
+      ctx.roundRect(x - helmetW * 0.18, y - 15.5 * scale, helmetW * 0.36, 2 * scale, 2 * scale);
+      ctx.fill();
+      addDirectionalLight(x, y - 16 * scale, helmetW * 0.92, helmetH * 0.92, 0.2);
+
+      const torsoGrad = ctx.createLinearGradient(x - bodyW / 2, y - 2 * scale, x + bodyW / 2, y + bodyH);
+      torsoGrad.addColorStop(0, palette.armorTop);
+      torsoGrad.addColorStop(0.32, palette.armorMid);
+      torsoGrad.addColorStop(0.7, palette.armorBottom);
+      torsoGrad.addColorStop(1, '#0f172a');
+      ctx.lineWidth = Math.max(1.2, 1.5 * scale);
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.fillStyle = torsoGrad;
+      ctx.beginPath();
+      ctx.roundRect(x - bodyW / 2, y - 2 * scale, bodyW, bodyH, 4 * scale);
+      ctx.fill();
+      ctx.stroke();
+      addDirectionalLight(x, y + bodyH * 0.38, bodyW, bodyH, 0.18);
+      addSpecularSweep(x, y + bodyH * 0.38, bodyW, bodyH, 0.14);
+      ctx.fillStyle = 'rgba(255,255,255,0.22)';
+      ctx.beginPath();
+      ctx.roundRect(x - bodyW * 0.36, y + 0.4 * scale, bodyW * 0.22, bodyH * 0.66, 2 * scale);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(15,23,42,0.26)';
+      ctx.beginPath();
+      ctx.roundRect(x + bodyW * 0.08, y + 1.5 * scale, bodyW * 0.22, bodyH * 0.78, 2 * scale);
+      ctx.fill();
+      ctx.fillStyle = palette.accent;
+      ctx.beginPath();
+      ctx.roundRect(x - shoulderW * 0.22, y + 4 * scale, shoulderW * 0.44, 3.2 * scale, 2.4 * scale);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.16)';
+      ctx.beginPath();
+      ctx.roundRect(x - bodyW * 0.12, y + 7.6 * scale, bodyW * 0.24, 2.2 * scale, 1.3 * scale);
+      ctx.fill();
+
+      const armGrad = ctx.createLinearGradient(x, y, x + shoulderW * 0.9, y + armH);
+      armGrad.addColorStop(0, '#334155');
+      armGrad.addColorStop(1, '#0f172a');
+      ctx.fillStyle = armGrad;
+      ctx.beginPath();
+      ctx.roundRect(x - bodyW / 2 - armW * 0.75, y + 1.4 * scale, armW, armH, 2.2 * scale);
+      ctx.roundRect(x + bodyW / 2 - armW * 0.25, y + 1.8 * scale, armW, armH * 0.94, 2.2 * scale);
+      ctx.fill();
+
+      const gunGradient = ctx.createLinearGradient(x, y, x + gunW, y + gunH);
+      gunGradient.addColorStop(0, '#475569');
+      gunGradient.addColorStop(0.4, '#e2e8f0');
+      gunGradient.addColorStop(1, '#1e293b');
+      ctx.fillStyle = gunGradient;
+      ctx.beginPath();
+      ctx.roundRect(x + bodyW * 0.16, y + 3.6 * scale, gunW * 1.18, gunH * 1.15, 1.8 * scale);
+      ctx.fill();
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(x + bodyW * 0.16 + gunW * 0.82, y + 4.2 * scale, gunW * 0.2, gunH * 0.32);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(x + bodyW * 0.05, y + 5.1 * scale, gunW * 0.26, gunH * 0.82);
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.fillRect(x + bodyW * 0.24, y + 4.1 * scale, gunW * 0.5, gunH * 0.18);
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = Math.max(0.8, 1.1 * scale);
+      ctx.strokeRect(x + bodyW * 0.16, y + 3.6 * scale, gunW * 1.18, gunH * 1.15);
+
+      const legGrad = ctx.createLinearGradient(x, y + bodyH - 2 * scale, x, y + bodyH + legH);
+      legGrad.addColorStop(0, '#334155');
+      legGrad.addColorStop(1, '#020617');
+      ctx.fillStyle = legGrad;
+      ctx.beginPath();
+      ctx.roundRect(x - bodyW * 0.34, y + bodyH - 1 * scale, legW, legH, 2 * scale);
+      ctx.roundRect(x + bodyW * 0.04, y + bodyH - 0.5 * scale, legW, legH * 0.96, 2 * scale);
+      ctx.fill();
+      ctx.fillStyle = '#020617';
+      ctx.beginPath();
+      ctx.roundRect(x - bodyW * 0.38, y + bodyH + legH - 1.8 * scale, legW + 1.8 * scale, 2.6 * scale, 1.5 * scale);
+      ctx.roundRect(x + bodyW * 0.02, y + bodyH + legH - 1.8 * scale, legW + 1.8 * scale, 2.6 * scale, 1.5 * scale);
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
+
+    function drawZombie(x, y, scale = 1, depth = 0, variant = 'zombie') {
+      const perfTier = squadPerfTier();
+      const head = (variant === 'boss' ? 12 : 8.5) * scale;
+      const bodyW = (variant === 'boss' ? 21 : variant === 'shield' ? 16 : 14) * scale;
+      const bodyH = (variant === 'boss' ? 34 : 26) * scale;
+      const bob = Math.sin((x * 0.03) + depth * 0.5 + performance.now() * 0.01) * scale * 1.3;
+      ctx.save();
+      ctx.translate(0, bob);
+      ctx.fillStyle = 'rgba(15,23,42,0.5)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + bodyH + 7 * scale, bodyW * 0.85, 4.6 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      const skin = variant === 'boss' ? '#6d28d9' : variant === 'shield' ? '#64748b' : variant === 'runner' ? '#84cc16' : '#65a30d';
+      const darkSkin = variant === 'boss' ? '#3b0764' : variant === 'shield' ? '#334155' : variant === 'runner' ? '#4d7c0f' : '#3f6212';
+      if (perfTier >= 2 && variant !== 'boss') {
+        if (perfTier === 2) addRimLight(x, y - 1 * scale, variant === 'shield' ? 24 * scale : 22 * scale, variant === 'shield' ? 'rgba(125,211,252,ALPHA)' : 'rgba(163,230,53,ALPHA)', 0.12);
+        const simpleGrad = ctx.createLinearGradient(x - bodyW / 2, y - head, x + bodyW / 2, y + bodyH);
+        simpleGrad.addColorStop(0, skin);
+        simpleGrad.addColorStop(1, darkSkin);
+        ctx.fillStyle = simpleGrad;
+        ctx.beginPath();
+        ctx.roundRect(x - bodyW / 2, y - 2 * scale, bodyW, bodyH + 4 * scale, 4 * scale);
+        ctx.fill();
+        ctx.fillStyle = perfTier >= 3 ? darkSkin : '#ef4444';
+        ctx.beginPath();
+        ctx.arc(x, y - 9 * scale, head, 0, Math.PI * 2);
+        ctx.fill();
+        if (perfTier === 2) {
+          ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+          ctx.lineWidth = Math.max(0.8, 1 * scale);
+          ctx.strokeRect(x - bodyW / 2, y - 2 * scale, bodyW, bodyH + 4 * scale);
+          ctx.fillStyle = '#fca5a5';
+          ctx.fillRect(x - bodyW * 0.18, y + 3 * scale, bodyW * 0.12, bodyH * 0.42);
+          ctx.fillStyle = '#fef2f2';
+          ctx.fillRect(x - 2.2 * scale, y - 11.5 * scale, 1.2 * scale, 1.2 * scale);
+          ctx.fillRect(x + 1 * scale, y - 11.5 * scale, 1.2 * scale, 1.2 * scale);
+        }
+        ctx.restore();
+        return;
+      }
+      addRimLight(x, y - 1 * scale, variant === 'boss' ? 48 * scale : variant === 'shield' ? 30 * scale : 28 * scale, variant === 'boss' ? 'rgba(239,68,68,ALPHA)' : variant === 'shield' ? 'rgba(125,211,252,ALPHA)' : 'rgba(163,230,53,ALPHA)', variant === 'boss' ? 0.34 : 0.24);
+
+      const skullGrad = ctx.createRadialGradient(x - head * 0.48, y - 13.5 * scale, 1, x, y - 10 * scale, head * 1.24);
+      skullGrad.addColorStop(0, variant === 'boss' ? '#f5d0fe' : variant === 'shield' ? '#e0f2fe' : '#ecfccb');
+      skullGrad.addColorStop(0.46, skin);
+      skullGrad.addColorStop(1, darkSkin);
+      ctx.fillStyle = skullGrad;
+      ctx.beginPath();
+      ctx.arc(x, y - 10 * scale, head, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.16)';
+      ctx.beginPath();
+      ctx.ellipse(x - head * 0.28, y - 12.5 * scale, head * 0.22, head * 0.38, -0.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      const bodyGrad = ctx.createLinearGradient(x - bodyW / 2, y - 2 * scale, x + bodyW / 2, y + bodyH);
+      bodyGrad.addColorStop(0, variant === 'boss' ? '#7c3aed' : variant === 'shield' ? '#94a3b8' : '#4b5563');
+      bodyGrad.addColorStop(0.4, variant === 'boss' ? '#4c1d95' : '#1f2937');
+      bodyGrad.addColorStop(1, '#020617');
+      ctx.lineWidth = Math.max(1.2, 1.6 * scale);
+      ctx.strokeStyle = variant === 'boss' ? 'rgba(233,213,255,0.18)' : 'rgba(226,232,240,0.08)';
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath();
+      ctx.roundRect(x - bodyW / 2, y - 1 * scale, bodyW, bodyH, 4 * scale);
+      ctx.fill();
+      ctx.stroke();
+      addDirectionalLight(x, y + bodyH * 0.35, bodyW, bodyH, variant === 'boss' ? 0.22 : 0.14);
+      addSpecularSweep(x, y + bodyH * 0.35, bodyW, bodyH, variant === 'boss' ? 0.12 : 0.08);
+      ctx.fillStyle = 'rgba(255,255,255,0.08)';
+      ctx.beginPath();
+      ctx.roundRect(x - bodyW * 0.28, y + 1.5 * scale, bodyW * 0.18, bodyH * 0.62, 2 * scale);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      ctx.beginPath();
+      ctx.roundRect(x + bodyW * 0.08, y + 2.5 * scale, bodyW * 0.18, bodyH * 0.7, 2 * scale);
+      ctx.fill();
+
+      ctx.strokeStyle = variant === 'boss' ? '#a78bfa' : '#84cc16';
+      ctx.lineWidth = Math.max(1, 1.5 * scale);
+      ctx.beginPath();
+      ctx.moveTo(x - bodyW * 0.82, y + 4 * scale);
+      ctx.lineTo(x - bodyW * 0.14, y + 10 * scale);
+      ctx.moveTo(x + bodyW * 0.82, y + 3 * scale);
+      ctx.lineTo(x + bodyW * 0.16, y + 9 * scale);
+      ctx.stroke();
+
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath();
+      ctx.arc(x - 3.2 * scale, y - 11.2 * scale, 2 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 3.2 * scale, y - 11.2 * scale, 2 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.32)';
+      ctx.beginPath();
+      ctx.arc(x - 3.7 * scale, y - 11.8 * scale, 0.55 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 2.7 * scale, y - 11.8 * scale, 0.55 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#7f1d1d';
+      ctx.beginPath();
+      ctx.arc(x - 3.2 * scale, y - 11.2 * scale, 0.9 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 3.2 * scale, y - 11.2 * scale, 0.9 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(239,68,68,0.42)';
+      ctx.lineWidth = Math.max(0.8, 1 * scale);
+      ctx.beginPath();
+      ctx.arc(x - 3.2 * scale, y - 11.2 * scale, 3.2 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 3.2 * scale, y - 11.2 * scale, 3.2 * scale, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = '#fecaca';
+      ctx.lineWidth = Math.max(1.2, 1.3 * scale);
+      ctx.beginPath();
+      ctx.moveTo(x - 4.8 * scale, y - 4.2 * scale);
+      ctx.lineTo(x - 2 * scale, y - 0.6 * scale);
+      ctx.lineTo(x, y - 4.2 * scale);
+      ctx.lineTo(x + 2.2 * scale, y - 0.8 * scale);
+      ctx.lineTo(x + 5 * scale, y - 4.2 * scale);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = Math.max(0.8, 1 * scale);
+      ctx.strokeRect(x - bodyW / 2, y - 1 * scale, bodyW, bodyH);
+
+      ctx.fillStyle = darkSkin;
+      ctx.beginPath();
+      ctx.roundRect(x - bodyW * 0.34, y + bodyH - 0.5 * scale, bodyW * 0.24, 11 * scale, 2 * scale);
+      ctx.roundRect(x + bodyW * 0.1, y + bodyH - 0.2 * scale, bodyW * 0.24, 11 * scale, 2 * scale);
+      ctx.fill();
+      ctx.fillStyle = '#450a0a';
+      ctx.beginPath();
+      ctx.arc(x - bodyW * 0.16, y + bodyH * 0.32, 2.6 * scale, 0, Math.PI * 2);
+      ctx.arc(x + bodyW * 0.12, y + bodyH * 0.46, 1.9 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(127,29,29,0.8)';
+      ctx.lineWidth = Math.max(0.8, 1.1 * scale);
+      ctx.beginPath();
+      ctx.moveTo(x - bodyW * 0.3, y + bodyH * 0.28);
+      ctx.lineTo(x - bodyW * 0.46, y + bodyH * 0.5);
+      ctx.moveTo(x + bodyW * 0.16, y + bodyH * 0.44);
+      ctx.lineTo(x + bodyW * 0.3, y + bodyH * 0.66);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawZombiePack(x, y, count = 3, scale = 1) {
+      const perfTier = squadPerfTier();
+      const total = Math.max(3, Math.min(perfTier >= 3 ? 5 : perfTier >= 2 ? 7 : 12, Math.ceil(count + 2)));
+      for (let i = 0; i < total; i++) {
+        const row = Math.floor(i / 4);
+        const col = i % 4;
+        const ox = (col - 1.5) * 11 * scale + (row % 2 ? 5 * scale : 0);
+        const oy = row * 12 * scale;
+        const memberScale = scale * (0.8 - row * 0.07 - i * 0.01);
+        drawZombie(x + ox, y + oy, Math.max(perfTier >= 2 ? 0.58 : 0.5, memberScale), i + row, i % 5 === 0 ? 'runner' : 'shield');
+      }
+    }
+
+    function drawLootZombie(x, y, scale = 1) {
+      const perfTier = squadPerfTier();
+      if (perfTier >= 2) {
+        ctx.fillStyle = 'rgba(127,29,29,0.36)';
+        ctx.beginPath();
+        ctx.ellipse(x, y + 6 * scale, 22 * scale, 10 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#450a0a';
+        ctx.beginPath();
+        ctx.roundRect(x - 18 * scale, y - 10 * scale, 36 * scale, 20 * scale, 8 * scale);
+        ctx.fill();
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(x - 5 * scale, y - 2 * scale, 2.4 * scale, 0, Math.PI * 2);
+        ctx.arc(x + 5 * scale, y - 2 * scale, 2.4 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        return;
+      }
+      const carcassGlow = ctx.createRadialGradient(x, y - 4 * scale, 3, x, y, 34 * scale);
+      carcassGlow.addColorStop(0, 'rgba(239,68,68,0.26)');
+      carcassGlow.addColorStop(1, 'rgba(239,68,68,0)');
+      ctx.fillStyle = carcassGlow;
+      ctx.beginPath();
+      ctx.arc(x, y, 34 * scale, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#1f2937';
+      ctx.beginPath();
+      ctx.roundRect(x - 20 * scale, y - 18 * scale, 40 * scale, 36 * scale, 10 * scale);
+      ctx.fill();
+      ctx.fillStyle = '#450a0a';
+      ctx.beginPath();
+      ctx.roundRect(x - 16 * scale, y - 14 * scale, 32 * scale, 28 * scale, 8 * scale);
+      ctx.fill();
+      ctx.fillStyle = '#7f1d1d';
+      ctx.beginPath();
+      ctx.arc(x, y - 2 * scale, 12 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath();
+      ctx.arc(x - 4.5 * scale, y - 5 * scale, 2.4 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 4.5 * scale, y - 5 * scale, 2.4 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#fecaca';
+      ctx.lineWidth = 2 * scale;
+      ctx.beginPath();
+      ctx.moveTo(x - 6 * scale, y + 5 * scale);
+      ctx.lineTo(x - 2 * scale, y + 9 * scale);
+      ctx.lineTo(x + 1 * scale, y + 5.5 * scale);
+      ctx.lineTo(x + 6 * scale, y + 9.5 * scale);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(248,113,113,0.7)';
+    }
+
+    function drawTreasureBox(x, y, scale = 1) {
+      const perfTier = squadPerfTier();
+      ctx.fillStyle = 'rgba(15,23,42,0.28)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 18 * scale, 22 * scale, 8 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      if (perfTier >= 2) {
+        ctx.fillStyle = '#7c2d12';
+        ctx.fillRect(x - 18 * scale, y - 8 * scale, 36 * scale, 22 * scale);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(x - 2 * scale, y - 8 * scale, 4 * scale, 22 * scale);
+        return;
+      }
+      addRimLight(x, y - 2 * scale, 34 * scale, 'rgba(250,204,21,ALPHA)', 0.18);
+      const wood = ctx.createLinearGradient(x - 18 * scale, y, x + 18 * scale, y + 22 * scale);
+      wood.addColorStop(0, '#92400e');
+      wood.addColorStop(0.5, '#b45309');
+      wood.addColorStop(1, '#7c2d12');
+      ctx.fillStyle = wood;
+      ctx.beginPath();
+      ctx.roundRect(x - 20 * scale, y - 6 * scale, 40 * scale, 26 * scale, 6 * scale);
+      ctx.fill();
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.roundRect(x - 20 * scale, y - 12 * scale, 40 * scale, 12 * scale, 6 * scale);
+      ctx.fill();
+      ctx.fillStyle = '#fde68a';
+      ctx.fillRect(x - 3 * scale, y - 10 * scale, 6 * scale, 24 * scale);
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(x - 12 * scale, y + 2 * scale, 24 * scale, 3 * scale);
+      ctx.fillStyle = '#fef3c7';
+      ctx.beginPath();
+      ctx.arc(x, y + 1 * scale, 3.2 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.24)';
+      ctx.beginPath();
+      ctx.ellipse(x - 6 * scale, y - 5 * scale, 6 * scale, 2.2 * scale, -0.25, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.lineWidth = 1.6 * scale;
+      ctx.beginPath();
+      ctx.moveTo(x - 18 * scale, y - 11 * scale);
+      ctx.lineTo(x - 9 * scale, y - 16 * scale);
+      ctx.moveTo(x + 18 * scale, y + 10 * scale);
+      ctx.lineTo(x + 9 * scale, y + 16 * scale);
+      ctx.stroke();
+    }
+
+    function drawTinySoldier(x, y, tint, scale = 1, depth = 0, compact = false) {
+      const bodyW = Math.max(1.4, 6.4 * scale);
+      const bodyH = Math.max(2.2, 9.6 * scale);
+      const head = Math.max(1.1, 3 * scale);
+      const marchPhase = compact ? 0 : performance.now() * 0.0065;
+      const bob = compact ? 0 : Math.sin((x + depth * 11) * 0.035 + marchPhase) * scale * 0.35;
+      const sway = compact ? 0 : Math.sin((depth * 0.8) + marchPhase + x * 0.01) * scale * 0.45;
+      ctx.save();
+      ctx.translate(sway, bob);
+      ctx.fillStyle = 'rgba(15,23,42,0.26)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + bodyH * 0.9, bodyW, Math.max(0.8, 1.8 * scale), 0, 0, Math.PI * 2);
+      ctx.fill();
+      const miniGrad = ctx.createLinearGradient(x - bodyW / 2, y - bodyH * 0.4, x + bodyW / 2, y + bodyH);
+      miniGrad.addColorStop(0, '#bfdbfe');
+      miniGrad.addColorStop(0.45, tint);
+      miniGrad.addColorStop(1, '#1e3a8a');
+      ctx.fillStyle = miniGrad;
+      ctx.beginPath();
+      ctx.roundRect(x - bodyW / 2, y - bodyH * 0.45, bodyW, bodyH, Math.max(0.8, 1.2 * scale));
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.fillRect(x - bodyW * 0.25, y - bodyH * 0.2, bodyW * 0.16, bodyH * 0.6);
+      const headGrad = ctx.createRadialGradient(x - head * 0.3, y - bodyH * 0.75, 0.2, x, y - bodyH * 0.6, head * 1.1);
+      headGrad.addColorStop(0, '#fff7ed');
+      headGrad.addColorStop(1, '#d6a36a');
+      ctx.fillStyle = headGrad;
+      ctx.beginPath();
+      ctx.arc(x, y - bodyH * 0.6, head, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#1e3a8a';
+      ctx.fillRect(x - bodyW * 0.64, y + bodyH * 0.1, bodyW * 1.28, Math.max(0.9, 1.4 * scale));
+      if (!compact) {
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        ctx.fillRect(x - bodyW * 0.14, y - bodyH * 0.28, bodyW * 0.08, bodyH * 0.42);
+      }
+      ctx.restore();
+    }
+
+    function buildCrowdCache(visibleSoldiers, centerX, baseY, crowdRadiusX, crowdRadiusY, total) {
+      if (!visibleSoldiers.length) return null;
+      const scaleDown = total > 140 ? 0.54 : total > 80 ? 0.6 : total > 40 ? 0.66 : 0.72;
+      const offscreen = document.createElement('canvas');
+      offscreen.width = Math.max(240, Math.floor(canvas.width * scaleDown));
+      offscreen.height = Math.max(320, Math.floor(canvas.height * scaleDown));
+      const octx = offscreen.getContext('2d');
+      octx.imageSmoothingEnabled = true;
+      octx.scale(scaleDown, scaleDown);
+      const glow = octx.createRadialGradient(centerX, 594, 30, centerX, 594, crowdRadiusX + 35);
+      glow.addColorStop(0, 'rgba(96,165,250,0.22)');
+      glow.addColorStop(1, 'rgba(96,165,250,0)');
+      octx.fillStyle = glow;
+      octx.beginPath();
+      octx.ellipse(centerX, 596, crowdRadiusX + 8, crowdRadiusY + 12, 0, 0, Math.PI * 2);
+      octx.fill();
+      octx.fillStyle = 'rgba(37,99,235,0.16)';
+      octx.beginPath();
+      octx.ellipse(centerX, 604, crowdRadiusX * 0.94, crowdRadiusY * 0.82, 0, 0, Math.PI * 2);
+      octx.fill();
+      octx.fillStyle = 'rgba(239,68,68,0.08)';
+      octx.beginPath();
+      octx.ellipse(centerX, 612, crowdRadiusX * 0.9, crowdRadiusY * 0.74, 0, 0, Math.PI * 2);
+      octx.fill();
+      visibleSoldiers.sort((a, b) => a.y - b.y);
+      for (const soldier of visibleSoldiers) {
+        const tint = soldier.index % 4 === 0 ? '#60a5fa' : soldier.index % 4 === 1 ? '#93c5fd' : soldier.index % 4 === 2 ? '#3b82f6' : '#2563eb';
+        const compactScale = Math.max(0.06, soldier.scale * 0.86);
+        const bodyW = Math.max(1.6, 6.1 * compactScale);
+        const bodyH = Math.max(2.4, 9.1 * compactScale);
+        const head = Math.max(1.15, 2.8 * compactScale);
+        octx.fillStyle = 'rgba(15,23,42,0.24)';
+        octx.beginPath();
+        octx.ellipse(soldier.x, soldier.y + bodyH * 0.9, bodyW, Math.max(0.9, 1.5 * compactScale), 0, 0, Math.PI * 2);
+        octx.fill();
+        const miniGrad = octx.createLinearGradient(soldier.x - bodyW / 2, soldier.y - bodyH * 0.4, soldier.x + bodyW / 2, soldier.y + bodyH);
+        miniGrad.addColorStop(0, '#dbeafe');
+        miniGrad.addColorStop(0.45, tint);
+        miniGrad.addColorStop(1, '#1e3a8a');
+        octx.fillStyle = miniGrad;
+        octx.beginPath();
+        octx.roundRect(soldier.x - bodyW / 2, soldier.y - bodyH * 0.45, bodyW, bodyH, Math.max(0.8, 1.2 * compactScale));
+        octx.fill();
+        octx.fillStyle = 'rgba(255,255,255,0.16)';
+        octx.fillRect(soldier.x - bodyW * 0.22, soldier.y - bodyH * 0.18, bodyW * 0.14, bodyH * 0.56);
+        const headGrad = octx.createRadialGradient(soldier.x - head * 0.3, soldier.y - bodyH * 0.75, 0.2, soldier.x, soldier.y - bodyH * 0.6, head * 1.08);
+        headGrad.addColorStop(0, '#fff7ed');
+        headGrad.addColorStop(1, '#d6a36a');
+        octx.fillStyle = headGrad;
+        octx.beginPath();
+        octx.arc(soldier.x, soldier.y - bodyH * 0.6, head, 0, Math.PI * 2);
+        octx.fill();
+      }
+      return { canvas: offscreen, scaleDown };
+    }
+
+    function drawSquad() {
+      const total = Math.max(0, state.squad);
+      if (!total) return;
+
+      const sizeTier = Math.max(0, Math.floor(Math.max(0, total - 1) / 20));
+      const halfScale = sizeTier === 0 ? 1 : Math.pow(0.5, sizeTier);
+      const centerX = canvas.width / 2;
+      const baseY = 622;
+      const crowdRadiusX = (total >= 500 ? 320 : total >= 250 ? 285 : total >= 100 ? 245 : 205) * (1 + Math.min(0.22, sizeTier * 0.035));
+      const crowdRadiusY = (total >= 500 ? 150 : total >= 250 ? 138 : total >= 100 ? 124 : 108) * (1 + Math.min(0.16, sizeTier * 0.024));
+      const dotArmyMode = sizeTier >= 5;
+      const perfCrowd = dotArmyMode || total > 80;
+      const massCrowd = dotArmyMode || total > 120;
+      const armyMode = sizeTier >= 4 || total >= 180;
+      const ultraArmyMode = sizeTier >= 6 || total >= 360;
+      const compactArmyMode = sizeTier >= 3 || total >= 120;
+      const minScaleBase = dotArmyMode ? 0.014 : ultraArmyMode ? 0.02 : armyMode ? 0.03 : 0.1;
+      const maxScaleBase = dotArmyMode ? 0.05 : ultraArmyMode ? 0.16 : armyMode ? 0.34 : 0.92;
+      const minScale = Math.max(dotArmyMode ? 0.01 : 0.018, minScaleBase * halfScale);
+      const maxScale = Math.max(minScale + (dotArmyMode ? 0.006 : 0.02), maxScaleBase * halfScale);
+      const visibleSoldiers = [];
+      const marchPhase = compactArmyMode ? performance.now() * 0.0025 : performance.now() * 0.004;
+      const maxVisible = massCrowd ? (ultraArmyMode ? 44 : armyMode ? 48 : 42) : perfCrowd ? (ultraArmyMode ? 66 : armyMode ? 72 : 60) : mobileSafeMode ? (ultraArmyMode ? 140 : armyMode ? 120 : 100) : (ultraArmyMode ? 220 : armyMode ? 180 : 140);
+      const step = total > maxVisible ? total / maxVisible : 1;
+
+      const crowdGlow = ctx.createRadialGradient(centerX, 592, 30, centerX, 592, crowdRadiusX + 35);
+      crowdGlow.addColorStop(0, armyMode ? 'rgba(96,165,250,0.26)' : 'rgba(96,165,250,0.18)');
+      crowdGlow.addColorStop(1, 'rgba(96,165,250,0)');
+      ctx.fillStyle = crowdGlow;
+      ctx.beginPath();
+      ctx.ellipse(centerX, 594 + (armyMode ? Math.sin(marchPhase) * 3 : 0), crowdRadiusX + 10, crowdRadiusY + 14, 0, 0, Math.PI * 2);
+      ctx.fill();
+      if (perfCrowd) {
+        ctx.fillStyle = 'rgba(37,99,235,0.22)';
+        ctx.beginPath();
+        ctx.ellipse(centerX, 604, crowdRadiusX * 0.94, crowdRadiusY * 0.82, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      let drawIndex = 0;
+      for (let n = 1; n <= total; n += step) {
+        const i = Math.floor(n - 1);
+        const t = total === 1 ? 0 : i / Math.max(total - 1, 1);
+        const ringBias = Math.sqrt(t);
+        const angle = i * 2.399963229728653 + Math.sin(i * 0.35 + marchPhase) * (compactArmyMode ? 0.02 : 0.05);
+        const radiusX = ringBias * crowdRadiusX;
+        const radiusY = ringBias * crowdRadiusY;
+        let x = centerX + Math.cos(angle) * radiusX;
+        let y = baseY - Math.sin(angle) * radiusY;
+        y = Math.min(baseY, y);
+        const depth = (baseY - y) / Math.max(crowdRadiusY, 1);
+        const scale = Math.max(minScale, Math.min(maxScale, maxScale - depth * (armyMode ? 0.14 : 0.2)));
+        visibleSoldiers.push({ x, y, depth, scale, index: drawIndex++ });
+      }
+
+      const bannerGradient = ctx.createLinearGradient(0, 0, 220, 0);
+      bannerGradient.addColorStop(0, 'rgba(15,23,42,.96)');
+      bannerGradient.addColorStop(1, 'rgba(30,64,175,.78)');
+      ctx.fillStyle = bannerGradient;
+      ctx.fillRect(18, 108, 210, 50);
+      ctx.strokeStyle = 'rgba(147,197,253,.35)';
+      ctx.strokeRect(18, 108, 210, 50);
+      ctx.fillStyle = '#eff6ff';
+      ctx.font = 'bold 22px system-ui';
+      ctx.textAlign = 'left';
+      ctx.fillText(`Army ${state.squad}`, 32, 141);
+
+      if (perfCrowd) {
+        const cacheKey = `${Math.round(crowdRadiusX)}:${Math.round(crowdRadiusY)}:${visibleSoldiers.length}:${Math.floor(total / 8)}:${sizeTier}`;
+        if (!crowdCache || crowdCache.key !== cacheKey) {
+          crowdCache = { key: cacheKey, layer: buildCrowdCache(visibleSoldiers.slice(), centerX, baseY, crowdRadiusX, crowdRadiusY, total) };
+        }
+        if (crowdCache?.layer?.canvas) {
+          const sway = Math.sin(marchPhase) * (massCrowd ? 1.4 : 2.2);
+          ctx.drawImage(crowdCache.layer.canvas, 0, 0, crowdCache.layer.canvas.width, crowdCache.layer.canvas.height, 0, sway, canvas.width, canvas.height);
+          if (massCrowd) {
+            ctx.fillStyle = 'rgba(255,255,255,0.06)';
+            ctx.beginPath();
+            ctx.ellipse(centerX, 560, crowdRadiusX * 0.7, crowdRadiusY * 0.24, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      } else {
+        visibleSoldiers.sort((a, b) => a.y - b.y);
+        for (const soldier of visibleSoldiers) {
+          const tint = soldier.index % 4 === 0 ? '#60a5fa' : soldier.index % 4 === 1 ? '#93c5fd' : soldier.index % 4 === 2 ? '#3b82f6' : '#2563eb';
+          if (dotArmyMode) drawTinySoldier(soldier.x, soldier.y, tint, soldier.scale, soldier.index, true);
+          else drawPerson(soldier.x, soldier.y, tint, soldier.scale, soldier.index);
+        }
+      }
+
+    }
+
+    function drawObjects() {
+      const perfTier = squadPerfTier();
+      for (const obj of state.objects) {
+        if (obj.type === 'zombie') {
+          drawObjectGroundShadow(obj, 15, 5.5);
+          drawZombie(obj.x, obj.y, 1.04, 1, 'zombie');
+          if (perfTier <= 1) { ctx.fillStyle='#dcfce7'; ctx.font='bold 16px system-ui'; ctx.textAlign='center'; ctx.fillText(`+${obj.reward}`,obj.x,obj.y-42); }
+        } else if (obj.type === 'lootzombie') {
+          drawObjectGroundShadow(obj, 16, 5.6, 0.28);
+          drawLootZombie(obj.x, obj.y, 1);
+          if (perfTier <= 1) { ctx.fillStyle='#fef3c7'; ctx.font='bold 14px system-ui'; ctx.textAlign='center'; ctx.fillText('LOOTER',obj.x,obj.y-30); }
+        } else if (obj.type === 'runner') {
+          drawObjectGroundShadow(obj, 13, 4.6, 0.24);
+          drawZombie(obj.x, obj.y, 0.94, 2, 'runner');
+          if (perfTier <= 1) { ctx.fillStyle='#ffedd5'; ctx.font='bold 15px system-ui'; ctx.textAlign='center'; ctx.fillText('FAST',obj.x,obj.y-38); }
+        } else if (obj.type === 'shield') {
+          drawObjectGroundShadow(obj, 26, 8, 0.34);
+          if (perfTier <= 1) addRimLight(obj.x, obj.y - 4, 36, 'rgba(125,211,252,ALPHA)', 0.18);
+          drawZombiePack(obj.x, obj.y - 6, obj.hp, 1.06);
+        } else if (obj.type === 'boss') {
+          drawObjectGroundShadow(obj, 28, 9, 0.34);
+          const bossPulse = 0.72 + Math.sin(performance.now() * 0.006) * 0.18;
+          if (perfTier <= 1) {
+            for (let ring = 0; ring < 2; ring++) {
+              ctx.strokeStyle = `rgba(248,113,113,${0.12 - ring * 0.04})`;
+              ctx.lineWidth = 3 - ring;
+              ctx.beginPath();
+              ctx.arc(obj.x, obj.y - 12, 58 + ring * 18 + Math.sin(performance.now() * 0.008 + ring) * 4, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+          }
+          if (perfTier <= 1) {
+            const bossBeam = ctx.createLinearGradient(obj.x, obj.y - 190, obj.x, obj.y + 20);
+            bossBeam.addColorStop(0, `rgba(248,113,113,${0.04 * bossPulse})`);
+            bossBeam.addColorStop(0.5, `rgba(239,68,68,${0.18 * bossPulse})`);
+            bossBeam.addColorStop(1, 'rgba(239,68,68,0)');
+            ctx.fillStyle = bossBeam;
+            ctx.fillRect(obj.x - 74, obj.y - 200, 148, 230);
+            const bossAura = ctx.createRadialGradient(obj.x, obj.y - 20, 10, obj.x, obj.y - 12, 92);
+            bossAura.addColorStop(0, `rgba(244,63,94,${0.22 * bossPulse})`);
+            bossAura.addColorStop(0.55, `rgba(239,68,68,${0.12 * bossPulse})`);
+            bossAura.addColorStop(1, 'rgba(239,68,68,0)');
+            ctx.fillStyle = bossAura;
+            ctx.beginPath();
+            ctx.arc(obj.x, obj.y - 10, 92, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          drawZombie(obj.x, obj.y, 1.72 + Math.sin(performance.now() * 0.01) * 0.03, 5, 'boss');
+          const bossGlow = ctx.createRadialGradient(obj.x, obj.y - 18, 12, obj.x, obj.y - 10, 74);
+          bossGlow.addColorStop(0, 'rgba(239,68,68,.3)');
+          bossGlow.addColorStop(1, 'rgba(239,68,68,0)');
+          ctx.fillStyle = bossGlow;
+          ctx.beginPath();
+          ctx.arc(obj.x, obj.y - 8, 76, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle='#fda4ff'; ctx.lineWidth=5; ctx.strokeRect(obj.x - 46, obj.y - 52, 92, 104);
+          ctx.fillStyle='rgba(15,23,42,.92)'; ctx.fillRect(obj.x - 52, obj.y - 78, 104, 14);
+          ctx.fillStyle='#7f1d1d'; ctx.fillRect(obj.x - 50, obj.y - 76, 100, 10);
+          ctx.fillStyle='#ef4444'; ctx.fillRect(obj.x - 50, obj.y - 76, 100 * Math.max(0, obj.hp / (18 + state.wave * 2)), 10);
+          ctx.fillStyle='#f5d0fe'; ctx.font='bold 15px system-ui'; ctx.textAlign='center'; ctx.fillText('BOSS',obj.x,obj.y-58);
+        } else if (obj.type === 'crate') {
+          drawObjectGroundShadow(obj, 16, 5.4, 0.28);
+          drawTreasureBox(obj.x, obj.y, 1);
+          ctx.fillStyle='#fef3c7'; ctx.font='bold 14px system-ui'; ctx.textAlign='center'; ctx.fillText('LOOT',obj.x,obj.y-30);
+        } else if (obj.type === 'wall') {
+          drawObjectGroundShadow(obj, 34, 8, 0.32);
+          addRimLight(obj.x, obj.y, 76, 'rgba(248,113,113,ALPHA)', 0.14);
+          const currentHp = Math.max(0, Math.ceil(obj.hp));
+          const maxHp = Math.max(currentHp, obj.maxHp || currentHp || 1);
+          if (currentHp > 0 && currentHp / maxHp > 0.5) {
+            const pulse = 0.16 + Math.sin(performance.now() * 0.01 + obj.lane * 0.9) * 0.06;
+            ctx.fillStyle = `rgba(251,146,60,${Math.max(0.08, pulse)})`;
+            ctx.fillRect(obj.x - 58, obj.y - 92, 116, 18);
+          }
+          obj.maxHp = maxHp;
+          const cols = 4;
+          const rows = 3;
+          const totalBricks = cols * rows;
+          const bricksAlive = Math.max(0, Math.ceil((currentHp / maxHp) * totalBricks));
+          const left = obj.x - 52;
+          const top = obj.y - 30;
+          const brickW = 24;
+          const brickH = 16;
+
+          ctx.fillStyle = 'rgba(127,29,29,0.26)';
+          ctx.beginPath();
+          ctx.roundRect(left, top, 104, 60, 8);
+          ctx.fill();
+
+          let brickIndex = 0;
+          for (let row = 0; row < rows; row++) {
+            const offset = row % 2 ? 12 : 0;
+            for (let col = 0; col < cols; col++) {
+              const bx = left + offset + col * brickW - (offset ? 6 : 0);
+              const by = top + row * brickH + 2;
+              const alive = brickIndex < bricksAlive;
+              brickIndex++;
+              if (alive) {
+                const brickGrad = ctx.createLinearGradient(bx, by, bx + brickW, by + brickH);
+                brickGrad.addColorStop(0, '#fecaca');
+                brickGrad.addColorStop(0.35, '#ef4444');
+                brickGrad.addColorStop(1, '#7f1d1d');
+                ctx.fillStyle = brickGrad;
+                ctx.beginPath();
+                ctx.roundRect(bx, by, brickW - 2, brickH - 2, 3);
+                ctx.fill();
+                ctx.fillStyle = 'rgba(255,255,255,0.16)';
+                ctx.fillRect(bx + 2, by + 2, brickW - 8, 3);
+                ctx.strokeStyle = 'rgba(255,241,242,0.28)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(bx, by, brickW - 2, brickH - 2);
+              } else {
+                ctx.fillStyle = 'rgba(2,6,23,0.34)';
+                ctx.beginPath();
+                ctx.roundRect(bx + 1, by + 1, brickW - 5, brickH - 5, 2);
+                ctx.fill();
+                ctx.fillStyle = 'rgba(248,113,113,0.08)';
+                ctx.fillRect(bx + 3, by + 3, brickW - 10, 2);
+              }
+            }
+          }
+
+          const crackCount = Math.min(5, Math.max(0, maxHp - currentHp + 1));
+          ctx.strokeStyle = 'rgba(255,241,242,0.34)';
+          ctx.lineWidth = 1.4;
+          for (let i = 0; i < crackCount; i++) {
+            const startX = obj.x - 22 + i * 11;
+            const startY = obj.y - 14 + (i % 2) * 8;
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(startX + 8, startY + 8);
+            ctx.lineTo(startX + 4, startY + 16);
+            ctx.stroke();
+          }
+
+          const chipCount = Math.min(12, Math.max(2, (maxHp - currentHp + 1) * 2));
+          ctx.fillStyle = '#fecaca';
+          for (let i = 0; i < chipCount; i++) {
+            const cx = obj.x - 44 + i * 8;
+            const cy = obj.y - 35 - (i % 3) * 4;
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(i * 0.55);
+            ctx.fillRect(-2.5, -2.5, 5, 5);
+            ctx.restore();
+          }
+          ctx.fillStyle='#fff1f2'; ctx.font='bold 22px system-ui'; ctx.textAlign='center'; ctx.fillText(String(currentHp),obj.x,obj.y-38);
+        } else if (obj.type === 'coin') {
+          addRimLight(obj.x, obj.y, 28, 'rgba(250,204,21,ALPHA)', 0.22);
+          const coinGrad = ctx.createRadialGradient(obj.x - 5, obj.y - 6, 2, obj.x, obj.y, 20);
+          coinGrad.addColorStop(0, '#fef9c3');
+          coinGrad.addColorStop(0.38, '#fde047');
+          coinGrad.addColorStop(0.72, '#f59e0b');
+          coinGrad.addColorStop(1, '#92400e');
+          ctx.fillStyle = coinGrad;
+          ctx.beginPath(); ctx.arc(obj.x,obj.y,18,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle = '#fffbeb'; ctx.lineWidth = 2.2; ctx.stroke();
+          ctx.beginPath(); ctx.arc(obj.x,obj.y,13,0,Math.PI*2); ctx.strokeStyle='rgba(120,53,15,0.45)'; ctx.lineWidth=1.6; ctx.stroke();
+          ctx.fillStyle = 'rgba(255,255,255,0.22)';
+          ctx.beginPath(); ctx.ellipse(obj.x - 5, obj.y - 6, 6, 3.5, -0.35, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#78350f'; ctx.font='bold 18px system-ui'; ctx.textAlign='center'; ctx.fillText('$',obj.x,obj.y+6);
+        }
+      }
+    }
+
+    function drawBullets() {
+      const perfTier = squadPerfTier();
+      const bulletsToDraw = (perfTier >= 2 || (mobileSafeMode && state.bullets.length > 90)) ? state.bullets.filter((_, i) => i % (perfTier >= 3 ? 3 : 2) === 0) : state.bullets;
+      for (const bullet of bulletsToDraw) {
+        ctx.save();
+        ctx.shadowColor = bullet.trail || bullet.color || '#facc15';
+        ctx.shadowBlur = perfTier >= 2 ? (bullet.glow ? 10 : 6) : bullet.glow ? 22 : 12;
+        ctx.fillStyle = bullet.color || COLORS.bullet;
+        ctx.strokeStyle = bullet.core || '#fff';
+        ctx.lineWidth = 1.4;
+
+        if (bullet.style === 'laser') {
+          ctx.fillRect(bullet.x - 2, bullet.y - 14, 4, 18);
+          ctx.strokeRect(bullet.x - 1, bullet.y - 10, 2, 10);
+        } else if (bullet.style === 'plasma') {
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, bullet.radius || 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, (bullet.radius || 6) * 0.55, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (bullet.style === 'pulse') {
+          ctx.beginPath();
+          ctx.ellipse(bullet.x, bullet.y, (bullet.radius || 5.5) + 2, bullet.radius || 5.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, (bullet.radius || 5.5) + 4, 0, Math.PI * 2);
+          ctx.globalAlpha = 0.22;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        } else if (bullet.style === 'scatter') {
+          ctx.save();
+          ctx.translate(bullet.x, bullet.y);
+          ctx.rotate((bullet.drift || 0) * 0.01);
+          ctx.fillRect(-3, -10, 6, 16);
+          ctx.strokeRect(-1.4, -7, 2.8, 8);
+          ctx.restore();
+        } else if (bullet.style === 'arc') {
+          ctx.beginPath();
+          ctx.moveTo(bullet.x - 5, bullet.y + 6);
+          ctx.quadraticCurveTo(bullet.x + 8, bullet.y, bullet.x - 1, bullet.y - 12);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, (bullet.radius || 6) * 0.65, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (bullet.style === 'minigun') {
+          ctx.fillRect(bullet.x - 2.5, bullet.y - 12, 5, 14);
+          ctx.strokeRect(bullet.x - 1.2, bullet.y - 8, 2.4, 8);
+        } else {
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, bullet.radius || 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        if (perfTier <= 1) {
+          ctx.globalAlpha = 0.55;
+          ctx.fillStyle = bullet.trail || '#fde68a';
+          ctx.fillRect(bullet.x - 1.5, bullet.y + 4, 3, 12);
+          ctx.globalAlpha = 0.2;
+          ctx.fillRect(bullet.x - 4, bullet.y + 2, 8, 18);
+        } else if (perfTier === 2) {
+          ctx.globalAlpha = 0.28;
+          ctx.fillStyle = bullet.trail || '#fde68a';
+          ctx.fillRect(bullet.x - 1, bullet.y + 5, 2, 8);
+        }
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawObjectGroundShadow(obj, radiusX, radiusY, alpha = 0.28) {
+      ctx.fillStyle = `rgba(2,6,23,${alpha})`;
+      ctx.beginPath();
+      ctx.ellipse(obj.x, obj.y + radiusY * 1.45, radiusX, radiusY, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawParticles() {
+      const perfTier = squadPerfTier();
+      const particlesToDraw = (perfTier >= 2 || mobileSafeMode || (lowPowerMobileMode && state.squad > 45)) && state.particles.length > (perfTier >= 2 ? 10 : 20)
+        ? state.particles.filter((_, i) => i % (perfTier >= 3 ? 3 : 2) === 0)
+        : state.particles;
+      for (const particle of particlesToDraw) {
+        const alpha = Math.max(0, particle.life / 0.18);
+        const size = particle.size || 8;
+        ctx.globalAlpha = alpha;
+        if (perfTier <= 1) {
+          const bloom = ctx.createRadialGradient(particle.x, particle.y, 0.5, particle.x, particle.y, Math.max(2, size * particle.life / 0.18));
+          bloom.addColorStop(0, 'rgba(255,255,255,0.22)');
+          bloom.addColorStop(0.4, particle.color);
+          bloom.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = bloom;
+        } else {
+          ctx.fillStyle = particle.color;
+        }
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, size * particle.life / 0.18, 0, Math.PI * 2);
+        ctx.fill();
+        if (particle.ring) {
+          ctx.strokeStyle = particle.ring;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, size * 0.8 * particle.life / 0.18, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        if (particle.burst) {
+          ctx.strokeStyle = particle.ring || '#fff';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(particle.x - size * 0.6, particle.y);
+          ctx.lineTo(particle.x + size * 0.6, particle.y);
+          ctx.moveTo(particle.x, particle.y - size * 0.6);
+          ctx.lineTo(particle.x, particle.y + size * 0.6);
+          ctx.stroke();
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawMissionPopup() {
+      if (!missionPopup) return;
+      const cardW = Math.min(420, canvas.width - 60);
+      const cardH = 220;
+      const cardX = (canvas.width - cardW) / 2;
+      const cardY = canvas.height * 0.24;
+      const buttonW = 180;
+      const buttonH = 50;
+      const buttonX = cardX + (cardW - buttonW) / 2;
+      const buttonY = cardY + 146;
+      missionPopup.rect = { x: buttonX, y: buttonY, w: buttonW, h: buttonH };
+
+      ctx.fillStyle = 'rgba(2,6,23,0.38)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const glow = ctx.createRadialGradient(cardX + cardW / 2, cardY + 30, 20, cardX + cardW / 2, cardY + 60, 220);
+      glow.addColorStop(0, 'rgba(250,204,21,0.18)');
+      glow.addColorStop(1, 'rgba(250,204,21,0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(cardX - 20, cardY - 20, cardW + 40, cardH + 40);
+
+      const panel = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH);
+      panel.addColorStop(0, 'rgba(15,23,42,0.96)');
+      panel.addColorStop(1, 'rgba(30,64,175,0.82)');
+      ctx.fillStyle = panel;
+      ctx.beginPath();
+      ctx.roundRect(cardX, cardY, cardW, cardH, 26);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(253,224,71,0.55)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = '#fde68a';
+      ctx.font = 'bold 32px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText(missionPopup.title, cardX + cardW / 2, cardY + 56);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 22px system-ui';
+      ctx.fillText(missionPopup.label, cardX + cardW / 2, cardY + 98);
+      ctx.fillStyle = '#fef3c7';
+      ctx.font = '18px system-ui';
+      ctx.fillText(`+${missionPopup.reward} coins earned`, cardX + cardW / 2, cardY + 128);
+
+      const buttonGrad = ctx.createLinearGradient(buttonX, buttonY, buttonX, buttonY + buttonH);
+      buttonGrad.addColorStop(0, '#facc15');
+      buttonGrad.addColorStop(1, '#f59e0b');
+      ctx.fillStyle = buttonGrad;
+      ctx.beginPath();
+      ctx.roundRect(buttonX, buttonY, buttonW, buttonH, 18);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      ctx.fillRect(buttonX + 8, buttonY + 6, buttonW - 16, 12);
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#111827';
+      ctx.font = 'bold 24px system-ui';
+      ctx.fillText(missionPopup.button, buttonX + buttonW / 2, buttonY + 33);
+    }
+
+    function getLaneThreats() {
+      const threats = LANES.map((x, lane) => ({ lane, x, obj: null, danger: 0 }));
+      for (const obj of state.objects) {
+        if (!obj || obj.hp <= 0 || obj.lane == null) continue;
+        const laneThreat = threats[obj.lane];
+        const approach = Math.max(0, Math.min(1, (obj.y - 120) / 470));
+        const weight = obj.type === 'boss' ? 1 : obj.type === 'wall' ? 0.9 : obj.type === 'shield' ? 0.82 : obj.type === 'runner' ? 0.76 : 0.64;
+        const danger = approach * weight;
+        if (danger > laneThreat.danger) {
+          laneThreat.obj = obj;
+          laneThreat.danger = danger;
+        }
+      }
+      return threats;
+    }
+
+    function drawLaneWarnings() {
+      const threats = getLaneThreats();
+      const perfTier = squadPerfTier();
+      for (const threat of threats) {
+        if (!threat.obj || threat.danger < 0.18) continue;
+        const pulse = 0.72 + Math.sin(performance.now() * 0.01 + threat.lane * 1.8) * 0.2;
+        const alpha = Math.min(0.7, threat.danger * (perfTier >= 2 ? 0.42 : 0.58)) * pulse;
+        const color = threat.obj.type === 'boss' ? `rgba(239,68,68,${alpha})` : threat.obj.type === 'wall' ? `rgba(251,146,60,${alpha})` : `rgba(248,113,113,${alpha})`;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(threat.x, 542);
+        ctx.lineTo(threat.x - 18, 574);
+        ctx.lineTo(threat.x + 18, 574);
+        ctx.closePath();
+        ctx.fill();
+        if (perfTier <= 1) {
+          ctx.fillStyle = 'rgba(255,255,255,0.12)';
+          ctx.fillRect(threat.x - 28, 582, 56, 7);
+          ctx.fillStyle = threat.obj.type === 'boss' ? '#ef4444' : threat.obj.type === 'wall' ? '#fb923c' : '#f87171';
+          ctx.fillRect(threat.x - 28, 582, 56 * Math.min(1, threat.danger), 7);
+        }
+      }
+    }
+
+    function drawHint() {
+      const titleGlow = ctx.createLinearGradient(86, 6, canvas.width - 86, 56);
+      titleGlow.addColorStop(0, 'rgba(59,130,246,.18)');
+      titleGlow.addColorStop(1, 'rgba(236,72,153,.14)');
+      ctx.fillStyle = titleGlow; ctx.fillRect(82,4,canvas.width - 164,52);
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.fillRect(82, 4, canvas.width - 164, 3);
+      const gloss = ctx.createLinearGradient(86, 8, 86, 28);
+      gloss.addColorStop(0, 'rgba(255,255,255,0.16)');
+      gloss.addColorStop(1, 'rgba(255,255,255,0)');
+      const titleGrad = ctx.createLinearGradient(86, 8, canvas.width - 86, 56);
+      titleGrad.addColorStop(0, 'rgba(15,23,42,.94)');
+      titleGrad.addColorStop(1, 'rgba(30,64,175,.72)');
+      ctx.fillStyle = titleGrad; ctx.fillRect(86,8,canvas.width - 172,46);
+      ctx.fillStyle = gloss; ctx.fillRect(90,10,canvas.width - 180,12);
+      ctx.strokeStyle = 'rgba(148,163,184,.22)'; ctx.lineWidth = 1.5; ctx.strokeRect(86,8,canvas.width - 172,46);
+      ctx.fillStyle='#e5e7eb'; ctx.font='bold 24px system-ui'; ctx.textAlign='center'; ctx.fillText('Zombie Squad Run',canvas.width / 2,39);
+      const minigunGlow = ctx.createLinearGradient(canvas.width - 176, 20, canvas.width - 30, 84);
+      minigunGlow.addColorStop(0, 'rgba(127,29,29,0.92)');
+      minigunGlow.addColorStop(1, 'rgba(30,41,59,0.88)');
+      ctx.fillStyle=minigunGlow; ctx.fillRect(canvas.width - 176, 20, 146, 64);
+      ctx.fillStyle='rgba(255,255,255,0.12)'; ctx.fillRect(canvas.width - 172, 24, 138, 14);
+      ctx.strokeStyle = 'rgba(239,68,68,.28)'; ctx.strokeRect(canvas.width - 176, 20, 146, 64);
+      ctx.fillStyle=state.minigunCharge >= 100 ? '#fca5a5' : '#fecaca'; ctx.font='bold 14px system-ui'; ctx.fillText('MINIGUN', canvas.width - 158, 44);
+      ctx.fillStyle='#fff'; ctx.font='bold 24px system-ui'; ctx.fillText(`${Math.floor(state.minigunCharge)}%`, canvas.width - 158, 68);
+      ctx.fillStyle='rgba(255,255,255,.12)'; ctx.fillRect(canvas.width - 158, 76, 116, 8);
+      ctx.fillStyle=state.minigunCharge >= 100 ? '#ef4444' : '#f59e0b'; ctx.fillRect(canvas.width - 158, 76, 116 * (state.minigunCharge / 100), 8);
+
+      if (state.bossWarningUntil > performance.now()) {
+        const remain = (state.bossWarningUntil - performance.now()) / 1000;
+        const pulse = 0.74 + Math.sin(performance.now() * 0.02) * 0.18;
+        ctx.fillStyle = `rgba(127,29,29,${0.72 * pulse})`;
+        ctx.fillRect(canvas.width / 2 - 136, 64, 272, 32);
+        ctx.strokeStyle = `rgba(248,113,113,${0.7 * pulse})`;
+        ctx.strokeRect(canvas.width / 2 - 136, 64, 272, 32);
+        ctx.fillStyle = '#fee2e2';
+        ctx.font = 'bold 18px system-ui';
+        ctx.fillText(remain > 0.9 ? 'BOSS WAVE INCOMING' : 'BOSS ENTERING NOW', canvas.width / 2, 86);
+      }
+
+      const laneThreats = getLaneThreats();
+      const urgentThreat = laneThreats.reduce((best, threat) => threat.danger > best.danger ? threat : best, laneThreats[0]);
+      let statusText = controlsMode === 'buttons' ? 'Use lane buttons for quick shots' : 'Tap any lane to fire';
+      if (urgentThreat?.obj && urgentThreat.danger > 0.58) {
+        const laneName = urgentThreat.lane === 0 ? 'LEFT' : urgentThreat.lane === 1 ? 'CENTER' : 'RIGHT';
+        statusText = `${laneName} ${urgentThreat.obj.type === 'wall' ? 'WALL' : urgentThreat.obj.type.toUpperCase()} CLOSE`;
+      } else if (state.minigunCharge >= 100) {
+        statusText = 'MINIGUN READY';
+      }
+      const statusGrad = ctx.createLinearGradient(canvas.width / 2 - 150, canvas.height - 40, canvas.width / 2 + 150, canvas.height - 16);
+      statusGrad.addColorStop(0, 'rgba(15,23,42,0.88)');
+      statusGrad.addColorStop(0.5, 'rgba(30,41,59,0.84)');
+      statusGrad.addColorStop(1, 'rgba(15,23,42,0.88)');
+      ctx.fillStyle = statusGrad;
+      ctx.fillRect(canvas.width / 2 - 150, canvas.height - 40, 300, 24);
+      ctx.strokeStyle = 'rgba(148,163,184,0.22)';
+      ctx.strokeRect(canvas.width / 2 - 150, canvas.height - 40, 300, 24);
+      ctx.fillStyle = urgentThreat?.danger > 0.58 ? '#fecaca' : state.minigunCharge >= 100 ? '#fde68a' : '#e2e8f0';
+      ctx.font = 'bold 13px system-ui';
+      ctx.shadowColor = urgentThreat?.danger > 0.58 ? 'rgba(248,113,113,0.32)' : 'rgba(125,211,252,0.18)';
+      ctx.shadowBlur = 8;
+      ctx.fillText(statusText, canvas.width / 2, canvas.height - 23);
+      ctx.shadowBlur = 0;
+
+      [minigunBtn, floatingMinigunBtn].forEach(btn => btn && btn.classList.toggle('ready', state.minigunCharge >= 100 && !state.paused && !state.gameOver));
+    }
+
+    function render() {
+      ctx.save();
+      if (screenShake > 0.1) {
+        const dx = (Math.random() - 0.5) * screenShake;
+        const dy = (Math.random() - 0.5) * screenShake;
+        ctx.translate(dx, dy);
+      }
+      drawRoad(); drawHeatHaze(); drawSquad(); drawObjects(); drawLaneWarnings(); drawMuzzleFlashes(); drawBullets(); drawShellCasings(); drawParticles(); drawDepthFog(); drawHint();
+      if (missionPopup) drawMissionPopup();
+      ctx.restore();
+      if (hitFlash > 0.01) {
+        ctx.fillStyle = `rgba(255,255,255,${Math.min(0.22, hitFlash)})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = `rgba(239,68,68,${Math.min(0.12, hitFlash * 0.7)})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      if (state.paused && !state.gameOver && !overlay.innerHTML && !missionPopup) {
+        ctx.fillStyle='rgba(0,0,0,.45)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle='#fff'; ctx.font='bold 42px system-ui'; ctx.textAlign='center'; ctx.fillText('Paused',canvas.width/2,canvas.height/2);
+      }
+    }
+
+    function tick(now) {
+      const dt = Math.min(0.033,(now-state.lastTime)/1000); state.lastTime=now; update(dt); render(); requestAnimationFrame(tick);
+    }
+
+    function laneFromX(x) { return x < canvas.width/3 ? 0 : x < canvas.width*2/3 ? 1 : 2; }
+    canvas.addEventListener('click', e => {
+      const rect=canvas.getBoundingClientRect();
+      const x=((e.clientX-rect.left)/rect.width)*canvas.width;
+      const y=((e.clientY-rect.top)/rect.height)*canvas.height;
+      if (missionPopup?.rect) {
+        const { x: bx, y: by, w, h } = missionPopup.rect;
+        if (x >= bx && x <= bx + w && y >= by && y <= by + h) {
+          missionPopup = null;
+          state.paused = false;
+          return;
+        }
+      }
+      fireAtLane(laneFromX(x));
+    });
+    window.addEventListener('keydown', e => { if (e.key==='1') fireAtLane(0); if (e.key==='2') fireAtLane(1); if (e.key==='3') fireAtLane(2); });
+    restartBtn.addEventListener('click', () => window.restartZombieRun());
+    pauseBtn.addEventListener('click', () => { state.paused=!state.paused; pauseBtn.textContent=state.paused?'Resume':'Pause'; });
+    [minigunBtn, floatingMinigunBtn].forEach(btn => {
+      btn.addEventListener('click', activateMinigun);
+      btn.addEventListener('pointerdown', activateMinigun);
+      btn.addEventListener('touchstart', activateMinigun, { passive: false });
+    });
+    moneyBtn.addEventListener('click', openMoneyPanel);
+    enhanceBtn.addEventListener('click', openEnhancementPanel);
+    avatarBtn.addEventListener('click', openAvatarPanel);
+    settingsBtn.addEventListener('click', openSettingsPanel);
+    battleSettingsBtn.addEventListener('click', openSettingsPanel);
+    floatingSettingsBtn.addEventListener('click', openSettingsPanel);
+    youtubeBtn.addEventListener('click', () => {
+      state.paused = true;
+      window.openYoutubeReward();
+    });
+    battleYoutubeBtn.addEventListener('click', () => {
+      state.paused = true;
+      window.openYoutubeReward();
+    });
+    laneLeftBtn.addEventListener('click', () => fireAtLane(0));
+    laneCenterBtn.addEventListener('click', () => fireAtLane(1));
+    laneRightBtn.addEventListener('click', () => fireAtLane(2));
+
+    buyGunBtn.addEventListener('click', () => {
+      if (state.coins >= gunPrice) {
+        state.coins -= gunPrice;
+        state.firepower = Math.min(12, state.firepower + 1);
+        gunPrice += 10;
+        bankCoins = state.coins;
+        saveMeta();
+        syncHud();
+      }
+    });
+    buySquadBtn.addEventListener('click', () => {
+      if (state.coins >= squadPrice) {
+        state.coins -= squadPrice;
+        state.squad += 2;
+        updateMission('survivors', 2);
+        squadPrice += 12;
+        bankCoins = state.coins;
+        saveMeta();
+        syncHud();
+      }
+    });
+    buyReviveBtn.addEventListener('click', () => {
+      if (state.coins >= revivePrice) {
+        state.coins -= revivePrice;
+        state.revives += 1;
+        revivePrice += 10;
+        bankCoins = state.coins;
+        saveMeta();
+        syncHud();
+      }
+    });
+
+    window.buyStarterPack = function() {
+      if (starterPackClaimed) {
+        overlay.innerHTML = moneyPanelMarkup();
+        return;
+      }
+      addCoins(100);
+      starterPackClaimed = true;
+      saveMeta();
+      overlay.innerHTML = `
+        <div class="message">
+          <h2>Starter Pack Added</h2>
+          <p>Your featured pack added <strong>100 coins</strong> to the run.</p>
+          <button onclick="window.openMoneyPanel()">Back To Shop</button>
+        </div>`;
+      syncHud();
+    };
+    window.openYoutubeReward = function() {
+      if (youtubeVisitClaimed) {
+        overlay.innerHTML = moneyPanelMarkup();
+        return;
+      }
+      addCoins(100);
+      youtubeVisitClaimed = true;
+      saveMeta();
+      syncHud();
+
+      const opened = window.open(YOUTUBE_CHANNEL_URL, '_blank', 'noopener,noreferrer');
+      if (!opened) {
+        overlay.innerHTML = `
+          <div class="message">
+            <h2>YouTube Reward Added</h2>
+            <p>You received <strong>100 coins</strong>. Your browser blocked the popup, so use the button below to open <strong>@ColtRT-e5n2h</strong>.</p>
+            <button class="warn" onclick="window.location.href='${YOUTUBE_CHANNEL_URL}'">Open YouTube Channel</button>
+            <button class="secondary" onclick="window.closeOverlayAndResume()">Back To Run</button>
+          </div>`;
+        return;
+      }
+      overlay.innerHTML = `
+        <div class="message">
+          <h2>YouTube Reward Added</h2>
+          <p>You opened <strong>@ColtRT-e5n2h</strong> and received 100 coins.</p>
+          <button onclick="window.openMoneyPanel()">Back To Shop</button>
+        </div>`;
+    };
+    window.claimSubscribeReward = function() {
+      if (youtubeSubscribeClaimed) {
+        overlay.innerHTML = moneyPanelMarkup();
+        return;
+      }
+      addCoins(1000);
+      youtubeSubscribeClaimed = true;
+      saveMeta();
+      overlay.innerHTML = `
+        <div class="message">
+          <h2>Subscription Reward Claimed</h2>
+          <p>1000 coins were added for subscribing to <strong>@ColtRT-e5n2h</strong>.</p>
+          <p class="mini-note">This is currently an honor-system reward until a real verification flow exists.</p>
+          <button onclick="window.openMoneyPanel()">Back To Shop</button>
+        </div>`;
+      syncHud();
+    };
+    window.closeOverlayAndResume = function() { overlay.innerHTML=''; missionPopup = null; state.paused=false; };
+    window.startZombieRun = function() { overlay.innerHTML=''; state.paused=false; state.running=true; state.gameOver=false; refreshMusicState(); };
+    window.mockRewardedReviveOffer = function() {
+      state.coins += 5;
+      bankCoins = state.coins;
+      saveMeta();
+      resetGame();
+    };
+    window.restartZombieRun = function() { bankCoins = state.coins; saveMeta(); resetGame(); pauseBtn.textContent='Pause'; refreshMusicState(); };
+
+    soundBtn.addEventListener('click', () => {
+      soundOn = !soundOn;
+      soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
+      if (soundOn) playTone(720, 0.08, 'triangle', 1.3);
+      refreshMusicState();
+      saveMeta();
+    });
+    titleBtn.addEventListener('click', () => { showTitleScreen(); refreshMusicState(); });
+
+    applyDisplaySettings();
+    applyControlsMode();
+    resetGame();
+    refreshMusicState();
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>

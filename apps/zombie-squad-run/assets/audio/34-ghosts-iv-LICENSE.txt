@@ -1,0 +1,12 @@
+34 Ghosts IV
+Artist: Nine Inch Nails
+Source release: Ghosts I-IV
+Track file source used here: Internet Archive mirror of Ghosts I-IV
+
+License basis used for this build:
+- Ghosts I-IV was released under Creative Commons Attribution-NonCommercial-ShareAlike (CC BY-NC-SA)
+- This game integration is intended for non-commercial use only
+- Attribution to Nine Inch Nails / Ghosts I-IV should be retained with the build
+
+Reference:
+- https://creativecommons.org/2008/03/02/nine-inch-nails-releases-ghosts-i-iv-under-a-creative-commons-license/

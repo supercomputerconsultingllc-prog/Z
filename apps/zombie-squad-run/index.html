@@ -1542,9 +1542,15 @@
       const baseBodyHeight = armyMode ? 10 : 24;
 
       const maxColumnsThatFit = Math.max(1, Math.floor(crowdWidth / Math.max(baseBodyWidth * minScale, 1)) + 1);
-      const growthCap = ultraArmyMode ? maxColumnsThatFit : armyMode ? Math.min(maxColumnsThatFit, 26) : total <= 12 ? 12 : total <= 36 ? 18 : total <= 90 ? 24 : 28;
-      const columns = Math.max(1, Math.min(total, growthCap, maxColumnsThatFit));
-      const rows = Math.max(1, Math.ceil(total / columns));
+      let rows;
+      if (ultraArmyMode) rows = Math.max(4, Math.ceil(total / Math.min(maxColumnsThatFit, 36)));
+      else if (armyMode) rows = Math.max(3, Math.ceil(total / Math.min(maxColumnsThatFit, 26)));
+      else if (total <= 12) rows = 1;
+      else if (total <= 24) rows = 2;
+      else if (total <= 36) rows = 3;
+      else if (total <= 48) rows = 4;
+      else rows = Math.max(5, Math.ceil(total / Math.min(maxColumnsThatFit, 12)));
+      const columns = Math.max(1, Math.min(maxColumnsThatFit, Math.ceil(total / rows)));
 
       const rawGapX = columns > 1 ? crowdWidth / (columns - 1) : crowdWidth;
       const rawGapY = rows > 1 ? crowdHeight / Math.max(rows - 1, 1) : crowdHeight;

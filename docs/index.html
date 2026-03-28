@@ -2239,6 +2239,18 @@
         visibleSoldiers.push({ x, y, depth, scale, index: drawIndex++ });
       }
 
+      const bannerGradient = ctx.createLinearGradient(0, 0, 220, 0);
+      bannerGradient.addColorStop(0, 'rgba(15,23,42,.96)');
+      bannerGradient.addColorStop(1, 'rgba(30,64,175,.78)');
+      ctx.fillStyle = bannerGradient;
+      ctx.fillRect(18, 108, 210, 50);
+      ctx.strokeStyle = 'rgba(147,197,253,.35)';
+      ctx.strokeRect(18, 108, 210, 50);
+      ctx.fillStyle = '#eff6ff';
+      ctx.font = 'bold 22px system-ui';
+      ctx.textAlign = 'left';
+      ctx.fillText(`Army ${state.squad}`, 32, 141);
+
       if (perfCrowd) {
         const cacheKey = `${Math.round(crowdRadiusX)}:${Math.round(crowdRadiusY)}:${visibleSoldiers.length}:${Math.floor(total / 8)}`;
         if (!crowdCache || crowdCache.key !== cacheKey) {

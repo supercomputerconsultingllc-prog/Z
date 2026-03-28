@@ -1195,7 +1195,7 @@
     function applySplashDamage(cx, cy, radius, damage, ring, color) {
       if (!radius || radius <= 0) return;
       for (const obj of state.objects) {
-        if (obj.hp <= 0 || (obj.type !== 'zombie' && obj.type !== 'wall' && obj.type !== 'crate')) continue;
+        if (obj.hp <= 0 || (obj.type !== 'zombie' && obj.type !== 'lootzombie' && obj.type !== 'wall' && obj.type !== 'crate')) continue;
         const dx = obj.x - cx;
         const dy = obj.y - cy;
         const dist = Math.hypot(dx, dy);
@@ -1215,7 +1215,7 @@
         let best = null;
         let bestDist = Infinity;
         for (const obj of state.objects) {
-          if (obj === current || obj.hp <= 0 || (obj.type !== 'zombie' && obj.type !== 'wall')) continue;
+          if (obj === current || obj.hp <= 0 || (obj.type !== 'zombie' && obj.type !== 'lootzombie' && obj.type !== 'wall')) continue;
           const dist = Math.hypot(obj.x - current.x, obj.y - current.y);
           if (dist < 120 && dist < bestDist) {
             best = obj;
@@ -1315,7 +1315,8 @@
       const lane = rand(0, 2);
       const roll = Math.random();
       let obj;
-      if (roll < 0.32) obj = { type:'zombie', lane, x:LANES[lane], y:-60, hp:rand(4, 6 + Math.floor(state.wave / 2)), reward:rand(1,2), size:36 };
+      if (roll < 0.28) obj = { type:'zombie', lane, x:LANES[lane], y:-60, hp:rand(4, 6 + Math.floor(state.wave / 2)), reward:rand(1,2), size:36 };
+      else if (roll < 0.4) obj = { type:'lootzombie', lane, x:LANES[lane], y:-58, hp:rand(4, 6 + Math.floor(state.wave / 2)), reward:2, size:34, speedFactor:1.08 };
       else if (roll < 0.52) {
         const hp = rand(2, Math.max(4, 2 + Math.floor(state.wave/2)));
         obj = { type:'wall', lane, x:LANES[lane], y:-80, hp, maxHp: hp, reward:0, size:58 };
@@ -1458,6 +1459,7 @@
         if (obj.y >= 570) {
           if (obj.type === 'wall' && obj.hp > 0) state.squad -= obj.hp;
           else if (obj.type === 'zombie' && obj.hp > 0) state.squad -= Math.max(1, obj.reward - 1);
+          else if (obj.type === 'lootzombie' && obj.hp > 0) state.squad -= Math.max(2, obj.reward);
           else if (obj.type === 'runner' && obj.hp > 0) state.squad -= Math.max(2, obj.reward);
           else if (obj.type === 'shield' && obj.hp > 0) state.squad -= Math.max(2, Math.ceil(obj.hp / 2));
           else if (obj.type === 'boss' && obj.hp > 0) state.squad -= Math.max(6, Math.ceil(obj.hp / 2));
@@ -1479,6 +1481,13 @@
         pushDecal(obj.x, obj.y + 18, '#7f1d1d', 20, 3.5, 5);
         pushDecal(obj.x - 12, obj.y + 10, '#991b1b', 11, 2.7, 3);
         pushDecal(obj.x + 10, obj.y + 14, '#b91c1c', 7, 2.1, 1);
+      }
+      else if (obj.type === 'lootzombie') {
+        const squadGain = Math.max(1, obj.reward);
+        state.squad += squadGain; addCoins(obj.reward + 2); updateMission('survivors', squadGain); playTone(260, 0.12, 'triangle', 1.55);
+        pushDecal(obj.x, obj.y + 18, '#7f1d1d', 18, 3.3, 4);
+        pushDecal(obj.x - 10, obj.y + 12, '#991b1b', 10, 2.5, 2);
+        pushDecal(obj.x + 10, obj.y + 12, '#991b1b', 10, 2.5, 2);
       }
       else if (obj.type === 'runner') {
         const squadGain = Math.max(1, obj.reward);
@@ -2155,6 +2164,41 @@
       ctx.lineTo(x + 6 * scale, y + 9.5 * scale);
       ctx.stroke();
       ctx.strokeStyle = 'rgba(248,113,113,0.7)';
+    }
+
+    function drawTreasureBox(x, y, scale = 1) {
+      const perfTier = squadPerfTier();
+      ctx.fillStyle = 'rgba(15,23,42,0.28)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 18 * scale, 22 * scale, 8 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      if (perfTier >= 2) {
+        ctx.fillStyle = '#7c2d12';
+        ctx.fillRect(x - 18 * scale, y - 8 * scale, 36 * scale, 22 * scale);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(x - 2 * scale, y - 8 * scale, 4 * scale, 22 * scale);
+        return;
+      }
+      const wood = ctx.createLinearGradient(x - 18 * scale, y, x + 18 * scale, y + 22 * scale);
+      wood.addColorStop(0, '#92400e');
+      wood.addColorStop(0.5, '#b45309');
+      wood.addColorStop(1, '#7c2d12');
+      ctx.fillStyle = wood;
+      ctx.beginPath();
+      ctx.roundRect(x - 20 * scale, y - 6 * scale, 40 * scale, 26 * scale, 6 * scale);
+      ctx.fill();
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.roundRect(x - 20 * scale, y - 12 * scale, 40 * scale, 12 * scale, 6 * scale);
+      ctx.fill();
+      ctx.fillStyle = '#fde68a';
+      ctx.fillRect(x - 3 * scale, y - 10 * scale, 6 * scale, 24 * scale);
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(x - 12 * scale, y + 2 * scale, 24 * scale, 3 * scale);
+      ctx.fillStyle = '#fef3c7';
+      ctx.beginPath();
+      ctx.arc(x, y + 1 * scale, 3.2 * scale, 0, Math.PI * 2);
+      ctx.fill();
       ctx.lineWidth = 1.6 * scale;
       ctx.beginPath();
       ctx.moveTo(x - 18 * scale, y - 11 * scale);
@@ -2355,6 +2399,10 @@
           drawObjectGroundShadow(obj, 15, 5.5);
           drawZombie(obj.x, obj.y, 1.04, 1, 'zombie');
           if (perfTier <= 1) { ctx.fillStyle='#dcfce7'; ctx.font='bold 16px system-ui'; ctx.textAlign='center'; ctx.fillText(`+${obj.reward}`,obj.x,obj.y-42); }
+        } else if (obj.type === 'lootzombie') {
+          drawObjectGroundShadow(obj, 16, 5.6, 0.28);
+          drawLootZombie(obj.x, obj.y, 1);
+          if (perfTier <= 1) { ctx.fillStyle='#fef3c7'; ctx.font='bold 14px system-ui'; ctx.textAlign='center'; ctx.fillText('LOOTER',obj.x,obj.y-30); }
         } else if (obj.type === 'runner') {
           drawObjectGroundShadow(obj, 13, 4.6, 0.24);
           drawZombie(obj.x, obj.y, 0.94, 2, 'runner');
@@ -2389,8 +2437,8 @@
           ctx.fillStyle='#f5d0fe'; ctx.font='bold 15px system-ui'; ctx.textAlign='center'; ctx.fillText('BOSS',obj.x,obj.y-58);
         } else if (obj.type === 'crate') {
           drawObjectGroundShadow(obj, 16, 5.4, 0.28);
-          drawLootZombie(obj.x, obj.y, 1);
-          ctx.fillStyle='#fee2e2'; ctx.font='bold 14px system-ui'; ctx.textAlign='center'; ctx.fillText('HUSK',obj.x,obj.y-30);
+          drawTreasureBox(obj.x, obj.y, 1);
+          ctx.fillStyle='#fef3c7'; ctx.font='bold 14px system-ui'; ctx.textAlign='center'; ctx.fillText('LOOT',obj.x,obj.y-30);
         } else if (obj.type === 'wall') {
           drawObjectGroundShadow(obj, 34, 8, 0.32);
           addRimLight(obj.x, obj.y, 76, 'rgba(248,113,113,ALPHA)', 0.14);

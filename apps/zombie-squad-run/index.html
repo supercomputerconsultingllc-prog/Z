@@ -1621,13 +1621,13 @@
       ctx.restore();
     }
 
-    function drawTinySoldier(x, y, tint, scale = 1, depth = 0) {
+    function drawTinySoldier(x, y, tint, scale = 1, depth = 0, compact = false) {
       const bodyW = Math.max(1.2, 6 * scale);
       const bodyH = Math.max(2, 9 * scale);
       const head = Math.max(1, 2.8 * scale);
-      const marchPhase = performance.now() * 0.0065;
-      const bob = Math.sin((x + depth * 11) * 0.035 + marchPhase) * scale * 0.35;
-      const sway = Math.sin((depth * 0.8) + marchPhase + x * 0.01) * scale * 0.45;
+      const marchPhase = compact ? 0 : performance.now() * 0.0065;
+      const bob = compact ? 0 : Math.sin((x + depth * 11) * 0.035 + marchPhase) * scale * 0.35;
+      const sway = compact ? 0 : Math.sin((depth * 0.8) + marchPhase + x * 0.01) * scale * 0.45;
       ctx.save();
       ctx.translate(sway, bob);
       ctx.fillStyle = 'rgba(15,23,42,0.26)';
@@ -1655,10 +1655,13 @@
       const crowdRadiusY = total >= 500 ? 150 : total >= 250 ? 138 : total >= 100 ? 124 : 108;
       const armyMode = total >= 260;
       const ultraArmyMode = total >= 500;
+      const compactArmyMode = total >= 220;
       const minScale = ultraArmyMode ? 0.028 : armyMode ? 0.04 : total > 120 ? 0.06 : total > 60 ? 0.075 : 0.1;
       const maxScale = ultraArmyMode ? 0.28 : armyMode ? 0.42 : 0.92;
       const visibleSoldiers = [];
-      const marchPhase = performance.now() * 0.004;
+      const marchPhase = compactArmyMode ? performance.now() * 0.0025 : performance.now() * 0.004;
+      const maxVisible = mobileSafeMode ? (ultraArmyMode ? 140 : armyMode ? 120 : 100) : (ultraArmyMode ? 220 : armyMode ? 180 : 140);
+      const step = total > maxVisible ? total / maxVisible : 1;
 
       const crowdGlow = ctx.createRadialGradient(centerX, 592, 30, centerX, 592, crowdRadiusX + 35);
       crowdGlow.addColorStop(0, armyMode ? 'rgba(96,165,250,0.26)' : 'rgba(96,165,250,0.18)');
@@ -1668,10 +1671,12 @@
       ctx.ellipse(centerX, 594 + (armyMode ? Math.sin(marchPhase) * 3 : 0), crowdRadiusX + 10, crowdRadiusY + 14, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      for (let i = 0; i < total; i++) {
+      let drawIndex = 0;
+      for (let n = 1; n <= total; n += step) {
+        const i = Math.floor(n - 1);
         const t = total === 1 ? 0 : i / Math.max(total - 1, 1);
         const ringBias = Math.sqrt(t);
-        const angle = i * 2.399963229728653 + Math.sin(i * 0.35 + marchPhase) * 0.05;
+        const angle = i * 2.399963229728653 + Math.sin(i * 0.35 + marchPhase) * (compactArmyMode ? 0.02 : 0.05);
         const radiusX = ringBias * crowdRadiusX;
         const radiusY = ringBias * crowdRadiusY;
         let x = centerX + Math.cos(angle) * radiusX;
@@ -1679,7 +1684,7 @@
         y = Math.min(baseY, y);
         const depth = (baseY - y) / Math.max(crowdRadiusY, 1);
         const scale = Math.max(minScale, Math.min(maxScale, maxScale - depth * (armyMode ? 0.14 : 0.2)));
-        visibleSoldiers.push({ x, y, depth, scale, index: i });
+        visibleSoldiers.push({ x, y, depth, scale, index: drawIndex++ });
       }
 
       const bannerGradient = ctx.createLinearGradient(0, 0, 220, 0);
@@ -1697,7 +1702,7 @@
       visibleSoldiers.sort((a, b) => a.y - b.y);
       for (const soldier of visibleSoldiers) {
         const tint = soldier.index % 4 === 0 ? '#60a5fa' : soldier.index % 4 === 1 ? '#93c5fd' : soldier.index % 4 === 2 ? '#3b82f6' : '#2563eb';
-        if (armyMode) drawTinySoldier(soldier.x, soldier.y, tint, soldier.scale, soldier.index);
+        if (armyMode) drawTinySoldier(soldier.x, soldier.y, tint, soldier.scale, soldier.index, compactArmyMode);
         else drawPerson(soldier.x, soldier.y, tint, soldier.scale, soldier.index);
       }
 

@@ -486,8 +486,12 @@
       const roll = Math.random();
       let obj;
       if (roll < 0.42) {
-        const reward = rand(1,3);
-        obj = { type:'zombie', lane, x:LANES[lane], y:-70, hp:reward, reward, size:48 + reward * 6 };
+        const waveTier = Math.floor((state.wave - 1) / 2);
+        const minReward = Math.min(4, 1 + waveTier);
+        const maxReward = Math.min(6, 3 + waveTier);
+        const reward = rand(minReward, maxReward);
+        const hp = reward + Math.floor(state.wave / 3);
+        obj = { type:'zombie', lane, x:LANES[lane], y:-70, hp, reward, size:52 + reward * 7 + state.wave * 1.5 };
       }
       else if (roll < 0.70) obj = { type:'wall', lane, x:LANES[lane], y:-80, hp:rand(2, Math.max(4, 2 + Math.floor(state.wave/2))), reward:0, size:58 };
       else if (roll < 0.88) obj = { type:'crate', lane, x:LANES[lane], y:-50, hp:1, reward:1, size:32 };

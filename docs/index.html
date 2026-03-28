@@ -516,6 +516,8 @@
     let musicTimer = null;
     let musicStep = 0;
     let renderNow = performance.now();
+    let lastShotSoundAt = 0;
+    const laneObjectBuckets = [[], [], []];
     let best = Number(localStorage.getItem('zombie-squad-run-best') || 0);
     let bankCoins = 0;
     let avatarCoins = Number(localStorage.getItem('zombie-squad-run-avatar-coins') || 0);
@@ -604,6 +606,10 @@
 
     function playShotSound(power = 1) {
       if (!soundOn || volumeLevel <= 0) return;
+      const nowMs = performance.now();
+      const minGap = power >= 10 ? 52 : power >= 7 ? 44 : 34;
+      if (nowMs - lastShotSoundAt < minGap) return;
+      lastShotSoundAt = nowMs;
       const ctxAudio = ensureAudio();
       if (!ctxAudio) return;
       if (ctxAudio.state === 'suspended') ctxAudio.resume();
@@ -1549,13 +1555,21 @@
       }
       state.bullets.length = bulletWrite;
       for (const obj of state.objects) obj.y += state.speed * (obj.speedFactor || 1) * dt;
+      laneObjectBuckets[0].length = 0;
+      laneObjectBuckets[1].length = 0;
+      laneObjectBuckets[2].length = 0;
+      for (let i = 0; i < state.objects.length; i++) {
+        const obj = state.objects[i];
+        if (obj.hp > 0 && obj.lane != null && laneObjectBuckets[obj.lane]) laneObjectBuckets[obj.lane].push(obj);
+      }
       const collisionStride = state.bullets.length > (mobileSafeMode ? 18 : 36) ? 2 : 1;
       for (let bulletIndex = 0; bulletIndex < state.bullets.length; bulletIndex += collisionStride) {
         const bullet = state.bullets[bulletIndex];
         if (!bullet) continue;
-        for (const obj of state.objects) {
+        const collisionTargets = bullet.lane != null && laneObjectBuckets[bullet.lane] ? laneObjectBuckets[bullet.lane] : state.objects;
+        for (let targetIndex = 0; targetIndex < collisionTargets.length; targetIndex++) {
+          const obj = collisionTargets[targetIndex];
           if (obj.hp <= 0) continue;
-          if (obj.lane != null && bullet.lane != null && obj.lane !== bullet.lane) continue;
           if (Math.abs(bullet.x - obj.x) < obj.size * 0.55 && Math.abs(bullet.y - obj.y) < obj.size * 0.55) {
             obj.hp -= bullet.damage || 1;
             addScreenShake(bullet.style === 'minigun' ? 4 : bullet.style === 'plasma' ? 6 : 3, bullet.style === 'plasma' ? 0.08 : 0.04);

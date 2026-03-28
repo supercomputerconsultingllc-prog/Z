@@ -1945,6 +1945,7 @@
     }
 
     function drawZombie(x, y, scale = 1, depth = 0, variant = 'zombie') {
+      const perfTier = squadPerfTier();
       const head = (variant === 'boss' ? 12 : 8.5) * scale;
       const bodyW = (variant === 'boss' ? 21 : variant === 'shield' ? 16 : 14) * scale;
       const bodyH = (variant === 'boss' ? 34 : 26) * scale;
@@ -1957,6 +1958,29 @@
       ctx.fill();
       const skin = variant === 'boss' ? '#6d28d9' : variant === 'shield' ? '#64748b' : variant === 'runner' ? '#84cc16' : '#65a30d';
       const darkSkin = variant === 'boss' ? '#3b0764' : variant === 'shield' ? '#334155' : variant === 'runner' ? '#4d7c0f' : '#3f6212';
+      if (perfTier >= 2 && variant !== 'boss') {
+        if (perfTier === 2) addRimLight(x, y - 1 * scale, variant === 'shield' ? 24 * scale : 22 * scale, variant === 'shield' ? 'rgba(125,211,252,ALPHA)' : 'rgba(163,230,53,ALPHA)', 0.12);
+        const simpleGrad = ctx.createLinearGradient(x - bodyW / 2, y - head, x + bodyW / 2, y + bodyH);
+        simpleGrad.addColorStop(0, skin);
+        simpleGrad.addColorStop(1, darkSkin);
+        ctx.fillStyle = simpleGrad;
+        ctx.beginPath();
+        ctx.roundRect(x - bodyW / 2, y - 2 * scale, bodyW, bodyH + 4 * scale, 4 * scale);
+        ctx.fill();
+        ctx.fillStyle = perfTier >= 3 ? darkSkin : '#ef4444';
+        ctx.beginPath();
+        ctx.arc(x, y - 9 * scale, head, 0, Math.PI * 2);
+        ctx.fill();
+        if (perfTier === 2) {
+          ctx.fillStyle = '#fca5a5';
+          ctx.fillRect(x - bodyW * 0.18, y + 3 * scale, bodyW * 0.12, bodyH * 0.42);
+          ctx.fillStyle = '#fef2f2';
+          ctx.fillRect(x - 2.2 * scale, y - 11.5 * scale, 1.2 * scale, 1.2 * scale);
+          ctx.fillRect(x + 1 * scale, y - 11.5 * scale, 1.2 * scale, 1.2 * scale);
+        }
+        ctx.restore();
+        return;
+      }
       addRimLight(x, y - 1 * scale, variant === 'boss' ? 48 * scale : variant === 'shield' ? 30 * scale : 28 * scale, variant === 'boss' ? 'rgba(239,68,68,ALPHA)' : variant === 'shield' ? 'rgba(125,211,252,ALPHA)' : 'rgba(163,230,53,ALPHA)', variant === 'boss' ? 0.34 : 0.24);
 
       const skullGrad = ctx.createRadialGradient(x - head * 0.48, y - 13.5 * scale, 1, x, y - 10 * scale, head * 1.24);
@@ -2059,18 +2083,36 @@
     }
 
     function drawZombiePack(x, y, count = 3, scale = 1) {
-      const total = Math.max(3, Math.min(12, Math.ceil(count + 2)));
+      const perfTier = squadPerfTier();
+      const total = Math.max(3, Math.min(perfTier >= 3 ? 5 : perfTier >= 2 ? 7 : 12, Math.ceil(count + 2)));
       for (let i = 0; i < total; i++) {
         const row = Math.floor(i / 4);
         const col = i % 4;
         const ox = (col - 1.5) * 11 * scale + (row % 2 ? 5 * scale : 0);
         const oy = row * 12 * scale;
         const memberScale = scale * (0.8 - row * 0.07 - i * 0.01);
-        drawZombie(x + ox, y + oy, Math.max(0.5, memberScale), i + row, i % 5 === 0 ? 'runner' : 'shield');
+        drawZombie(x + ox, y + oy, Math.max(perfTier >= 2 ? 0.58 : 0.5, memberScale), i + row, i % 5 === 0 ? 'runner' : 'shield');
       }
     }
 
     function drawLootZombie(x, y, scale = 1) {
+      const perfTier = squadPerfTier();
+      if (perfTier >= 2) {
+        ctx.fillStyle = 'rgba(127,29,29,0.36)';
+        ctx.beginPath();
+        ctx.ellipse(x, y + 6 * scale, 22 * scale, 10 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#450a0a';
+        ctx.beginPath();
+        ctx.roundRect(x - 18 * scale, y - 10 * scale, 36 * scale, 20 * scale, 8 * scale);
+        ctx.fill();
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(x - 5 * scale, y - 2 * scale, 2.4 * scale, 0, Math.PI * 2);
+        ctx.arc(x + 5 * scale, y - 2 * scale, 2.4 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        return;
+      }
       const carcassGlow = ctx.createRadialGradient(x, y - 4 * scale, 3, x, y, 34 * scale);
       carcassGlow.addColorStop(0, 'rgba(239,68,68,0.26)');
       carcassGlow.addColorStop(1, 'rgba(239,68,68,0)');
@@ -2298,28 +2340,31 @@
     }
 
     function drawObjects() {
+      const perfTier = squadPerfTier();
       for (const obj of state.objects) {
         if (obj.type === 'zombie') {
           drawObjectGroundShadow(obj, 15, 5.5);
           drawZombie(obj.x, obj.y, 1.04, 1, 'zombie');
-          ctx.fillStyle='#dcfce7'; ctx.font='bold 16px system-ui'; ctx.textAlign='center'; ctx.fillText(`+${obj.reward}`,obj.x,obj.y-42);
+          if (perfTier <= 1) { ctx.fillStyle='#dcfce7'; ctx.font='bold 16px system-ui'; ctx.textAlign='center'; ctx.fillText(`+${obj.reward}`,obj.x,obj.y-42); }
         } else if (obj.type === 'runner') {
           drawObjectGroundShadow(obj, 13, 4.6, 0.24);
           drawZombie(obj.x, obj.y, 0.94, 2, 'runner');
-          ctx.fillStyle='#ffedd5'; ctx.font='bold 15px system-ui'; ctx.textAlign='center'; ctx.fillText('FAST',obj.x,obj.y-38);
+          if (perfTier <= 1) { ctx.fillStyle='#ffedd5'; ctx.font='bold 15px system-ui'; ctx.textAlign='center'; ctx.fillText('FAST',obj.x,obj.y-38); }
         } else if (obj.type === 'shield') {
           drawObjectGroundShadow(obj, 26, 8, 0.34);
-          addRimLight(obj.x, obj.y - 4, 36, 'rgba(125,211,252,ALPHA)', 0.18);
+          if (perfTier <= 1) addRimLight(obj.x, obj.y - 4, 36, 'rgba(125,211,252,ALPHA)', 0.18);
           drawZombiePack(obj.x, obj.y - 6, obj.hp, 1.06);
         } else if (obj.type === 'boss') {
           drawObjectGroundShadow(obj, 28, 9, 0.34);
           const bossPulse = 0.72 + Math.sin(performance.now() * 0.006) * 0.18;
-          const bossBeam = ctx.createLinearGradient(obj.x, obj.y - 190, obj.x, obj.y + 20);
-          bossBeam.addColorStop(0, `rgba(248,113,113,${0.04 * bossPulse})`);
-          bossBeam.addColorStop(0.5, `rgba(239,68,68,${0.18 * bossPulse})`);
-          bossBeam.addColorStop(1, 'rgba(239,68,68,0)');
-          ctx.fillStyle = bossBeam;
-          ctx.fillRect(obj.x - 74, obj.y - 200, 148, 230);
+          if (perfTier <= 1) {
+            const bossBeam = ctx.createLinearGradient(obj.x, obj.y - 190, obj.x, obj.y + 20);
+            bossBeam.addColorStop(0, `rgba(248,113,113,${0.04 * bossPulse})`);
+            bossBeam.addColorStop(0.5, `rgba(239,68,68,${0.18 * bossPulse})`);
+            bossBeam.addColorStop(1, 'rgba(239,68,68,0)');
+            ctx.fillStyle = bossBeam;
+            ctx.fillRect(obj.x - 74, obj.y - 200, 148, 230);
+          }
           drawZombie(obj.x, obj.y, 1.72, 5, 'boss');
           const bossGlow = ctx.createRadialGradient(obj.x, obj.y - 18, 12, obj.x, obj.y - 10, 74);
           bossGlow.addColorStop(0, 'rgba(239,68,68,.3)');

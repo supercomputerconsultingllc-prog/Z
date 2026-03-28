@@ -501,6 +501,8 @@
     let best = Number(localStorage.getItem('zombie-squad-run-best') || 0);
     let bankCoins = 0;
     let avatarCoins = Number(localStorage.getItem('zombie-squad-run-avatar-coins') || 0);
+    let selectedAvatar = localStorage.getItem('zombie-squad-run-selected-avatar') || 'default';
+    let unlockedAvatars = JSON.parse(localStorage.getItem('zombie-squad-run-unlocked-avatars') || '["default"]');
     let soundOn = localStorage.getItem('zombie-squad-run-sound') !== 'off';
     let volumeLevel = Number(localStorage.getItem('zombie-squad-run-volume') || 140);
     let brightnessLevel = Number(localStorage.getItem('zombie-squad-run-brightness') || 100);
@@ -530,6 +532,8 @@
       localStorage.setItem('zombie-squad-run-best', String(best));
       localStorage.setItem('zombie-squad-run-coins', String(bankCoins));
       localStorage.setItem('zombie-squad-run-avatar-coins', String(avatarCoins));
+      localStorage.setItem('zombie-squad-run-selected-avatar', selectedAvatar);
+      localStorage.setItem('zombie-squad-run-unlocked-avatars', JSON.stringify(unlockedAvatars));
       localStorage.setItem('zombie-squad-run-sound', soundOn ? 'on' : 'off');
       localStorage.setItem('zombie-squad-run-music', musicEnabled ? 'on' : 'off');
       localStorage.setItem('zombie-squad-run-volume', String(volumeLevel));
@@ -803,10 +807,16 @@
 
     function openAvatarPanel() {
       state.paused = true;
+      const avatars = [
+        { id: 'default', name: 'Default Trooper', cost: 0, note: 'Classic blue squad look.' },
+        { id: 'ranger', name: 'Ranger Helmet', cost: 2, note: 'Forest green field gear.' },
+        { id: 'commander', name: 'Blue Commander', cost: 4, note: 'Sharper blue command trim.' },
+        { id: 'gold', name: 'Gold Minigun Hero', cost: 8, note: 'Gold armor for elite runs.' }
+      ];
       overlay.innerHTML = `
         <div class="message settings-page">
           <h2>Avatar Screen</h2>
-          <p>Trade regular coins for avatar coins, then spend avatar coins on avatar unlocks.</p>
+          <p>Trade regular coins for avatar coins, unlock avatars, then equip the one you want.</p>
           <div class="settings-grid">
             <div class="settings-card">
               <h4>Currency Exchange</h4>
@@ -816,12 +826,20 @@
             </div>
             <div class="settings-card">
               <h4>Avatar Unlocks</h4>
-              <ul class="panel-list">
-                <li>Ranger Helmet, 2 avatar coins</li>
-                <li>Blue Commander, 4 avatar coins</li>
-                <li>Gold Minigun Hero, 8 avatar coins</li>
-              </ul>
-              <p class="mini-note">This screen is ready for a fuller avatar selection flow later.</p>
+              <div style="display:grid;gap:10px;">
+                ${avatars.map(avatar => {
+                  const unlocked = unlockedAvatars.includes(avatar.id);
+                  const selected = selectedAvatar === avatar.id;
+                  return `<div style="border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;">
+                    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
+                      <strong>${avatar.name}</strong>
+                      <span class="pill" style="margin:0;">${unlocked ? (selected ? 'Equipped' : 'Unlocked') : `${avatar.cost} AC`}</span>
+                    </div>
+                    <p class="mini-note" style="margin:8px 0 0;">${avatar.note}</p>
+                    <button class="secondary avatar-action-btn" data-avatar="${avatar.id}" style="width:auto;">${unlocked ? (selected ? 'Equipped' : 'Equip') : `Unlock for ${avatar.cost}`}</button>
+                  </div>`;
+                }).join('')}
+              </div>
             </div>
           </div>
           <button class="secondary" onclick="window.closeOverlayAndResume()">Close</button>
@@ -836,6 +854,23 @@
         saveMeta();
         syncHud();
         openAvatarPanel();
+      });
+
+      document.querySelectorAll('.avatar-action-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const avatarId = btn.dataset.avatar;
+          const avatar = avatars.find(a => a.id === avatarId);
+          if (!avatar) return;
+          if (!unlockedAvatars.includes(avatarId)) {
+            if (avatarCoins < avatar.cost) return;
+            avatarCoins -= avatar.cost;
+            unlockedAvatars.push(avatarId);
+          }
+          selectedAvatar = avatarId;
+          saveMeta();
+          syncHud();
+          openAvatarPanel();
+        });
       });
     }
 
@@ -1450,6 +1485,13 @@
       }
     }
 
+    function avatarPalette() {
+      if (selectedAvatar === 'ranger') return { armorTop: '#86efac', armorMid: '#4ade80', armorBottom: '#166534', helmet: '#3f6212', visor: '#dcfce7', accent: '#bbf7d0' };
+      if (selectedAvatar === 'commander') return { armorTop: '#bfdbfe', armorMid: '#60a5fa', armorBottom: '#1d4ed8', helmet: '#1e40af', visor: '#e0f2fe', accent: '#93c5fd' };
+      if (selectedAvatar === 'gold') return { armorTop: '#fde68a', armorMid: '#fbbf24', armorBottom: '#b45309', helmet: '#92400e', visor: '#fff7ed', accent: '#fcd34d' };
+      return { armorTop: '#bfdbfe', armorMid: '#93c5fd', armorBottom: color, helmet: '#1d4ed8', visor: '#eff6ff', accent: '#dbeafe' };
+    }
+
     function drawPerson(x, y, color, scale = 1, depth = 0) {
       const head = 8 * scale;
       const bodyW = 13 * scale;
@@ -1480,17 +1522,18 @@
       ctx.arc(x, y - 10 * scale, head, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = '#1d4ed8';
+      const palette = avatarPalette(color);
+      ctx.fillStyle = palette.helmet;
       ctx.fillRect(x - helmetW / 2, y - 18 * scale, helmetW, helmetH);
-      ctx.fillStyle = '#93c5fd';
+      ctx.fillStyle = palette.accent;
       ctx.fillRect(x - helmetW * 0.25, y - 16.5 * scale, helmetW * 0.5, 1.5 * scale);
-      ctx.fillStyle = '#eff6ff';
+      ctx.fillStyle = palette.visor;
       ctx.fillRect(x - helmetW * 0.08, y - 14.8 * scale, helmetW * 0.16, 1.3 * scale);
 
       const bodyGradient = ctx.createLinearGradient(x, y - 2 * scale, x, y + bodyH);
-      bodyGradient.addColorStop(0, '#bfdbfe');
-      bodyGradient.addColorStop(0.55, '#93c5fd');
-      bodyGradient.addColorStop(1, color);
+      bodyGradient.addColorStop(0, palette.armorTop);
+      bodyGradient.addColorStop(0.55, palette.armorMid);
+      bodyGradient.addColorStop(1, palette.armorBottom);
       ctx.fillStyle = bodyGradient;
       ctx.fillRect(x - bodyW / 2, y - 2 * scale, bodyW, bodyH);
       ctx.fillStyle = 'rgba(255,255,255,0.18)';

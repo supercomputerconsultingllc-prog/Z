@@ -390,7 +390,7 @@
           <h3>Upgrade shop</h3>
           <p>Spend coins between runs or mid-run.</p>
           <button class="shop-btn warn" id="buyGunBtn">+1 Firepower (10)</button>
-          <button class="shop-btn warn" id="buySquadBtn">+3 Squad (8)</button>
+          <button class="shop-btn warn" id="buySquadBtn">+2 Squad (8)</button>
           <button class="shop-btn warn" id="buyReviveBtn">+1 Revive (15)</button>
         </div>
         <div class="card">
@@ -1162,7 +1162,7 @@
 
     function syncShopButtons() {
       buyGunBtn.textContent = `+1 Firepower (${gunPrice})`;
-      buySquadBtn.textContent = `+3 Squad (${squadPrice})`;
+      buySquadBtn.textContent = `+2 Squad (${squadPrice})`;
       buyReviveBtn.textContent = `+1 Revive (${revivePrice})`;
     }
 
@@ -1183,13 +1183,13 @@
     function addCoins(n) { state.coins += n; bankCoins = state.coins; saveMeta(); updateMission('coins', n); }
 
     function weaponProfile(powerLevel) {
-      if (powerLevel <= 2) return { name: 'Rifle', color: '#fde047', core: '#fff8c5', size: 5, trail: '#fef08a', shape: 'round', muzzle: '#fff7ae', ring: '#facc15', damage: 1 + Math.max(0, powerLevel - 1) * 0.08, spread: 0, pierce: 0, splash: 0, chain: 0, speed: 0 };
-      if (powerLevel <= 4) return { name: 'Pulse', color: '#38bdf8', core: '#e0f2fe', size: 5.5, trail: '#7dd3fc', shape: 'pulse', muzzle: '#a5f3fc', ring: '#38bdf8', damage: 1.12 + (powerLevel - 3) * 0.08, spread: 12, pierce: 0, splash: 0, chain: 0, speed: 20 };
-      if (powerLevel <= 6) return { name: 'Scatter', color: '#22c55e', core: '#dcfce7', size: 5.8, trail: '#86efac', shape: 'scatter', muzzle: '#bbf7d0', ring: '#16a34a', damage: 0.98 + (powerLevel - 5) * 0.08, spread: 26, pierce: 0, splash: 0, chain: 0, speed: 12 };
-      if (powerLevel <= 8) return { name: 'Plasma', color: '#a78bfa', core: '#f3e8ff', size: 6.5, trail: '#c4b5fd', shape: 'plasma', muzzle: '#ddd6fe', ring: '#8b5cf6', damage: 1.28 + (powerLevel - 7) * 0.1, spread: 18, pierce: 0, splash: 30 + (powerLevel - 7) * 6, chain: 0, speed: 32 };
-      if (powerLevel <= 10) return { name: 'Rail', color: '#fb7185', core: '#ffe4e6', size: 6.8, trail: '#fda4af', shape: 'laser', muzzle: '#fecdd3', ring: '#e11d48', damage: 1.48 + (powerLevel - 9) * 0.14, spread: 12, pierce: 1, splash: 0, chain: 0, speed: 92 };
-      if (powerLevel <= 11) return { name: 'Storm', color: '#06b6d4', core: '#cffafe', size: 7.4, trail: '#67e8f9', shape: 'arc', muzzle: '#a5f3fc', ring: '#0891b2', damage: 1.88, spread: 16, pierce: 1, splash: 22, chain: 1, speed: 110 };
-      return { name: 'Apocalypse Minigun', color: '#f59e0b', core: '#fffbeb', size: 8.2, trail: '#fdba74', shape: 'minigun', muzzle: '#fed7aa', ring: '#ea580c', damage: 2.2, spread: 22, pierce: 2, splash: 22, chain: 1, speed: 145 };
+      if (powerLevel <= 2) return { name: 'Rifle', color: '#fde047', core: '#fff8c5', size: 5, trail: '#fef08a', shape: 'round', muzzle: '#fff7ae', ring: '#facc15', damage: 0.92 + Math.max(0, powerLevel - 1) * 0.07, spread: 0, pierce: 0, splash: 0, chain: 0, speed: 0 };
+      if (powerLevel <= 4) return { name: 'Pulse', color: '#38bdf8', core: '#e0f2fe', size: 5.5, trail: '#7dd3fc', shape: 'pulse', muzzle: '#a5f3fc', ring: '#38bdf8', damage: 1.02 + (powerLevel - 3) * 0.07, spread: 12, pierce: 0, splash: 0, chain: 0, speed: 20 };
+      if (powerLevel <= 6) return { name: 'Scatter', color: '#22c55e', core: '#dcfce7', size: 5.8, trail: '#86efac', shape: 'scatter', muzzle: '#bbf7d0', ring: '#16a34a', damage: 0.9 + (powerLevel - 5) * 0.07, spread: 26, pierce: 0, splash: 0, chain: 0, speed: 12 };
+      if (powerLevel <= 8) return { name: 'Plasma', color: '#a78bfa', core: '#f3e8ff', size: 6.5, trail: '#c4b5fd', shape: 'plasma', muzzle: '#ddd6fe', ring: '#8b5cf6', damage: 1.16 + (powerLevel - 7) * 0.09, spread: 18, pierce: 0, splash: 26 + (powerLevel - 7) * 5, chain: 0, speed: 32 };
+      if (powerLevel <= 10) return { name: 'Rail', color: '#fb7185', core: '#ffe4e6', size: 6.8, trail: '#fda4af', shape: 'laser', muzzle: '#fecdd3', ring: '#e11d48', damage: 1.34 + (powerLevel - 9) * 0.12, spread: 12, pierce: 1, splash: 0, chain: 0, speed: 92 };
+      if (powerLevel <= 11) return { name: 'Storm', color: '#06b6d4', core: '#cffafe', size: 7.4, trail: '#67e8f9', shape: 'arc', muzzle: '#a5f3fc', ring: '#0891b2', damage: 1.7, spread: 16, pierce: 1, splash: 18, chain: 1, speed: 110 };
+      return { name: 'Apocalypse Minigun', color: '#f59e0b', core: '#fffbeb', size: 8.2, trail: '#fdba74', shape: 'minigun', muzzle: '#fed7aa', ring: '#ea580c', damage: 2, spread: 22, pierce: 2, splash: 18, chain: 1, speed: 145 };
     }
 
     function applySplashDamage(cx, cy, radius, damage, ring, color) {
@@ -1298,8 +1298,8 @@
     function spawnBossWave() {
       const lane = rand(0, 2);
       bossWave = true;
-      state.objects.push({ type:'boss', lane, x:LANES[lane], y:-130, hp:18 + state.wave * 2, reward:8, size:82, speedFactor:0.65 });
-      state.objects.push({ type:'shield', lane:(lane + 1) % 3, x:LANES[(lane + 1) % 3], y:-90, hp:7 + Math.floor(state.wave * 0.7), reward:3, size:52, speedFactor:0.85 });
+      state.objects.push({ type:'boss', lane, x:LANES[lane], y:-130, hp:22 + state.wave * 2, reward:6, size:82, speedFactor:0.65 });
+      state.objects.push({ type:'shield', lane:(lane + 1) % 3, x:LANES[(lane + 1) % 3], y:-90, hp:8 + Math.floor(state.wave * 0.8), reward:2, size:52, speedFactor:0.85 });
       trimRuntimeLoad();
       addScreenShake(18, 0.16);
       hitFlash = Math.max(hitFlash, 0.14);
@@ -1314,15 +1314,15 @@
       const lane = rand(0, 2);
       const roll = Math.random();
       let obj;
-      if (roll < 0.32) obj = { type:'zombie', lane, x:LANES[lane], y:-60, hp:rand(3, 5 + Math.floor(state.wave / 2)), reward:rand(1,3), size:36 };
+      if (roll < 0.32) obj = { type:'zombie', lane, x:LANES[lane], y:-60, hp:rand(4, 6 + Math.floor(state.wave / 2)), reward:rand(1,2), size:36 };
       else if (roll < 0.52) {
         const hp = rand(2, Math.max(4, 2 + Math.floor(state.wave/2)));
         obj = { type:'wall', lane, x:LANES[lane], y:-80, hp, maxHp: hp, reward:0, size:58 };
       }
-      else if (roll < 0.66) obj = { type:'runner', lane, x:LANES[lane], y:-55, hp:rand(2, 4 + Math.floor(state.wave / 3)), reward:2, size:28, speedFactor:1.45 };
-      else if (roll < 0.78) obj = { type:'shield', lane, x:LANES[lane], y:-70, hp:rand(5, 7 + Math.floor(state.wave / 2)), reward:3, size:48, speedFactor:0.9 };
+      else if (roll < 0.66) obj = { type:'runner', lane, x:LANES[lane], y:-55, hp:rand(3, 5 + Math.floor(state.wave / 3)), reward:1, size:28, speedFactor:1.45 };
+      else if (roll < 0.78) obj = { type:'shield', lane, x:LANES[lane], y:-70, hp:rand(6, 8 + Math.floor(state.wave / 2)), reward:2, size:48, speedFactor:0.9 };
       else if (roll < 0.89) obj = { type:'crate', lane, x:LANES[lane], y:-50, hp:1, reward:1, size:32 };
-      else obj = { type:'coin', lane, x:LANES[lane], y:-40, hp:1, reward:rand(2,5), size:24 };
+      else obj = { type:'coin', lane, x:LANES[lane], y:-40, hp:1, reward:rand(2,4), size:24 };
       state.objects.push(obj);
       trimRuntimeLoad();
     }
@@ -1470,26 +1470,30 @@
 
     function handleDestroyed(obj) {
       if (obj.type === 'zombie') {
-        state.squad += obj.reward; addCoins(obj.reward); updateMission('survivors', obj.reward); playTone(220, 0.12, 'sawtooth', 1.4);
+        const squadGain = Math.max(1, obj.reward);
+        state.squad += squadGain; addCoins(obj.reward); updateMission('survivors', squadGain); playTone(220, 0.12, 'sawtooth', 1.4);
         pushDecal(obj.x, obj.y + 18, '#7f1d1d', 20, 3.5, 5);
         pushDecal(obj.x - 12, obj.y + 10, '#991b1b', 11, 2.7, 3);
         pushDecal(obj.x + 10, obj.y + 14, '#b91c1c', 7, 2.1, 1);
       }
       else if (obj.type === 'runner') {
-        state.squad += obj.reward + 1; addCoins(obj.reward + 1); updateMission('survivors', obj.reward + 1); playTone(320, 0.08, 'triangle', 1.5);
+        const squadGain = Math.max(1, obj.reward);
+        state.squad += squadGain; addCoins(obj.reward + 1); updateMission('survivors', squadGain); playTone(320, 0.08, 'triangle', 1.5);
         pushDecal(obj.x, obj.y + 16, '#991b1b', 17, 3, 6);
         pushDecal(obj.x + 10, obj.y + 8, '#b91c1c', 9, 2.3, 2);
         pushDecal(obj.x - 9, obj.y + 12, '#7f1d1d', 8, 2.1, 2);
       }
       else if (obj.type === 'shield') {
-        state.squad += obj.reward; addCoins(obj.reward + 1); updateMission('survivors', obj.reward); playTone(150, 0.14, 'square', 1.8);
+        const squadGain = Math.max(1, obj.reward - 1);
+        state.squad += squadGain; addCoins(obj.reward + 1); updateMission('survivors', squadGain); playTone(150, 0.14, 'square', 1.8);
         pushDecal(obj.x, obj.y + 18, '#7f1d1d', 24, 4, 7);
         pushDecal(obj.x - 14, obj.y + 12, '#991b1b', 12, 3, 4);
         pushDecal(obj.x + 13, obj.y + 14, '#991b1b', 12, 3, 4);
         pushDecal(obj.x, obj.y + 6, '#450a0a', 8, 2.2, 2);
       }
       else if (obj.type === 'boss') {
-        state.squad += obj.reward + 6; addCoins(obj.reward + 8); updateMission('survivors', obj.reward + 6); playTone(110, 0.26, 'sawtooth', 2.1); addScreenShake(16, 0.18); bossWave = false;
+        const squadGain = obj.reward + 3;
+        state.squad += squadGain; addCoins(obj.reward + 6); updateMission('survivors', squadGain); playTone(110, 0.26, 'sawtooth', 2.1); addScreenShake(16, 0.18); bossWave = false;
         pushDecal(obj.x, obj.y + 28, '#450a0a', 32, 5.2, 8);
         pushDecal(obj.x - 18, obj.y + 22, '#7f1d1d', 18, 4.1, 4);
         pushDecal(obj.x + 20, obj.y + 26, '#7f1d1d', 18, 4.1, 4);
@@ -2756,9 +2760,9 @@
     buySquadBtn.addEventListener('click', () => {
       if (state.coins >= squadPrice) {
         state.coins -= squadPrice;
-        state.squad += 3;
-        updateMission('survivors', 3);
-        squadPrice += 10;
+        state.squad += 2;
+        updateMission('survivors', 2);
+        squadPrice += 12;
         bankCoins = state.coins;
         saveMeta();
         syncHud();

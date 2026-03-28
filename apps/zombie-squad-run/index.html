@@ -615,7 +615,9 @@
     function startMusicLoop() {
       if (musicTimer || !musicEnabled) return;
       scheduleMusicBar();
-      musicTimer = setInterval(scheduleMusicBar, 1760);
+      musicTimer = setInterval(() => {
+        if (!document.hidden && !state?.paused && !state?.gameOver) scheduleMusicBar();
+      }, 1760);
     }
 
     function stopMusicLoop() {
@@ -914,6 +916,7 @@
       state.particles = [];
       state.minigunCharge = 100;
       state.minigunActiveUntil = 0;
+      state.lastMinigunBurst = 0;
       state.distance = 0;
       state.wave = 1;
       state.speed = 190;
@@ -1013,7 +1016,7 @@
         squad: 8, firepower: 1, distance: 0, wave: 1, speed: 190,
         bullets: [], objects: [], particles: [], spawnTimer: 0, running: true, paused: true, gameOver: false,
         lastTime: performance.now(), coins: bankCoins, revives: 1, usedRevive: false, distanceCoinsTick: 0,
-        minigunCharge: 100, minigunActiveUntil: 0
+        minigunCharge: 100, minigunActiveUntil: 0, lastMinigunBurst: 0
       };
       syncHud();
       syncMissionHud();
@@ -1046,10 +1049,11 @@
       return { color: '#f59e0b', core: '#fffbeb', size: 7, trail: '#fdba74', shape: 'minigun', muzzle: '#fed7aa', ring: '#ea580c' };
     }
 
-    function fireAtLane(laneIndex, powerBoost = 0, speedBoost = 0) {
+    function fireAtLane(laneIndex, powerBoost = 0, speedBoost = 0, options = {}) {
       if (!state.running || state.paused || state.gameOver) return;
-      if (navigator.vibrate && volumeLevel > 0) navigator.vibrate(12);
-      playTone(920, 0.06, 'square', 1.2);
+      const { silent = false, noVibrate = false, muzzleScale = 1 } = options;
+      if (!noVibrate && navigator.vibrate && volumeLevel > 0) navigator.vibrate(12);
+      if (!silent) playTone(920, 0.06, 'square', 1.2);
       const laneX = LANES[laneIndex];
       const bulletCount = state.firepower + powerBoost;
       const effectivePower = state.firepower + powerBoost;
@@ -1070,7 +1074,9 @@
           radius: profile.size
         });
       }
-      state.particles.push({ x: laneX, y: 602, life: 0.09, color: profile.muzzle, ring: profile.ring, burst: true, size: 14 + effectivePower * 1.5 });
+      state.particles.push({ x: laneX, y: 602, life: 0.09, color: profile.muzzle, ring: profile.ring, burst: true, size: (14 + effectivePower * 1.5) * muzzleScale });
+      if (state.particles.length > 220) state.particles.splice(0, state.particles.length - 220);
+      if (state.bullets.length > 260) state.bullets.splice(0, state.bullets.length - 260);
     }
 
     function spawnObject() {
@@ -1090,11 +1096,15 @@
       state.wave = 1 + Math.floor(state.distance / 180);
       state.speed = 190 + state.wave * 8;
       state.minigunCharge = Math.min(100, state.minigunCharge + dt * 8);
-      if (state.minigunActiveUntil > performance.now()) {
-        for (let lane = 0; lane < LANES.length; lane++) {
-          fireAtLane(lane, 3, 220);
+      const nowMs = performance.now();
+      if (state.minigunActiveUntil > nowMs) {
+        if (nowMs - state.lastMinigunBurst > 90) {
+          for (let lane = 0; lane < LANES.length; lane++) {
+            fireAtLane(lane, 3, 220, { silent: true, noVibrate: true, muzzleScale: 0.65 });
+          }
+          state.lastMinigunBurst = nowMs;
+          playTone(150 + rand(0, 40), 0.05, 'sawtooth', 0.55);
         }
-        if (Math.random() < 0.35) playTone(150 + rand(0, 40), 0.05, 'sawtooth', 0.8);
       }
       const roundCoins = Math.floor(state.distance / 180) * 2;
       if (roundCoins > state.distanceCoinsTick) { addCoins(roundCoins - state.distanceCoinsTick); state.distanceCoinsTick = roundCoins; }
@@ -1117,7 +1127,7 @@
       }
       state.bullets = state.bullets.filter(b => b.y > -20);
       for (const particle of state.particles) particle.life -= dt;
-      state.particles = state.particles.filter(p => p.life > 0);
+      state.particles = state.particles.filter(p => p.life > 0).slice(-220);
       for (const obj of state.objects) {
         if (obj.y >= 570) {
           if (obj.type === 'wall' && obj.hp > 0) state.squad -= obj.hp;

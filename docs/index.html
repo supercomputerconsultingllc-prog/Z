@@ -1596,6 +1596,20 @@
       farGlow.addColorStop(1, 'rgba(244,63,94,0.04)');
       ctx.fillStyle = farGlow;
       ctx.fillRect(0, 176, canvas.width, 90);
+
+      if (!lowPowerMobileMode || state.squad < 70) {
+        for (let i = 0; i < 4; i++) {
+          const cloudX = (canvas.width * 0.18) + i * 170 + Math.sin((state.distance * 0.003) + i) * 18;
+          const cloudY = 86 + i * 28;
+          const cloud = ctx.createRadialGradient(cloudX, cloudY, 8, cloudX, cloudY, 46);
+          cloud.addColorStop(0, 'rgba(148,163,184,0.08)');
+          cloud.addColorStop(1, 'rgba(148,163,184,0)');
+          ctx.fillStyle = cloud;
+          ctx.beginPath();
+          ctx.ellipse(cloudX, cloudY, 48, 16, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
       ctx.fillStyle = 'rgba(15,23,42,0.48)';
       for (let i = 0; i < 6; i++) {
         const w = 70 + i * 12;
@@ -1630,6 +1644,13 @@
         ctx.fillRect(x + 12, 0, 3, canvas.height);
         ctx.fillRect(x + 165, 0, 3, canvas.height);
 
+        const laneSheen = ctx.createLinearGradient(x + 20, 0, x + 160, canvas.height);
+        laneSheen.addColorStop(0, 'rgba(255,255,255,0.025)');
+        laneSheen.addColorStop(0.45, 'rgba(255,255,255,0)');
+        laneSheen.addColorStop(1, 'rgba(14,165,233,0.03)');
+        ctx.fillStyle = laneSheen;
+        ctx.fillRect(x + 16, 0, 148, canvas.height);
+
         ctx.strokeStyle = COLORS.line; ctx.lineWidth = 4;
         for (let y=-40;y<canvas.height;y+=80) {
           const dashY = (y+(state.distance*2))%80+y;
@@ -1647,6 +1668,12 @@
       vignette.addColorStop(1, 'rgba(2,6,23,0.34)');
       ctx.fillStyle = vignette;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const roadReflect = ctx.createLinearGradient(0, canvas.height - 180, 0, canvas.height);
+      roadReflect.addColorStop(0, 'rgba(255,255,255,0)');
+      roadReflect.addColorStop(1, 'rgba(148,163,184,0.06)');
+      ctx.fillStyle = roadReflect;
+      ctx.fillRect(0, canvas.height - 180, canvas.width, 180);
 
       ctx.fillStyle = 'rgba(2,6,23,.45)';
       ctx.beginPath();
@@ -1669,6 +1696,34 @@
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
       ctx.fill();
+    }
+
+    function addDirectionalLight(x, y, width, height, alpha = 0.12) {
+      const beam = ctx.createLinearGradient(x - width * 0.7, y - height * 0.8, x + width * 0.6, y + height * 0.9);
+      beam.addColorStop(0, `rgba(255,255,255,${alpha})`);
+      beam.addColorStop(0.4, `rgba(191,219,254,${alpha * 0.55})`);
+      beam.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = beam;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(-0.28);
+      ctx.fillRect(-width * 0.55, -height * 0.5, width * 1.1, height * 0.34);
+      ctx.restore();
+    }
+
+    function addSpecularSweep(x, y, width, height, alpha = 0.08) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      const sweep = ctx.createLinearGradient(x - width * 0.6, y - height * 0.8, x + width * 0.7, y + height * 0.9);
+      sweep.addColorStop(0, 'rgba(255,255,255,0)');
+      sweep.addColorStop(0.48, `rgba(255,255,255,${alpha})`);
+      sweep.addColorStop(0.58, `rgba(255,255,255,${alpha * 0.35})`);
+      sweep.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = sweep;
+      ctx.beginPath();
+      ctx.roundRect(x - width / 2, y - height / 2, width, height, Math.max(4, Math.min(width, height) * 0.18));
+      ctx.fill();
+      ctx.restore();
     }
 
     function pushDecal(x, y, color = '#7f1d1d', size = 18, life = 2.8, spray = 0) {
@@ -1989,6 +2044,9 @@
         ctx.arc(x, y - 9 * scale, head, 0, Math.PI * 2);
         ctx.fill();
         if (perfTier === 2) {
+          ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+          ctx.lineWidth = Math.max(0.8, 1 * scale);
+          ctx.strokeRect(x - bodyW / 2, y - 2 * scale, bodyW, bodyH + 4 * scale);
           ctx.fillStyle = '#fca5a5';
           ctx.fillRect(x - bodyW * 0.18, y + 3 * scale, bodyW * 0.12, bodyH * 0.42);
           ctx.fillStyle = '#fef2f2';
@@ -2179,6 +2237,7 @@
         ctx.fillRect(x - 2 * scale, y - 8 * scale, 4 * scale, 22 * scale);
         return;
       }
+      addRimLight(x, y - 2 * scale, 34 * scale, 'rgba(250,204,21,ALPHA)', 0.18);
       const wood = ctx.createLinearGradient(x - 18 * scale, y, x + 18 * scale, y + 22 * scale);
       wood.addColorStop(0, '#92400e');
       wood.addColorStop(0.5, '#b45309');
@@ -2198,6 +2257,10 @@
       ctx.fillStyle = '#fef3c7';
       ctx.beginPath();
       ctx.arc(x, y + 1 * scale, 3.2 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.24)';
+      ctx.beginPath();
+      ctx.ellipse(x - 6 * scale, y - 5 * scale, 6 * scale, 2.2 * scale, -0.25, 0, Math.PI * 2);
       ctx.fill();
       ctx.lineWidth = 1.6 * scale;
       ctx.beginPath();

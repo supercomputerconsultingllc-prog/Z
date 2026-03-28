@@ -41,6 +41,7 @@ Skills are shared. Your setup is yours. Keeping them apart means you can update 
 - For GitHub Pages with source `main / docs`, files under `docs/` publish at the site root. Example: `docs/support/index.html` becomes `/support/`, not `/docs/support/`.
 - If the live site is not reflecting app changes, verify the real deploy target before editing. In this workspace, the published Zombie Squad Run page was serving `docs/index.html`, while gameplay edits were initially being made in `apps/zombie-squad-run/index.html`.
 - PATs that push workflow file changes need workflow permission. A classic token with `repo` and `workflow` scopes works when fine-grained tokens are too narrow.
+- For syntax-checking JavaScript extracted from inline HTML `<script>` tags, write the extracted code to a real temp file first, then run `node --check /tmp/file.js`. In this shell/runtime, `node --check <( ... )` can fail on the process-substitution path.
 
 ---
 

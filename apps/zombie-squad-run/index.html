@@ -480,6 +480,9 @@
     let youtubeVisitClaimed = localStorage.getItem('zombie-squad-run-youtube-visit') === 'claimed';
     let youtubeSubscribeClaimed = localStorage.getItem('zombie-squad-run-youtube-subscribe') === 'claimed';
     let starterPackClaimed = localStorage.getItem('zombie-squad-run-starter-pack') === 'claimed';
+    let gunPrice = Number(localStorage.getItem('zombie-squad-run-gun-price') || 10);
+    let squadPrice = Number(localStorage.getItem('zombie-squad-run-squad-price') || 8);
+    let revivePrice = Number(localStorage.getItem('zombie-squad-run-revive-price') || 15);
     let screenShake = 0;
     let hitFlash = 0;
     let bossWave = false;
@@ -507,6 +510,9 @@
       localStorage.setItem('zombie-squad-run-youtube-visit', youtubeVisitClaimed ? 'claimed' : 'open');
       localStorage.setItem('zombie-squad-run-youtube-subscribe', youtubeSubscribeClaimed ? 'claimed' : 'open');
       localStorage.setItem('zombie-squad-run-starter-pack', starterPackClaimed ? 'claimed' : 'open');
+      localStorage.setItem('zombie-squad-run-gun-price', String(gunPrice));
+      localStorage.setItem('zombie-squad-run-squad-price', String(squadPrice));
+      localStorage.setItem('zombie-squad-run-revive-price', String(revivePrice));
     }
 
     function activeMission() { return MISSIONS[missionIndex % MISSIONS.length]; }
@@ -1045,6 +1051,12 @@
       }
     }
 
+    function syncShopButtons() {
+      buyGunBtn.textContent = `+1 Firepower (${gunPrice})`;
+      buySquadBtn.textContent = `+3 Squad (${squadPrice})`;
+      buyReviveBtn.textContent = `+1 Revive (${revivePrice})`;
+    }
+
     function syncHud() {
       squadStat.textContent = state.squad;
       gunStat.textContent = state.firepower;
@@ -1054,6 +1066,7 @@
       coinStat.textContent = state.coins;
       avatarCoinStat.textContent = avatarCoins;
       reviveStat.textContent = state.revives;
+      syncShopButtons();
       if (state.distance > best) { best = Math.floor(state.distance); bestStat.textContent = best; saveMeta(); }
       syncMissionHud();
     }
@@ -1067,7 +1080,12 @@
       if (powerLevel === 4) return { name: 'Plasma', color: '#a78bfa', core: '#f3e8ff', size: 6.5, trail: '#c4b5fd', shape: 'plasma', muzzle: '#ddd6fe', ring: '#8b5cf6', damage: 1.3, spread: 18, pierce: 0, splash: 32, chain: 0, speed: 30 };
       if (powerLevel === 5) return { name: 'Rail', color: '#fb7185', core: '#ffe4e6', size: 6.6, trail: '#fda4af', shape: 'laser', muzzle: '#fecdd3', ring: '#e11d48', damage: 1.45, spread: 12, pierce: 1, splash: 0, chain: 0, speed: 80 };
       if (powerLevel === 6) return { name: 'Arc', color: '#f97316', core: '#ffedd5', size: 6.8, trail: '#fdba74', shape: 'arc', muzzle: '#fed7aa', ring: '#ea580c', damage: 1.2, spread: 14, pierce: 0, splash: 18, chain: 1, speed: 55 };
-      return { name: 'Minigun', color: '#f59e0b', core: '#fffbeb', size: 7, trail: '#fdba74', shape: 'minigun', muzzle: '#fed7aa', ring: '#ea580c', damage: 1.35, spread: 20, pierce: 1, splash: 16, chain: 0, speed: 110 };
+      if (powerLevel === 7) return { name: 'Shredder', color: '#ef4444', core: '#fee2e2', size: 6.9, trail: '#fca5a5', shape: 'minigun', muzzle: '#fecaca', ring: '#dc2626', damage: 1.45, spread: 18, pierce: 1, splash: 10, chain: 0, speed: 120 };
+      if (powerLevel === 8) return { name: 'Storm', color: '#06b6d4', core: '#cffafe', size: 7.1, trail: '#67e8f9', shape: 'arc', muzzle: '#a5f3fc', ring: '#0891b2', damage: 1.4, spread: 16, pierce: 1, splash: 20, chain: 2, speed: 95 };
+      if (powerLevel === 9) return { name: 'Nova', color: '#8b5cf6', core: '#ede9fe', size: 7.4, trail: '#c4b5fd', shape: 'plasma', muzzle: '#ddd6fe', ring: '#7c3aed', damage: 1.65, spread: 22, pierce: 1, splash: 40, chain: 1, speed: 70 };
+      if (powerLevel === 10) return { name: 'Hellfire', color: '#f97316', core: '#ffedd5', size: 7.4, trail: '#fdba74', shape: 'scatter', muzzle: '#fed7aa', ring: '#ea580c', damage: 1.85, spread: 34, pierce: 1, splash: 24, chain: 0, speed: 100 };
+      if (powerLevel === 11) return { name: 'Thunder Lance', color: '#e879f9', core: '#fae8ff', size: 7.8, trail: '#f0abfc', shape: 'laser', muzzle: '#f5d0fe', ring: '#c026d3', damage: 2.05, spread: 10, pierce: 2, splash: 16, chain: 1, speed: 135 };
+      return { name: 'Apocalypse Minigun', color: '#f59e0b', core: '#fffbeb', size: 8.2, trail: '#fdba74', shape: 'minigun', muzzle: '#fed7aa', ring: '#ea580c', damage: 2.2, spread: 22, pierce: 2, splash: 22, chain: 1, speed: 145 };
     }
 
     function applySplashDamage(cx, cy, radius, damage, ring, color) {
@@ -1300,7 +1318,7 @@
       else if (obj.type === 'runner') { state.squad += obj.reward + 1; addCoins(obj.reward + 1); updateMission('survivors', obj.reward + 1); playTone(320, 0.08, 'triangle', 1.5); }
       else if (obj.type === 'shield') { state.squad += obj.reward; addCoins(obj.reward + 1); updateMission('survivors', obj.reward); playTone(150, 0.14, 'square', 1.8); }
       else if (obj.type === 'boss') { state.squad += obj.reward + 6; addCoins(obj.reward + 8); updateMission('survivors', obj.reward + 6); playTone(110, 0.26, 'sawtooth', 2.1); addScreenShake(16, 0.18); bossWave = false; }
-      else if (obj.type === 'crate') { state.firepower = Math.min(6, state.firepower + obj.reward); playTone(540, 0.1, 'triangle', 1.2); }
+      else if (obj.type === 'crate') { state.firepower = Math.min(12, state.firepower + obj.reward); playTone(540, 0.1, 'triangle', 1.2); }
       else if (obj.type === 'coin') { addCoins(obj.reward); playTone(1100, 0.08, 'triangle', 1.3); }
       else if (obj.type === 'wall') { updateMission('walls', 1); playTone(180, 0.16, 'square', 1.6); }
     }
@@ -1426,6 +1444,51 @@
       ctx.restore();
     }
 
+    function drawZombie(x, y, scale = 1, depth = 0, variant = 'zombie') {
+      const head = 8 * scale;
+      const bodyW = 13 * scale;
+      const bodyH = 24 * scale;
+      const bob = Math.sin((x * 0.03) + depth * 0.5 + performance.now() * 0.01) * scale * 1.3;
+      ctx.save();
+      ctx.translate(0, bob);
+      ctx.fillStyle = 'rgba(15,23,42,0.5)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + bodyH + 7 * scale, 11 * scale, 4.2 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      const skin = variant === 'boss' ? '#6d28d9' : variant === 'shield' ? '#64748b' : variant === 'runner' ? '#84cc16' : '#65a30d';
+      ctx.fillStyle = skin;
+      ctx.beginPath();
+      ctx.arc(x, y - 10 * scale, head, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = variant === 'boss' ? '#4c1d95' : '#1f2937';
+      ctx.fillRect(x - bodyW / 2, y - 1 * scale, bodyW, bodyH);
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath();
+      ctx.arc(x - 3 * scale, y - 11 * scale, 1.8 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 3 * scale, y - 11 * scale, 1.8 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#f87171';
+      ctx.lineWidth = Math.max(1, 1.2 * scale);
+      ctx.beginPath();
+      ctx.moveTo(x - 4 * scale, y - 4 * scale);
+      ctx.lineTo(x - 1 * scale, y - 1 * scale);
+      ctx.lineTo(x + 1 * scale, y - 4 * scale);
+      ctx.lineTo(x + 4 * scale, y - 1 * scale);
+      ctx.stroke();
+      ctx.strokeStyle = '#a3e635';
+      ctx.lineWidth = Math.max(1, 1.1 * scale);
+      ctx.beginPath();
+      ctx.moveTo(x - bodyW * 0.75, y + 3 * scale);
+      ctx.lineTo(x - bodyW * 0.1, y + 8 * scale);
+      ctx.moveTo(x + bodyW * 0.75, y + 3 * scale);
+      ctx.lineTo(x + bodyW * 0.1, y + 8 * scale);
+      ctx.stroke();
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(x - bodyW * 0.36, y + bodyH - 1 * scale, bodyW * 0.28, 10 * scale);
+      ctx.fillRect(x + bodyW * 0.08, y + bodyH - 1 * scale, bodyW * 0.28, 10 * scale);
+      ctx.restore();
+    }
+
     function drawTinySoldier(x, y, tint, scale = 1, depth = 0) {
       const bodyW = Math.max(1.2, 6 * scale);
       const bodyH = Math.max(2, 9 * scale);
@@ -1526,17 +1589,17 @@
     function drawObjects() {
       for (const obj of state.objects) {
         if (obj.type === 'zombie') {
-          drawPerson(obj.x,obj.y,COLORS.zombie);
+          drawZombie(obj.x, obj.y, 1, 1, 'zombie');
           ctx.fillStyle='#dcfce7'; ctx.font='bold 16px system-ui'; ctx.textAlign='center'; ctx.fillText(`+${obj.reward}`,obj.x,obj.y-28);
         } else if (obj.type === 'runner') {
-          drawPerson(obj.x, obj.y, '#f97316', 0.88, 2);
+          drawZombie(obj.x, obj.y, 0.88, 2, 'runner');
           ctx.fillStyle='#ffedd5'; ctx.font='bold 15px system-ui'; ctx.textAlign='center'; ctx.fillText('FAST',obj.x,obj.y-24);
         } else if (obj.type === 'shield') {
-          drawPerson(obj.x, obj.y, '#64748b', 1.04, 3);
+          drawZombie(obj.x, obj.y, 1.04, 3, 'shield');
           ctx.strokeStyle='#e2e8f0'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(obj.x, obj.y + 2, 22, 0, Math.PI * 2); ctx.stroke();
           ctx.fillStyle='#f8fafc'; ctx.font='bold 18px system-ui'; ctx.textAlign='center'; ctx.fillText(String(Math.ceil(obj.hp)),obj.x,obj.y+8);
         } else if (obj.type === 'boss') {
-          drawPerson(obj.x, obj.y, '#7c3aed', 1.45, 5);
+          drawZombie(obj.x, obj.y, 1.45, 5, 'boss');
           ctx.strokeStyle='#fda4ff'; ctx.lineWidth=5; ctx.strokeRect(obj.x - 42, obj.y - 46, 84, 92);
           ctx.fillStyle='rgba(15,23,42,.92)'; ctx.fillRect(obj.x - 44, obj.y - 68, 88, 12);
           ctx.fillStyle='#ef4444'; ctx.fillRect(obj.x - 42, obj.y - 66, 84 * Math.max(0, obj.hp / (18 + state.wave * 2)), 8);
@@ -1700,9 +1763,36 @@
     laneCenterBtn.addEventListener('click', () => fireAtLane(1));
     laneRightBtn.addEventListener('click', () => fireAtLane(2));
 
-    buyGunBtn.addEventListener('click', () => { if (state.coins >= 10) { state.coins -= 10; state.firepower = Math.min(6, state.firepower + 1); bankCoins = state.coins; saveMeta(); syncHud(); } });
-    buySquadBtn.addEventListener('click', () => { if (state.coins >= 8) { state.coins -= 8; state.squad += 3; bankCoins = state.coins; saveMeta(); syncHud(); } });
-    buyReviveBtn.addEventListener('click', () => { if (state.coins >= 15) { state.coins -= 15; state.revives += 1; bankCoins = state.coins; saveMeta(); syncHud(); } });
+    buyGunBtn.addEventListener('click', () => {
+      if (state.coins >= gunPrice) {
+        state.coins -= gunPrice;
+        state.firepower = Math.min(12, state.firepower + 1);
+        gunPrice += 10;
+        bankCoins = state.coins;
+        saveMeta();
+        syncHud();
+      }
+    });
+    buySquadBtn.addEventListener('click', () => {
+      if (state.coins >= squadPrice) {
+        state.coins -= squadPrice;
+        state.squad += 3;
+        squadPrice += 10;
+        bankCoins = state.coins;
+        saveMeta();
+        syncHud();
+      }
+    });
+    buyReviveBtn.addEventListener('click', () => {
+      if (state.coins >= revivePrice) {
+        state.coins -= revivePrice;
+        state.revives += 1;
+        revivePrice += 10;
+        bankCoins = state.coins;
+        saveMeta();
+        syncHud();
+      }
+    });
 
     window.buyStarterPack = function() {
       if (starterPackClaimed) {

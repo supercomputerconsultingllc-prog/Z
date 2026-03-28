@@ -1038,8 +1038,16 @@
           <h1>Zombie Squad Run</h1>
           <p>Run with your squad, shoot the right lane, smash walls before impact, and spend coins to upgrade your survival chances.</p>
           <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best}</p>
-          <button onclick="window.startZombieRun()">Start Run</button>
+          <button id="startRunBtn" type="button">Start Run</button>
         </div>`;
+      const startRunBtn = document.getElementById('startRunBtn');
+      if (startRunBtn) {
+        startRunBtn.addEventListener('click', window.startZombieRun);
+        startRunBtn.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          window.startZombieRun();
+        }, { passive: false });
+      }
       refreshMusicState();
     }
 
@@ -2035,6 +2043,7 @@
       refreshMusicState();
     };
     window.startZombieRun = function() {
+      if (!state) resetGame();
       emergencyPerfMode = false;
       perfWarningUntil = 0;
       overlay.innerHTML = '';
@@ -2059,6 +2068,7 @@
       state.running = true;
       state.gameOver = false;
       bankCoins = 0;
+      localStorage.setItem('zombie-squad-run-coins', '0');
       saveMeta();
       syncHud();
       refreshMusicState();

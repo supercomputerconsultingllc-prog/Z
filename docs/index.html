@@ -997,12 +997,18 @@
       missionStat.title = mission.label;
     }
 
+    function grantCoins(amount) {
+      state.coins += amount;
+      bankCoins = state.coins;
+      saveMeta();
+    }
+
     function updateMission(eventName, amount = 1) {
       const mission = activeMission();
       if (mission.event !== eventName) return;
       missionProgress += amount;
       if (missionProgress >= mission.target) {
-        addCoins(10);
+        grantCoins(10);
         missionIndex += 1;
         missionProgress = 0;
         overlay.innerHTML = `

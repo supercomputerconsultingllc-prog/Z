@@ -5,14 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Zombie Squad Run</title>
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="./icon.svg">
   <meta name="theme-color" content="#0b1220">
-  <meta name="description" content="Contra-style zombie lane shooter with weapon upgrades, boss walls, and cinematic night survival.">
-  <meta property="og:title" content="Zombie Squad Run">
-  <meta property="og:description" content="Contra-style zombie lane shooter with weapon upgrades, boss walls, and cinematic night survival.">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="./icon.svg">
   <style>
     :root {
       --bg: #0b1220;
@@ -64,71 +57,288 @@
     .content { display: grid; grid-template-columns: 1fr 320px; }
     .canvas-wrap { position: relative; min-height: 680px; background: linear-gradient(180deg, #111827 0%, #0f172a 50%, #1e293b 100%); }
     canvas { width: 100%; height: 680px; display: block; touch-action: manipulation; cursor: crosshair; }
+    .battle-side-ui {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      z-index: 4;
+    }
+    .battle-side-btn {
+      width: 86px;
+      min-height: 86px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(180deg, rgba(239,68,68,.96), rgba(127,29,29,.98));
+      color: white;
+      box-shadow: 0 18px 36px rgba(0,0,0,.32);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 900;
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      pointer-events: auto;
+      position: relative;
+      z-index: 4;
+    }
+    .battle-side-btn.ready {
+      box-shadow: 0 0 0 2px rgba(254,202,202,.22), 0 0 24px rgba(248,113,113,.55), 0 18px 36px rgba(0,0,0,.32);
+      filter: saturate(1.2);
+    }
+    .battle-side-btn:active {
+      transform: scale(.96);
+    }
+    .battle-side-btn .big { font-size: 28px; line-height: 1; }
     .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
     .message {
-      background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.88));
+      background: rgba(15, 23, 42, 0.9);
       border: 1px solid rgba(255,255,255,0.08);
-      box-shadow: 0 24px 64px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
       padding: 18px 22px;
       border-radius: 16px;
       text-align: center;
       max-width: 520px;
       pointer-events: auto;
     }
+    .message.settings-page {
+      width: min(720px, calc(100% - 24px));
+      max-width: 720px;
+      text-align: left;
+      padding: 24px;
+    }
     .message h1, .message h2 { margin: 0 0 10px; }
     .message p { color: var(--muted); line-height: 1.45; }
     .controls { padding: 16px; border-left: 1px solid rgba(148,163,184,.12); background: rgba(255,255,255,0.03); }
     .card { background: var(--panel); border-radius: 16px; padding: 14px; margin-bottom: 14px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.04); }
-    .card.hidden { display: none; }
     h3 { margin: 0 0 10px; }
     p, li { color: var(--muted); }
     ul { margin: 0; padding-left: 20px; }
     button {
-      border: 0; border-radius: 999px; padding: 13px 18px; background: linear-gradient(180deg, #4ade80, #16a34a); color: #06210f;
+      border: 0; border-radius: 999px; padding: 13px 18px; background: var(--accent); color: #06210f;
       font-weight: 800; cursor: pointer; width: 100%; font-size: 16px; margin-top: 8px;
-      box-shadow: 0 12px 24px rgba(34,197,94,0.18), inset 0 1px 0 rgba(255,255,255,0.2);
-      transition: transform .12s ease, filter .12s ease;
     }
-    button:hover { filter: brightness(1.06); transform: translateY(-1px); }
-    button.secondary { background: linear-gradient(180deg, #475569, #334155); color: white; box-shadow: 0 10px 22px rgba(15,23,42,0.25); }
-    button.warn { background: linear-gradient(180deg, #fbbf24, #f59e0b); color: #1f2937; box-shadow: 0 10px 22px rgba(245,158,11,0.22); }
+    button.secondary { background: #334155; color: white; }
+    button.warn { background: var(--warn); color: #1f2937; }
     .pill {
       display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
       background: rgba(34,197,94,.12); color: #86efac; margin-right: 6px; margin-bottom: 6px;
     }
     .shop-btn { width: auto; margin: 6px 6px 0 0; padding: 12px 16px; font-size: 14px; min-height: 44px; }
-    .touch-row { display: none; gap: 10px; padding: 0 16px 16px; background: rgba(255,255,255,0.03); }
-    .touch-btn { flex: 1; min-height: 52px; font-size: 16px; }
-    .badge-line { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 10px 0 12px; }
-    .badge { padding: 6px 10px; border-radius: 999px; background: rgba(15,23,42,0.82); border: 1px solid rgba(125,211,252,0.16); color: #cbd5e1; font-size: 12px; font-weight: 700; }
-    .site-links {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-      padding: 0 16px 18px;
-      background: rgba(255,255,255,0.03);
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
     }
-    .site-links a {
-      color: #7dd3fc;
-      text-decoration: none;
-      font-weight: 700;
-      padding: 8px 12px;
+    .action-btn {
+      width: 100%;
+      margin-top: 0;
+      min-height: 108px;
+      border-radius: 22px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(180deg, rgba(59,130,246,.96), rgba(30,64,175,.96));
+      color: white;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    }
+    .action-btn.enhance {
+      background: linear-gradient(180deg, rgba(245,158,11,.96), rgba(180,83,9,.96));
+      color: #fff7ed;
+    }
+    .action-btn.settings {
+      background: linear-gradient(180deg, rgba(71,85,105,.96), rgba(30,41,59,.98));
+      color: #e2e8f0;
+    }
+    .action-icon { font-size: 34px; line-height: 1; }
+    .action-label { font-size: 15px; font-weight: 800; }
+    .action-sub { font-size: 12px; opacity: 0.85; text-align: center; }
+    .panel-list {
+      margin: 12px 0 0;
+      padding-left: 18px;
+      color: var(--ink);
+    }
+    .panel-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 12px 0;
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .panel-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--blue);
+    }
+    .volume-bar-shell {
+      height: 16px;
       border-radius: 999px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(148,163,184,.12);
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+      margin-top: 8px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .volume-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #22c55e, #facc15);
+      transition: width .12s ease;
+    }
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .settings-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 14px;
+    }
+    .settings-card h4 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+    .mini-note {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .shop-grid {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+      text-align: left;
+    }
+    .shop-hero {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 12px;
+      margin-top: 14px;
+      text-align: left;
+    }
+    .shop-card {
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.03);
+    }
+    .shop-card.featured {
+      background: linear-gradient(135deg, rgba(245,158,11,.24), rgba(15,23,42,.98));
+      border-color: rgba(250,204,21,.28);
+    }
+    .shop-card.balance {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(59,130,246,.18), rgba(15,23,42,.98));
+    }
+    .shop-card h4 {
+      margin: 0 0 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 17px;
+    }
+    .shop-card p {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .coin-big {
+      font-size: 42px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .balance-value {
+      font-size: 34px;
+      font-weight: 900;
+      color: #fde68a;
+    }
+    .featured-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-weight: 900;
+      font-size: 19px;
+    }
+    .shop-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      background: rgba(34,197,94,.14);
+      color: #86efac;
+    }
+    .shop-badge.locked {
+      background: rgba(148,163,184,.16);
+      color: #cbd5e1;
+    }
+    .shop-card .cta-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .shop-card .cta-row button {
+      width: auto;
+      margin-top: 0;
+      flex: 1 1 180px;
+    }
+    .touch-row { display: none; gap: 10px; padding: 0 16px 16px; background: rgba(255,255,255,0.03); flex-wrap: wrap; }
+    .touch-btn { flex: 1 1 120px; min-height: 56px; font-size: 16px; }
+    .touch-btn.special {
+      flex: 1 1 140px;
+      background: linear-gradient(180deg, rgba(239,68,68,.96), rgba(127,29,29,.98));
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    .touch-btn.utility {
+      flex: 1 1 120px;
+      background: linear-gradient(180deg, rgba(71,85,105,.96), rgba(30,41,59,.98));
+      color: #e2e8f0;
+    }
+    .touch-btn .tiny-status {
+      display: block;
+      margin-top: 4px;
+      font-size: 11px;
+      opacity: 0.82;
     }
     @media (max-width: 920px) {
       .topbar { grid-template-columns: repeat(4, 1fr); }
       .content { grid-template-columns: 1fr; }
       .controls { border-left: 0; border-top: 1px solid rgba(148,163,184,.12); }
       canvas { height: 560px; }
+      .shop-hero { grid-template-columns: 1fr; }
       .touch-row { display: flex; }
     }
     @media (max-width: 560px) {
       .topbar { grid-template-columns: repeat(2, 1fr); }
       .stat .value { font-size: 22px; }
       .controls { padding: 12px; }
+      .settings-grid { grid-template-columns: 1fr; }
       button { min-height: 46px; }
     }
   </style>
@@ -137,19 +347,31 @@
   <main class="app">
     <section class="topbar">
       <div class="stat"><span class="label">Squad</span><span class="value" id="squadStat">8</span></div>
-      <div class="stat"><span class="label">Firepower</span><span class="value" id="gunStat">1</span></div>
+      <div class="stat"><span class="label">Firepower</span><span class="value" id="gunStat">1</span><span class="label" id="weaponNameStat" style="margin-top:6px;display:block;color:#cbd5e1;letter-spacing:.04em;text-transform:none;">Rifle</span></div>
       <div class="stat"><span class="label">Distance</span><span class="value" id="distanceStat">0</span></div>
       <div class="stat"><span class="label">Wave</span><span class="value" id="waveStat">1</span></div>
-      <div class="stat"><span class="label">Coins</span><span class="value" id="coinStat">🪙 0</span></div>
+      <div class="stat"><span class="label">Coins</span><span class="value" id="coinStat">0</span></div>
+      <div class="stat"><span class="label">Avatar Coins</span><span class="value" id="avatarCoinStat">0</span></div>
       <div class="stat"><span class="label">Revives</span><span class="value" id="reviveStat">1</span></div>
       <div class="stat"><span class="label">Best</span><span class="value" id="bestStat">0</span></div>
       <div class="stat"><span class="label">Mission</span><span class="value" id="missionStat">1/3</span></div>
-      <div class="stat"><span class="label">Minigun</span><span class="value" id="minigunStat">Ready</span></div>
     </section>
 
     <section class="content">
       <div class="canvas-wrap">
         <canvas id="game" width="800" height="680"></canvas>
+        <div class="battle-side-ui">
+          <button class="battle-side-btn" id="floatingMinigunBtn" aria-label="Activate minigun" type="button">
+            <span class="big">🔥</span>
+            <span>Minigun</span>
+            <span class="battle-side-status" id="floatingMinigunStatus" style="font-size:11px;opacity:.86;">Tap when ready</span>
+          </button>
+          <button class="battle-side-btn" id="floatingSettingsBtn" aria-label="Open settings" type="button" style="background:linear-gradient(180deg, rgba(71,85,105,.96), rgba(30,41,59,.98));">
+            <span class="big">⚙️</span>
+            <span>Settings</span>
+            <span style="font-size:11px;opacity:.86;">Brightness + volume</span>
+          </button>
+        </div>
         <div class="overlay" id="overlay"></div>
       </div>
 
@@ -157,40 +379,63 @@
         <div class="card">
           <h3>How it works</h3>
           <ul>
-            <li>🎯 Tap or click a lane to fire there.</li>
-            <li>🧟 Drop zombies to rescue and recruit survivors.</li>
-            <li>🔫 Shoot weapon crates to level up your guns.</li>
-            <li>🪙 Coins drop from clears and distance.</li>
-            <li>🧱 Break the wall before you hit it.</li>
-            <li>💥 If the wall still has strength left, you lose that many squad members.</li>
+            <li>Tap or click a lane to fire there.</li>
+            <li>Shoot zombies to save and recruit survivors.</li>
+            <li>Shoot crates to gain extra firepower.</li>
+            <li>Coins drop from clears and distance.</li>
+            <li>Break the wall before you hit it.</li>
+            <li>If the wall still has strength left, you lose that many squad members.</li>
           </ul>
         </div>
         <div class="card">
           <h3>Upgrade shop</h3>
           <p>Spend coins between runs or mid-run.</p>
-          <button class="shop-btn warn" id="buyGunBtn">🔫 +1 Firepower (10)</button>
-          <button class="shop-btn warn" id="buySquadBtn">🪖 +3 Squad (8)</button>
-          <button class="shop-btn warn" id="buyReviveBtn">❤️ +1 Revive (15)</button>
-          <p id="weaponTierText">Weapon tier: Peashooter</p>
-          <p id="shopFeedback">Shop ready.</p>
+          <button class="shop-btn warn" id="buyGunBtn">+1 Firepower (10)</button>
+          <button class="shop-btn warn" id="buySquadBtn">+3 Squad (8)</button>
+          <button class="shop-btn warn" id="buyReviveBtn">+1 Revive (15)</button>
         </div>
-        <div class="card hidden" id="avatarArmoryCard">
-          <h3>Avatar Armory</h3>
-          <p id="avatarCoinsText">Saved avatar coins: 0</p>
-          <button class="shop-btn secondary" id="avatarDefaultBtn">🪖 Default Trooper</button>
-          <button class="shop-btn secondary" id="avatarDesertBtn">🏜️ Desert Ranger (25)</button>
-          <button class="shop-btn secondary" id="avatarShadowBtn">🌑 Shadow Commando (40)</button>
-          <button class="shop-btn secondary" id="avatarBioBtn">☣️ Bio Armor (60)</button>
-          <button class="shop-btn secondary" id="avatarPoliceBtn">🚓 Police Officers (500)</button>
-          <button class="shop-btn secondary" id="avatarTankBtn">🛡️ Tanks (10000)</button>
-          <p id="avatarFeedback">Choose an avatar for your shooters.</p>
+        <div class="card">
+          <h3>Quick actions</h3>
+          <div class="action-grid">
+            <button class="action-btn money" id="moneyBtn" aria-label="Open money options">
+              <span class="action-icon">💸</span>
+              <span class="action-label">Money</span>
+              <span class="action-sub">Tap the cash button instead of the QR link</span>
+            </button>
+            <button class="action-btn enhance" id="enhanceBtn" aria-label="Open character enhancement">
+              <span class="action-icon">🔫</span>
+              <span class="action-label">Character Boost</span>
+              <span class="action-sub">Open enhancements and gun log</span>
+            </button>
+            <button class="action-btn enhance" id="avatarBtn" aria-label="Open avatar screen">
+              <span class="action-icon">🧑</span>
+              <span class="action-label">Avatars</span>
+              <span class="action-sub">Trade coins for avatar coins and unlock looks</span>
+            </button>
+            <button class="action-btn settings" id="settingsBtn" aria-label="Open settings">
+              <span class="action-icon">⚙️</span>
+              <span class="action-label">Settings</span>
+              <span class="action-sub">Volume, brightness, and controls</span>
+            </button>
+            <button class="action-btn money" id="youtubeBtn" aria-label="Open YouTube reward">
+              <span class="action-icon">▶️</span>
+              <span class="action-label">YouTube</span>
+              <span class="action-sub">Open channel and claim the visit reward</span>
+            </button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Monetization hooks</h3>
+          <span class="pill">Rewarded revive</span>
+          <span class="pill">Premium squads</span>
+          <span class="pill">Weapon skins</span>
+          <span class="pill">Season levels</span>
+          <span class="pill">Ad-free unlock</span>
         </div>
         <div class="card">
           <h3>Controls</h3>
           <p>Mouse/touch: shoot selected lane.</p>
           <p>Keyboard: <strong>1</strong>, <strong>2</strong>, <strong>3</strong> shoot left, center, right.</p>
-          <button class="secondary" id="avatarMenuBtn">👕 Avatars</button>
-          <button class="warn" id="minigunBtn">🌀 Use Minigun</button>
           <button id="restartBtn">Restart Run</button>
           <button class="secondary" id="pauseBtn">Pause</button>
           <button class="secondary" id="soundBtn">Sound: On</button>
@@ -200,54 +445,47 @@
     </section>
 
     <section class="touch-row">
-      <button class="secondary touch-btn" id="laneLeftBtn">⬅️ Fire Left</button>
-      <button class="secondary touch-btn" id="laneCenterBtn">🎯 Fire Center</button>
-      <button class="secondary touch-btn" id="laneRightBtn">➡️ Fire Right</button>
+      <button class="secondary touch-btn" id="laneLeftBtn">⬅️ Shoot Left</button>
+      <button class="secondary touch-btn" id="laneCenterBtn">🎯 Shoot Center</button>
+      <button class="secondary touch-btn" id="laneRightBtn">➡️ Shoot Right</button>
+      <button class="touch-btn special" id="minigunBtn" aria-label="Activate minigun" type="button">🔥 Minigun<span class="tiny-status battle-side-status">Tap when ready</span></button>
+      <button class="touch-btn utility" id="battleSettingsBtn" aria-label="Open settings" type="button">⚙️ Settings<span class="tiny-status">Brightness, volume, controls</span></button>
+      <button class="touch-btn utility" id="battleYoutubeBtn" aria-label="Open YouTube channel" type="button">▶️ YouTube<span class="tiny-status">Open @ColtRT-e5n2h</span></button>
     </section>
-
-    <nav class="site-links" aria-label="Site links">
-      <a href="./support/">Support</a>
-      <a href="./privacy/">Privacy</a>
-    </nav>
   </main>
 
   <script>
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
-    let audioCtx = null;
-    let masterGain = null;
-    let musicTimer = null;
-    let musicStep = 0;
     const overlay = document.getElementById('overlay');
     const squadStat = document.getElementById('squadStat');
     const gunStat = document.getElementById('gunStat');
+    const weaponNameStat = document.getElementById('weaponNameStat');
     const distanceStat = document.getElementById('distanceStat');
     const waveStat = document.getElementById('waveStat');
     const bestStat = document.getElementById('bestStat');
     const missionStat = document.getElementById('missionStat');
-    const minigunStat = document.getElementById('minigunStat');
     const coinStat = document.getElementById('coinStat');
+    const avatarCoinStat = document.getElementById('avatarCoinStat');
     const reviveStat = document.getElementById('reviveStat');
-    const avatarMenuBtn = document.getElementById('avatarMenuBtn');
-    const avatarArmoryCard = document.getElementById('avatarArmoryCard');
-    const minigunBtn = document.getElementById('minigunBtn');
     const restartBtn = document.getElementById('restartBtn');
     const pauseBtn = document.getElementById('pauseBtn');
     const soundBtn = document.getElementById('soundBtn');
     const titleBtn = document.getElementById('titleBtn');
+    const floatingMinigunBtn = document.getElementById('floatingMinigunBtn');
+    const floatingMinigunStatus = document.getElementById('floatingMinigunStatus');
+    const floatingSettingsBtn = document.getElementById('floatingSettingsBtn');
     const buyGunBtn = document.getElementById('buyGunBtn');
     const buySquadBtn = document.getElementById('buySquadBtn');
     const buyReviveBtn = document.getElementById('buyReviveBtn');
-    const weaponTierText = document.getElementById('weaponTierText');
-    const shopFeedback = document.getElementById('shopFeedback');
-    const avatarCoinsText = document.getElementById('avatarCoinsText');
-    const avatarFeedback = document.getElementById('avatarFeedback');
-    const avatarDefaultBtn = document.getElementById('avatarDefaultBtn');
-    const avatarDesertBtn = document.getElementById('avatarDesertBtn');
-    const avatarShadowBtn = document.getElementById('avatarShadowBtn');
-    const avatarBioBtn = document.getElementById('avatarBioBtn');
-    const avatarPoliceBtn = document.getElementById('avatarPoliceBtn');
-    const avatarTankBtn = document.getElementById('avatarTankBtn');
+    const minigunBtn = document.getElementById('minigunBtn');
+    const moneyBtn = document.getElementById('moneyBtn');
+    const enhanceBtn = document.getElementById('enhanceBtn');
+    const avatarBtn = document.getElementById('avatarBtn');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const battleSettingsBtn = document.getElementById('battleSettingsBtn');
+    const battleYoutubeBtn = document.getElementById('battleYoutubeBtn');
+    const youtubeBtn = document.getElementById('youtubeBtn');
     const laneLeftBtn = document.getElementById('laneLeftBtn');
     const laneCenterBtn = document.getElementById('laneCenterBtn');
     const laneRightBtn = document.getElementById('laneRightBtn');
@@ -256,113 +494,438 @@
     const COLORS = { road:'#334155', line:'#64748b', zombie:'#22c55e', wall:'#7c2d12', crate:'#2563eb', bullet:'#fde047', coin:'#facc15' };
 
     let state;
-    let particles = [];
-    let cameraShake = 0;
+    let audioCtx = null;
+    let musicEnabled = localStorage.getItem('zombie-squad-run-music') !== 'off';
+    let musicTimer = null;
+    let musicStep = 0;
     let best = Number(localStorage.getItem('zombie-squad-run-best') || 0);
-    let bankCoins = 0;
+    let bankCoins = Number(localStorage.getItem('zombie-squad-run-coins') || 0);
     let avatarCoins = Number(localStorage.getItem('zombie-squad-run-avatar-coins') || 0);
-    let selectedAvatar = localStorage.getItem('zombie-squad-run-avatar') || 'default';
-    let unlockedAvatars = JSON.parse(localStorage.getItem('zombie-squad-run-avatar-unlocks') || '["default"]');
-    let avatarMenuOpen = false;
     let soundOn = localStorage.getItem('zombie-squad-run-sound') !== 'off';
+    let volumeLevel = Number(localStorage.getItem('zombie-squad-run-volume') || 140);
+    let brightnessLevel = Number(localStorage.getItem('zombie-squad-run-brightness') || 100);
+    let controlsMode = localStorage.getItem('zombie-squad-run-controls') || 'tap';
     let missionIndex = Number(localStorage.getItem('zombie-squad-run-mission-index') || 0);
     let missionProgress = Number(localStorage.getItem('zombie-squad-run-mission-progress') || 0);
+    let youtubeVisitClaimed = localStorage.getItem('zombie-squad-run-youtube-visit') === 'claimed';
+    let youtubeSubscribeClaimed = localStorage.getItem('zombie-squad-run-youtube-subscribe') === 'claimed';
+    let starterPackClaimed = localStorage.getItem('zombie-squad-run-starter-pack') === 'claimed';
+    let gunPrice = Number(localStorage.getItem('zombie-squad-run-gun-price') || 10);
+    let squadPrice = Number(localStorage.getItem('zombie-squad-run-squad-price') || 8);
+    let revivePrice = Number(localStorage.getItem('zombie-squad-run-revive-price') || 15);
+    let screenShake = 0;
+    let hitFlash = 0;
+    let bossWave = false;
     const MISSIONS = [
-      { label: 'Break 3 walls', target: 3, event: 'walls' },
-      { label: 'Recruit 8 survivors', target: 8, event: 'survivors' },
-      { label: 'Collect 20 coins', target: 20, event: 'coins' }
+      { label: 'Break 12 walls', target: 12, event: 'walls' },
+      { label: 'Recruit 32 survivors', target: 32, event: 'survivors' },
+      { label: 'Collect 80 coins', target: 80, event: 'coins' }
     ];
     bestStat.textContent = best;
     soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
 
     function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
-
-    function resizeCanvas() {
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      const logicalWidth = 800;
-      const logicalHeight = 680;
-      canvas.width = Math.floor(logicalWidth * ratio);
-      canvas.height = Math.floor(logicalHeight * ratio);
-      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-      ctx.imageSmoothingEnabled = true;
-    }
-
-    function ensureAudio() {
-      if (!soundOn) return null;
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        masterGain = audioCtx.createGain();
-        masterGain.gain.value = 0.05;
-        masterGain.connect(audioCtx.destination);
-      }
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      return audioCtx;
-    }
-
-    function playTone(freq = 220, duration = 0.08, type = 'square', volume = 0.03) {
-      const ac = ensureAudio();
-      if (!ac || !masterGain) return;
-      const osc = ac.createOscillator();
-      const gain = ac.createGain();
-      osc.type = type;
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(volume, ac.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(masterGain);
-      osc.start();
-      osc.stop(ac.currentTime + duration);
-    }
-
-    function startMusic() {
-      const ac = ensureAudio();
-      if (!ac || musicTimer) return;
-      const melody = [220, 247, 262, 294, 330, 294, 262, 247, 196, 220, 247, 262, 330, 392, 330, 294];
-      musicTimer = window.setInterval(() => {
-        if (!soundOn || !state || state.paused || state.gameOver) return;
-        const waveBoost = Math.min(1.35, 1 + (state.wave * 0.04));
-        const note = melody[musicStep % melody.length] * waveBoost;
-        playTone(note, 0.16, 'triangle', 0.018);
-        if (musicStep % 4 === 0) playTone(note / 2, 0.12, 'sawtooth', 0.012);
-        musicStep += 1;
-      }, 180);
-    }
-
-    function stopMusic() {
-      if (musicTimer) {
-        clearInterval(musicTimer);
-        musicTimer = null;
-      }
-    }
-
+    function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
     function saveMeta(){
       localStorage.setItem('zombie-squad-run-best', String(best));
+      localStorage.setItem('zombie-squad-run-coins', String(bankCoins));
+      localStorage.setItem('zombie-squad-run-avatar-coins', String(avatarCoins));
       localStorage.setItem('zombie-squad-run-sound', soundOn ? 'on' : 'off');
+      localStorage.setItem('zombie-squad-run-music', musicEnabled ? 'on' : 'off');
+      localStorage.setItem('zombie-squad-run-volume', String(volumeLevel));
+      localStorage.setItem('zombie-squad-run-brightness', String(brightnessLevel));
+      localStorage.setItem('zombie-squad-run-controls', controlsMode);
       localStorage.setItem('zombie-squad-run-mission-index', String(missionIndex));
       localStorage.setItem('zombie-squad-run-mission-progress', String(missionProgress));
-      localStorage.setItem('zombie-squad-run-avatar-coins', String(avatarCoins));
-      localStorage.setItem('zombie-squad-run-avatar', selectedAvatar);
-      localStorage.setItem('zombie-squad-run-avatar-unlocks', JSON.stringify(unlockedAvatars));
+      localStorage.setItem('zombie-squad-run-youtube-visit', youtubeVisitClaimed ? 'claimed' : 'open');
+      localStorage.setItem('zombie-squad-run-youtube-subscribe', youtubeSubscribeClaimed ? 'claimed' : 'open');
+      localStorage.setItem('zombie-squad-run-starter-pack', starterPackClaimed ? 'claimed' : 'open');
+      localStorage.setItem('zombie-squad-run-gun-price', String(gunPrice));
+      localStorage.setItem('zombie-squad-run-squad-price', String(squadPrice));
+      localStorage.setItem('zombie-squad-run-revive-price', String(revivePrice));
     }
 
     function activeMission() { return MISSIONS[missionIndex % MISSIONS.length]; }
 
-    function syncAvatarHud() {
-      avatarCoinsText.textContent = `Saved avatar coins: ${avatarCoins}`;
-      avatarMenuBtn.textContent = avatarMenuOpen ? '👕 Close Avatars' : '👕 Avatars';
-      avatarArmoryCard.classList.toggle('hidden', !avatarMenuOpen);
-      avatarDefaultBtn.textContent = selectedAvatar === 'default' ? '🪖 Default Trooper ✓' : '🪖 Default Trooper';
-      avatarDesertBtn.textContent = unlockedAvatars.includes('desert') ? (selectedAvatar === 'desert' ? '🏜️ Desert Ranger ✓' : '🏜️ Desert Ranger') : '🏜️ Desert Ranger (25)';
-      avatarShadowBtn.textContent = unlockedAvatars.includes('shadow') ? (selectedAvatar === 'shadow' ? '🌑 Shadow Commando ✓' : '🌑 Shadow Commando') : '🌑 Shadow Commando (40)';
-      avatarBioBtn.textContent = unlockedAvatars.includes('bio') ? (selectedAvatar === 'bio' ? '☣️ Bio Armor ✓' : '☣️ Bio Armor') : '☣️ Bio Armor (60)';
-      avatarPoliceBtn.textContent = unlockedAvatars.includes('police') ? (selectedAvatar === 'police' ? '🚓 Police Officers ✓' : '🚓 Police Officers') : '🚓 Police Officers (500)';
-      avatarTankBtn.textContent = unlockedAvatars.includes('tank') ? (selectedAvatar === 'tank' ? '🛡️ Tanks ✓' : '🛡️ Tanks') : '🛡️ Tanks (10000)';
+    function ensureAudio() {
+      if (audioCtx) return audioCtx;
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return null;
+      audioCtx = new AudioContextClass();
+      return audioCtx;
+    }
+
+    function playTone(freq, duration = 0.08, type = 'square', gainBoost = 1) {
+      if (!soundOn || volumeLevel <= 0) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      if (ctxAudio.state === 'suspended') ctxAudio.resume();
+      const osc = ctxAudio.createOscillator();
+      const gain = ctxAudio.createGain();
+      const now = ctxAudio.currentTime;
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime((volumeLevel / 100) * 0.08 * gainBoost, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      osc.connect(gain);
+      gain.connect(ctxAudio.destination);
+      osc.start(now);
+      osc.stop(now + duration);
+    }
+
+    function playKick(time, gainBoost = 1) {
+      if (!musicEnabled || volumeLevel <= 0) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      const osc = ctxAudio.createOscillator();
+      const gain = ctxAudio.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(140, time);
+      osc.frequency.exponentialRampToValueAtTime(42, time + 0.18);
+      gain.gain.setValueAtTime((volumeLevel / 100) * 0.08 * gainBoost, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.18);
+      osc.connect(gain);
+      gain.connect(ctxAudio.destination);
+      osc.start(time);
+      osc.stop(time + 0.18);
+    }
+
+    function playNoiseHit(time, duration = 0.08, gainBoost = 0.45) {
+      if (!musicEnabled || volumeLevel <= 0) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      const buffer = ctxAudio.createBuffer(1, ctxAudio.sampleRate * duration, ctxAudio.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+      const source = ctxAudio.createBufferSource();
+      const filter = ctxAudio.createBiquadFilter();
+      const gain = ctxAudio.createGain();
+      source.buffer = buffer;
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(1600, time);
+      gain.gain.setValueAtTime((volumeLevel / 100) * 0.05 * gainBoost, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctxAudio.destination);
+      source.start(time);
+    }
+
+    function playMusicNote(freq, time, duration, type = 'triangle', gainBoost = 0.22) {
+      if (!musicEnabled || volumeLevel <= 0) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      const osc = ctxAudio.createOscillator();
+      const gain = ctxAudio.createGain();
+      const filter = ctxAudio.createBiquadFilter();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, time);
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(type === 'sawtooth' ? 1800 : 1200, time);
+      gain.gain.setValueAtTime((volumeLevel / 100) * 0.028 * gainBoost, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctxAudio.destination);
+      osc.start(time);
+      osc.stop(time + duration);
+    }
+
+    function musicIntensity() {
+      const waveBoost = Math.min(1.8, state ? state.wave / 6 : 0.5);
+      const minigunBoost = state && state.minigunActiveUntil > performance.now() ? 0.9 : 0;
+      return 0.75 + waveBoost + minigunBoost;
+    }
+
+    function scheduleMusicBar() {
+      if (!musicEnabled || !soundOn) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      if (ctxAudio.state === 'suspended') ctxAudio.resume();
+      const now = ctxAudio.currentTime + 0.02;
+      const stepDur = 0.2;
+      const root = state ? 82 + Math.min(34, state.wave * 2) : 88;
+      const intensity = musicIntensity();
+      const chordProgression = [0, 3, 7, 10];
+      const bassPattern = [0, 0, 7, 0, 3, 0, 10, 7];
+      const arpPattern = [12, 15, 19, 15, 22, 19, 15, 12];
+      const chord = chordProgression[Math.floor((musicStep / 8) % chordProgression.length)];
+
+      for (let i = 0; i < 8; i++) {
+        const stepTime = now + i * stepDur;
+        const bassFreq = root * Math.pow(2, (bassPattern[i] + chord) / 12);
+        const arpFreq = root * Math.pow(2, (arpPattern[i] + chord) / 12);
+        playMusicNote(bassFreq * 0.5, stepTime, 0.22, 'sawtooth', 0.95 * intensity);
+        playMusicNote(bassFreq, stepTime, 0.3, 'triangle', 0.38 * intensity);
+        playMusicNote(arpFreq, stepTime, 0.16, i % 2 === 0 ? 'square' : 'triangle', 0.34 * intensity);
+        if (i % 2 === 1) playMusicNote(arpFreq * 2, stepTime, 0.08, 'sawtooth', 0.18 * intensity);
+        if (i % 4 === 0) playKick(stepTime, 1.45 * intensity);
+        if (i % 2 === 1) playNoiseHit(stepTime, 0.07, 0.95 * intensity);
+      }
+      musicStep = (musicStep + 8) % 32;
+    }
+
+    function startMusicLoop() {
+      if (musicTimer || !musicEnabled) return;
+      scheduleMusicBar();
+      musicTimer = setInterval(() => {
+        if (!document.hidden && !state?.paused && !state?.gameOver) scheduleMusicBar();
+      }, 1760);
+    }
+
+    function stopMusicLoop() {
+      if (!musicTimer) return;
+      clearInterval(musicTimer);
+      musicTimer = null;
+    }
+
+    function refreshMusicState() {
+      if (musicEnabled && soundOn) startMusicLoop();
+      else stopMusicLoop();
+    }
+
+    function applyDisplaySettings() {
+      canvas.style.filter = `brightness(${brightnessLevel}%)`;
+    }
+
+    function applyControlsMode() {
+      const touchRow = document.querySelector('.touch-row');
+      touchRow.style.display = controlsMode === 'buttons' ? 'flex' : '';
+      touchRow.style.opacity = controlsMode === 'buttons' ? '1' : '';
+    }
+
+    function controlSummary() {
+      return controlsMode === 'buttons'
+        ? 'On-screen lane buttons are emphasized for play.'
+        : 'Tap or click any lane, keyboard 1 to 3 still works.';
+    }
+
+    function gunLogItems() {
+      return [
+        `Current firepower: Lv.${state.firepower}`,
+        `Squad armor boost: +${Math.max(0, state.squad - 8)}`,
+        `Revive stock: ${state.revives}`
+      ];
+    }
+
+    const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@ColtRT-e5n2h';
+
+    function moneyPanelMarkup() {
+      return `
+        <div class="message settings-page">
+          <h2>Squad Shop</h2>
+          <p>Top up coins, claim channel rewards, and juice the next run.</p>
+          <div class="settings-grid">
+            <div class="settings-card" style="background:linear-gradient(135deg, rgba(245,158,11,.18), rgba(15,23,42,.96));">
+              <h4>🪙 Coin Wallet</h4>
+              <p><strong>${state.coins}</strong> run coins ready to spend.</p>
+              <p class="mini-note">Best when paired with firepower and revive upgrades.</p>
+            </div>
+            <div class="settings-card" style="background:linear-gradient(135deg, rgba(59,130,246,.18), rgba(15,23,42,.96));">
+              <h4>🔫 Current Loadout</h4>
+              <p><strong>${weaponProfile(state.firepower).name}</strong> at firepower level ${state.firepower}.</p>
+              <p class="mini-note">Next crate or upgrade will push you harder.</p>
+            </div>
+          </div>
+          <div class="shop-grid">
+            <div class="shop-card featured">
+              <h4><span>🔥 Featured Starter Pack</span><span class="shop-badge">100 Coins</span></h4>
+              <p>Instantly add 100 coins and a little momentum before the next wave.</p>
+              <div class="cta-row">
+                <button class="warn" onclick="window.buyStarterPack()" ${starterPackClaimed ? 'disabled' : ''}>${starterPackClaimed ? 'Starter Pack Claimed' : 'Buy 100 Coins'}</button>
+              </div>
+            </div>
+            <div class="shop-card">
+              <h4><span>▶️ YouTube Visit Reward</span><span class="shop-badge ${youtubeVisitClaimed ? '' : 'locked'}">${youtubeVisitClaimed ? 'Claimed' : 'Ready'}</span></h4>
+              <p>Open <strong>@ColtRT-e5n2h</strong> and receive 100 coins.</p>
+              <div class="cta-row">
+                <button class="warn" onclick="window.openYoutubeReward()" ${youtubeVisitClaimed ? 'disabled' : ''}>${youtubeVisitClaimed ? '100 Coins Claimed' : 'Open Channel + Claim'}</button>
+              </div>
+            </div>
+            <div class="shop-card">
+              <h4><span>⭐ Subscribe Bonus</span><span class="shop-badge ${youtubeSubscribeClaimed ? '' : 'locked'}">${youtubeSubscribeClaimed ? 'Claimed' : 'Honor System'}</span></h4>
+              <p>Subscribe to <strong>@ColtRT-e5n2h</strong> and claim a 1000-coin bonus.</p>
+              <div class="cta-row">
+                <button onclick="window.claimSubscribeReward()" ${youtubeSubscribeClaimed ? 'disabled' : ''}>${youtubeSubscribeClaimed ? '1000 Coins Claimed' : 'Claim 1000 Coins'}</button>
+              </div>
+            </div>
+          </div>
+          <p class="mini-note">Channel rewards are one-time bonuses. Subscribe still uses honor-system claiming until real verification exists.</p>
+          <button class="secondary" onclick="window.closeOverlayAndResume()">Close</button>
+        </div>`;
+    }
+
+    function openMoneyPanel() {
+      state.paused = true;
+      overlay.innerHTML = moneyPanelMarkup();
+    }
+
+    function openEnhancementPanel() {
+      state.paused = true;
+      overlay.innerHTML = `
+        <div class="message">
+          <h2>Character Enhancement</h2>
+          <p>Use this panel for powerups, costumes, and the gun log.</p>
+          <ul class="panel-list">${gunLogItems().map(item => `<li>${item}</li>`).join('')}</ul>
+          <p class="mini-note">Next upgrade unlocks a wider shot spread and stronger wall damage.</p>
+          <button onclick="window.closeOverlayAndResume()">Close</button>
+        </div>`;
+    }
+
+    function openAvatarPanel() {
+      state.paused = true;
+      overlay.innerHTML = `
+        <div class="message settings-page">
+          <h2>Avatar Screen</h2>
+          <p>Trade regular coins for avatar coins, then spend avatar coins on avatar unlocks.</p>
+          <div class="settings-grid">
+            <div class="settings-card">
+              <h4>Currency Exchange</h4>
+              <p><strong>25 coins = 1 avatar coin</strong></p>
+              <p>You have <strong>${state.coins}</strong> coins and <strong>${avatarCoins}</strong> avatar coins.</p>
+              <button class="warn" id="tradeAvatarCoinBtn" style="width:auto;">Trade 25 Coins For 1 Avatar Coin</button>
+            </div>
+            <div class="settings-card">
+              <h4>Avatar Unlocks</h4>
+              <ul class="panel-list">
+                <li>Ranger Helmet, 2 avatar coins</li>
+                <li>Blue Commander, 4 avatar coins</li>
+                <li>Gold Minigun Hero, 8 avatar coins</li>
+              </ul>
+              <p class="mini-note">This screen is ready for a fuller avatar selection flow later.</p>
+            </div>
+          </div>
+          <button class="secondary" onclick="window.closeOverlayAndResume()">Close</button>
+        </div>`;
+
+      const tradeAvatarCoinBtn = document.getElementById('tradeAvatarCoinBtn');
+      tradeAvatarCoinBtn.addEventListener('click', () => {
+        if (state.coins < 25) return;
+        state.coins -= 25;
+        bankCoins = state.coins;
+        avatarCoins += 1;
+        saveMeta();
+        syncHud();
+        openAvatarPanel();
+      });
+    }
+
+    function openSettingsPanel() {
+      state.paused = true;
+      overlay.innerHTML = `
+        <div class="message settings-page">
+          <h2>Settings</h2>
+          <p>Adjust the game sound, screen brightness, and control style from one place.</p>
+          <div class="settings-grid">
+            <div class="settings-card">
+              <h4>Volume</h4>
+              <div class="panel-row">
+                <span>Master Audio</span>
+                <input id="volumeRange" type="range" min="0" max="200" value="${volumeLevel}">
+                <strong id="volumeValue">${volumeLevel}%</strong>
+              </div>
+              <div class="volume-bar-shell">
+                <div class="volume-bar-fill" id="volumeBarFill" style="width:${Math.min(volumeLevel, 200) / 2}%"></div>
+              </div>
+              <p class="mini-note">This now controls real game sound. It can go above 100% for extra punch.</p>
+              <button id="testAudioBtn" class="warn" style="width:auto;">Test Volume</button>
+            </div>
+            <div class="settings-card">
+              <h4>Display</h4>
+              <div class="panel-row">
+                <span>Brightness</span>
+                <input id="brightnessRange" type="range" min="70" max="140" value="${brightnessLevel}">
+                <strong id="brightnessValue">${brightnessLevel}%</strong>
+              </div>
+              <p class="mini-note">Raise this if the battlefield looks too dark.</p>
+            </div>
+            <div class="settings-card">
+              <h4>Controls</h4>
+              <div class="panel-row">
+                <span>Input Mode</span>
+                <button class="secondary" id="controlsModeBtn" style="width:auto;margin-top:0;">${controlsMode === 'buttons' ? 'Buttons' : 'Tap / Keys'}</button>
+              </div>
+              <p class="mini-note" id="controlsHelp">${controlSummary()}</p>
+            </div>
+            <div class="settings-card">
+              <h4>Sound Toggle</h4>
+              <div class="panel-row">
+                <span>Effects</span>
+                <button class="secondary" id="soundToggleBtn" style="width:auto;margin-top:0;">${soundOn ? 'On' : 'Off'}</button>
+              </div>
+              <p class="mini-note">Turn the battle sounds on or off without leaving the page.</p>
+            </div>
+            <div class="settings-card">
+              <h4>Music</h4>
+              <div class="panel-row">
+                <span>Epic Music</span>
+                <button class="secondary" id="musicToggleBtn" style="width:auto;margin-top:0;">${musicEnabled ? 'On' : 'Off'}</button>
+              </div>
+              <p class="mini-note">Layered bass, lead, drums, and wave-based intensity.</p>
+            </div>
+          </div>
+          <button onclick="window.closeOverlayAndResume()">Done</button>
+        </div>`;
+
+      const volumeRange = document.getElementById('volumeRange');
+      const volumeValue = document.getElementById('volumeValue');
+      const volumeBarFill = document.getElementById('volumeBarFill');
+      const brightnessRange = document.getElementById('brightnessRange');
+      const brightnessValue = document.getElementById('brightnessValue');
+      const controlsModeBtn = document.getElementById('controlsModeBtn');
+      const controlsHelp = document.getElementById('controlsHelp');
+      const testAudioBtn = document.getElementById('testAudioBtn');
+      const soundToggleBtn = document.getElementById('soundToggleBtn');
+      const musicToggleBtn = document.getElementById('musicToggleBtn');
+
+      volumeRange.addEventListener('input', () => {
+        volumeLevel = Number(volumeRange.value);
+        volumeValue.textContent = `${volumeLevel}%`;
+        volumeBarFill.style.width = `${Math.min(volumeLevel, 200) / 2}%`;
+        saveMeta();
+      });
+
+      brightnessRange.addEventListener('input', () => {
+        brightnessLevel = Number(brightnessRange.value);
+        brightnessValue.textContent = `${brightnessLevel}%`;
+        applyDisplaySettings();
+        saveMeta();
+      });
+
+      controlsModeBtn.addEventListener('click', () => {
+        controlsMode = controlsMode === 'buttons' ? 'tap' : 'buttons';
+        controlsModeBtn.textContent = controlsMode === 'buttons' ? 'Buttons' : 'Tap / Keys';
+        controlsHelp.textContent = controlSummary();
+        applyControlsMode();
+        saveMeta();
+      });
+
+      soundToggleBtn.addEventListener('click', () => {
+        soundOn = !soundOn;
+        soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
+        soundToggleBtn.textContent = soundOn ? 'On' : 'Off';
+        refreshMusicState();
+        saveMeta();
+      });
+
+      musicToggleBtn.addEventListener('click', () => {
+        musicEnabled = !musicEnabled;
+        musicToggleBtn.textContent = musicEnabled ? 'On' : 'Off';
+        refreshMusicState();
+        saveMeta();
+      });
+
+      testAudioBtn.addEventListener('click', () => {
+        playTone(660, 0.08, 'square', 1.6);
+        setTimeout(() => playTone(880, 0.1, 'sawtooth', 1.4), 70);
+        scheduleMusicBar();
+      });
     }
 
     function syncMissionHud() {
       const mission = activeMission();
       missionStat.textContent = `${Math.min(missionProgress, mission.target)}/${mission.target}`;
-      missionStat.title = `Mission: ${mission.label}`;
+      missionStat.title = mission.label;
     }
 
     function updateMission(eventName, amount = 1) {
@@ -370,20 +933,15 @@
       if (mission.event !== eventName) return;
       missionProgress += amount;
       if (missionProgress >= mission.target) {
+        addCoins(10);
         missionIndex += 1;
         missionProgress = 0;
-        state.coins += 10;
-        bankCoins = state.coins;
         overlay.innerHTML = `
           <div class="message">
             <h2>Mission Complete</h2>
-            <div class="badge-line">
-              <span class="badge">Bonus earned</span>
-              <span class="badge">+10 coins</span>
-            </div>
             <p>${mission.label}</p>
-            <p>You earned a 10-coin bonus and unlocked the next objective.</p>
-            <button data-action="resume">⚡ Keep Running</button>
+            <p>You earned a 10-coin bonus.</p>
+            <button onclick="window.closeOverlayAndResume()">Keep Running</button>
           </div>`;
         state.paused = true;
       }
@@ -396,67 +954,148 @@
       overlay.innerHTML = `
         <div class="message">
           <h1>Zombie Squad Run</h1>
-          <div class="badge-line">
-            <span class="badge">Contra-inspired lane shooter</span>
-            <span class="badge">Weapon-tier squad</span>
-            <span class="badge">Night survival run</span>
-          </div>
-          <p><strong>Hold the road. Build the squad. Melt the undead.</strong></p>
-          <p>Run with your squad, blast the right lane, smash boss walls before impact, and stack stronger weapons every round.</p>
-          <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best} &nbsp; <strong>Tier:</strong> ${weaponTierName(state.firepower)}</p>
-          <div class="badge-line">
-            <span class="badge">Tap lane to fire</span>
-            <span class="badge">Crates = stronger guns</span>
-            <span class="badge">Walls = squad damage</span>
-          </div>
-          <div class="badge-line">
-            <span class="badge">Elite zombies appear at higher rewards</span>
-            <span class="badge">Boss walls punish bad timing</span>
-          </div>
-          <button data-action="start">🚀 Start Run</button>
+          <p>Run with your squad, shoot the right lane, smash walls before impact, and spend coins to upgrade your survival chances.</p>
+          <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best}</p>
+          <button onclick="window.startZombieRun()">Start Run</button>
         </div>`;
     }
+
+    function applyScenePreset(scene) {
+      overlay.innerHTML = '';
+      state.running = true;
+      state.gameOver = false;
+      state.paused = true;
+      state.bullets = [];
+      state.objects = [];
+      state.particles = [];
+      state.minigunCharge = 100;
+      state.minigunActiveUntil = 0;
+      state.lastMinigunBurst = 0;
+      state.distance = 0;
+      state.wave = 1;
+      state.speed = 190;
+      state.squad = 8;
+      state.firepower = 1;
+      state.coins = 42;
+      state.revives = 1;
+      state.usedRevive = false;
+      missionIndex = 0;
+      missionProgress = 1;
+
+      if (scene === 'title') {
+        bankCoins = 42;
+        best = 312;
+        syncHud();
+        showTitleScreen();
+        return;
+      }
+
+      if (scene === 'action') {
+        state.paused = false;
+        state.distance = 228;
+        state.wave = 3;
+        state.squad = 11;
+        state.firepower = 2;
+        state.objects = [
+          { type:'zombie', lane:0, x:LANES[0], y:180, hp:4, reward:2, size:36 },
+          { type:'zombie', lane:1, x:LANES[1], y:260, hp:5, reward:3, size:36 },
+          { type:'coin', lane:2, x:LANES[2], y:230, hp:1, reward:4, size:24 },
+          { type:'crate', lane:1, x:LANES[1], y:110, hp:1, reward:1, size:32 }
+        ];
+        state.bullets = [
+          { x: LANES[1] - 8, y: 470, speed: 560 },
+          { x: LANES[1] + 8, y: 420, speed: 560 },
+          { x: LANES[0], y: 520, speed: 560 }
+        ];
+      } else if (scene === 'wall') {
+        state.paused = false;
+        state.distance = 386;
+        state.wave = 5;
+        state.squad = 14;
+        state.firepower = 3;
+        state.objects = [
+          { type:'wall', lane:1, x:LANES[1], y:220, hp:4, reward:0, size:58 },
+          { type:'zombie', lane:0, x:LANES[0], y:150, hp:4, reward:2, size:36 },
+          { type:'zombie', lane:2, x:LANES[2], y:170, hp:4, reward:2, size:36 }
+        ];
+        state.bullets = [
+          { x: LANES[1] - 12, y: 470, speed: 560 },
+          { x: LANES[1], y: 430, speed: 560 },
+          { x: LANES[1] + 12, y: 390, speed: 560 }
+        ];
+      } else if (scene === 'shop') {
+        state.distance = 144;
+        state.wave = 2;
+        state.squad = 10;
+        state.firepower = 2;
+        state.coins = 63;
+        overlay.innerHTML = `
+          <div class="message">
+            <h2>Upgrade Window</h2>
+            <p>You have enough coins to buy firepower, squad size, or a safety revive before the next push.</p>
+            <button onclick="window.closeOverlayAndResume()">Back To Run</button>
+          </div>`;
+      } else if (scene === 'revive') {
+        state.distance = 542;
+        state.wave = 6;
+        state.squad = 4;
+        state.firepower = 3;
+        state.coins = 88;
+        state.revives = 0;
+        state.usedRevive = true;
+        state.objects = [
+          { type:'zombie', lane:1, x:LANES[1], y:140, hp:5, reward:3, size:36 },
+          { type:'wall', lane:2, x:LANES[2], y:250, hp:3, reward:0, size:58 }
+        ];
+        overlay.innerHTML = `
+          <div class="message">
+            <h2>Squad Revived</h2>
+            <p>Your team barely made it. You spent one revive and returned with 4 squad members.</p>
+            <button onclick="window.closeOverlayAndResume()">Keep Running</button>
+          </div>`;
+      } else {
+        showTitleScreen();
+        return;
+      }
+
+      syncHud();
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const captureMode = params.get('capture') === '1';
+    const sceneMode = params.get('scene');
 
     function resetGame() {
       state = {
         squad: 8, firepower: 1, distance: 0, wave: 1, speed: 190,
-        bullets: [], objects: [], spawnTimer: 0, running: true, paused: true, gameOver: false,
-        lastTime: performance.now(), coins: 0, revives: 1, usedRevive: false, distanceCoinsTick: 0,
-        minigunReadyWave: 1, minigunUsed: false, surgeWave: 0
+        bullets: [], objects: [], particles: [], spawnTimer: 0, running: true, paused: true, gameOver: false,
+        lastTime: performance.now(), coins: bankCoins, revives: 1, usedRevive: false, distanceCoinsTick: 0,
+        minigunCharge: 100, minigunActiveUntil: 0, lastMinigunBurst: 0
       };
-      bankCoins = 0;
       syncHud();
       syncMissionHud();
-      syncAvatarHud();
-      showTitleScreen();
-    }
-
-    function weaponTierName(level) {
-      return ['Peashooter', 'Ranger Rifle', 'Pulse Carbine', 'Contra Blaster', 'Twin Cannons', 'Heavy Spreadgun'][Math.max(0, Math.min(5, level - 1))];
+      if (sceneMode) {
+        applyScenePreset(sceneMode);
+      } else {
+        showTitleScreen();
+      }
     }
 
     function syncShopButtons() {
-      const coins = state?.coins ?? bankCoins ?? 0;
-      buyGunBtn.disabled = coins < 10;
-      buySquadBtn.disabled = coins < 8;
-      buyReviveBtn.disabled = coins < 15;
-      buyGunBtn.textContent = `🔫 +1 Firepower (10)`;
-      buySquadBtn.textContent = `🪖 +3 Squad (8)`;
-      buyReviveBtn.textContent = `❤️ +1 Revive (15)`;
+      buyGunBtn.textContent = `+1 Firepower (${gunPrice})`;
+      buySquadBtn.textContent = `+3 Squad (${squadPrice})`;
+      buyReviveBtn.textContent = `+1 Revive (${revivePrice})`;
     }
 
     function syncHud() {
       squadStat.textContent = state.squad;
       gunStat.textContent = state.firepower;
+      weaponNameStat.textContent = weaponProfile(state.firepower).name;
       distanceStat.textContent = Math.floor(state.distance);
       waveStat.textContent = state.wave;
-      coinStat.textContent = `🪙 ${state.coins}`;
+      coinStat.textContent = state.coins;
+      avatarCoinStat.textContent = avatarCoins;
       reviveStat.textContent = state.revives;
-      weaponTierText.textContent = `Weapon tier: ${weaponTierName(state.firepower)}`;
-      minigunStat.textContent = state.minigunUsed ? 'Used' : 'Ready';
-      syncAvatarHud();
-      minigunBtn.disabled = state.minigunUsed || state.paused || state.gameOver;
-      minigunBtn.textContent = state.minigunUsed ? '🌀 Minigun Used' : '🌀 Use Minigun';
       syncShopButtons();
       if (state.distance > best) { best = Math.floor(state.distance); bestStat.textContent = best; saveMeta(); }
       syncMissionHud();
@@ -464,160 +1103,242 @@
 
     function addCoins(n) { state.coins += n; bankCoins = state.coins; saveMeta(); updateMission('coins', n); }
 
-    function showShopFeedback(text, good = true) {
-      if (!shopFeedback) return;
-      shopFeedback.textContent = text;
-      shopFeedback.style.color = good ? '#86efac' : '#fca5a5';
+    function weaponProfile(powerLevel) {
+      if (powerLevel <= 1) return { name: 'Rifle', color: '#fde047', core: '#fff8c5', size: 5, trail: '#fef08a', shape: 'round', muzzle: '#fff7ae', ring: '#facc15', damage: 1, spread: 0, pierce: 0, splash: 0, chain: 0, speed: 0 };
+      if (powerLevel === 2) return { name: 'Pulse', color: '#38bdf8', core: '#e0f2fe', size: 5.5, trail: '#7dd3fc', shape: 'pulse', muzzle: '#a5f3fc', ring: '#38bdf8', damage: 1.15, spread: 12, pierce: 0, splash: 0, chain: 0, speed: 20 };
+      if (powerLevel === 3) return { name: 'Scatter', color: '#22c55e', core: '#dcfce7', size: 5.8, trail: '#86efac', shape: 'scatter', muzzle: '#bbf7d0', ring: '#16a34a', damage: 0.95, spread: 26, pierce: 0, splash: 0, chain: 0, speed: 10 };
+      if (powerLevel === 4) return { name: 'Plasma', color: '#a78bfa', core: '#f3e8ff', size: 6.5, trail: '#c4b5fd', shape: 'plasma', muzzle: '#ddd6fe', ring: '#8b5cf6', damage: 1.3, spread: 18, pierce: 0, splash: 32, chain: 0, speed: 30 };
+      if (powerLevel === 5) return { name: 'Rail', color: '#fb7185', core: '#ffe4e6', size: 6.6, trail: '#fda4af', shape: 'laser', muzzle: '#fecdd3', ring: '#e11d48', damage: 1.45, spread: 12, pierce: 1, splash: 0, chain: 0, speed: 80 };
+      if (powerLevel === 6) return { name: 'Arc', color: '#f97316', core: '#ffedd5', size: 6.8, trail: '#fdba74', shape: 'arc', muzzle: '#fed7aa', ring: '#ea580c', damage: 1.2, spread: 14, pierce: 0, splash: 18, chain: 1, speed: 55 };
+      if (powerLevel === 7) return { name: 'Shredder', color: '#ef4444', core: '#fee2e2', size: 6.9, trail: '#fca5a5', shape: 'minigun', muzzle: '#fecaca', ring: '#dc2626', damage: 1.45, spread: 18, pierce: 1, splash: 10, chain: 0, speed: 120 };
+      if (powerLevel === 8) return { name: 'Storm', color: '#06b6d4', core: '#cffafe', size: 7.1, trail: '#67e8f9', shape: 'arc', muzzle: '#a5f3fc', ring: '#0891b2', damage: 1.4, spread: 16, pierce: 1, splash: 20, chain: 2, speed: 95 };
+      if (powerLevel === 9) return { name: 'Nova', color: '#8b5cf6', core: '#ede9fe', size: 7.4, trail: '#c4b5fd', shape: 'plasma', muzzle: '#ddd6fe', ring: '#7c3aed', damage: 1.65, spread: 22, pierce: 1, splash: 40, chain: 1, speed: 70 };
+      if (powerLevel === 10) return { name: 'Hellfire', color: '#f97316', core: '#ffedd5', size: 7.4, trail: '#fdba74', shape: 'scatter', muzzle: '#fed7aa', ring: '#ea580c', damage: 1.85, spread: 34, pierce: 1, splash: 24, chain: 0, speed: 100 };
+      if (powerLevel === 11) return { name: 'Thunder Lance', color: '#e879f9', core: '#fae8ff', size: 7.8, trail: '#f0abfc', shape: 'laser', muzzle: '#f5d0fe', ring: '#c026d3', damage: 2.05, spread: 10, pierce: 2, splash: 16, chain: 1, speed: 135 };
+      return { name: 'Apocalypse Minigun', color: '#f59e0b', core: '#fffbeb', size: 8.2, trail: '#fdba74', shape: 'minigun', muzzle: '#fed7aa', ring: '#ea580c', damage: 2.2, spread: 22, pierce: 2, splash: 22, chain: 1, speed: 145 };
     }
 
-    function purchaseUpgrade(cost, applyUpgrade, successText) {
-      if (!state) return;
-      if ((state.coins ?? 0) < cost) {
-        showShopFeedback(`Need ${cost} coins.`, false);
-        playTone(110, 0.12, 'sawtooth', 0.02);
-        syncShopButtons();
-        return;
+    function applySplashDamage(cx, cy, radius, damage, ring, color) {
+      if (!radius || radius <= 0) return;
+      for (const obj of state.objects) {
+        if (obj.hp <= 0 || (obj.type !== 'zombie' && obj.type !== 'wall' && obj.type !== 'crate')) continue;
+        const dx = obj.x - cx;
+        const dy = obj.y - cy;
+        const dist = Math.hypot(dx, dy);
+        if (dist <= radius) {
+          const falloff = Math.max(0.35, 1 - dist / Math.max(radius, 1));
+          obj.hp -= damage * falloff;
+          state.particles.push({ x: obj.x, y: obj.y, life: 0.16, color: color || '#fff', ring: ring || '#fff', size: 10 + radius * 0.12 });
+          if (obj.hp <= 0) handleDestroyed(obj);
+        }
       }
-      state.coins -= cost;
-      bankCoins = state.coins;
-      applyUpgrade();
-      saveMeta();
-      syncHud();
-      showShopFeedback(successText, true);
-      playTone(760, 0.08, 'triangle', 0.02);
-      spawnBurst(690, 210, 'rgba(250,204,21,0.9)', 10, 100);
     }
 
-    function spawnBurst(x, y, color, count = 8, speed = 120) {
-      for (let i = 0; i < count; i++) {
-        const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
-        const velocity = speed * (0.55 + Math.random() * 0.8);
-        particles.push({
-          x, y,
-          vx: Math.cos(angle) * velocity,
-          vy: Math.sin(angle) * velocity,
-          life: 0.28 + Math.random() * 0.24,
-          maxLife: 0.28 + Math.random() * 0.24,
-          size: 2 + Math.random() * 4,
-          color
+    function applyChainDamage(sourceObj, jumps, damage, ring, color) {
+      if (!sourceObj || jumps <= 0) return;
+      let current = sourceObj;
+      for (let i = 0; i < jumps; i++) {
+        let best = null;
+        let bestDist = Infinity;
+        for (const obj of state.objects) {
+          if (obj === current || obj.hp <= 0 || (obj.type !== 'zombie' && obj.type !== 'wall')) continue;
+          const dist = Math.hypot(obj.x - current.x, obj.y - current.y);
+          if (dist < 120 && dist < bestDist) {
+            best = obj;
+            bestDist = dist;
+          }
+        }
+        if (!best) break;
+        state.particles.push({ x: (current.x + best.x) / 2, y: (current.y + best.y) / 2, life: 0.14, color: color || '#fff', ring: ring || '#fff', burst: true, size: 16 });
+        best.hp -= damage * Math.max(0.55, 0.82 - i * 0.14);
+        if (best.hp <= 0) handleDestroyed(best);
+        current = best;
+      }
+    }
+
+    function fireAtLane(laneIndex, powerBoost = 0, speedBoost = 0, options = {}) {
+      if (!state.running || state.paused || state.gameOver) return;
+      const { silent = false, noVibrate = false, muzzleScale = 1 } = options;
+      if (!noVibrate && navigator.vibrate && volumeLevel > 0) navigator.vibrate(12);
+      if (!silent) playTone(920, 0.06, 'square', 1.2);
+      const laneX = LANES[laneIndex];
+      const bulletCount = state.firepower + powerBoost;
+      const effectivePower = state.firepower + powerBoost;
+      const profile = weaponProfile(effectivePower);
+      for (let i = 0; i < bulletCount; i++) {
+        const spreadBase = bulletCount > 1 ? (i - (bulletCount - 1) / 2) : 0;
+        const drift = spreadBase * profile.spread;
+        state.bullets.push({
+          x: laneX + spreadBase * 10,
+          y: 600,
+          speed: 560 + speedBoost + profile.speed,
+          damage: profile.damage + powerBoost * 0.16,
+          glow: powerBoost > 0 || effectivePower >= 4,
+          style: profile.shape,
+          color: profile.color,
+          core: profile.core,
+          trail: profile.trail,
+          muzzle: profile.muzzle,
+          ring: profile.ring,
+          radius: profile.size,
+          drift,
+          splash: profile.splash,
+          pierce: profile.pierce,
+          chain: profile.chain,
+          hits: 0
         });
       }
+      state.particles.push({ x: laneX, y: 602, life: 0.09, color: profile.muzzle, ring: profile.ring, burst: true, size: (14 + effectivePower * 1.5) * muzzleScale });
+      if (state.particles.length > 260) state.particles.splice(0, state.particles.length - 260);
+      if (state.bullets.length > 320) state.bullets.splice(0, state.bullets.length - 320);
     }
 
-    function fireAtLane(laneIndex) {
-      if (!state.running || state.paused || state.gameOver) return;
-      if (navigator.vibrate) navigator.vibrate(12);
-      playTone(520 + state.firepower * 36, 0.05, 'square', 0.028);
-      const laneX = LANES[laneIndex];
-      spawnBurst(laneX, 598, 'rgba(250,204,21,0.9)', 6 + state.firepower, 80 + state.firepower * 10);
-      cameraShake = Math.max(cameraShake, 4 + state.firepower * 0.7);
-      const spreadMap = {
-        1: [0],
-        2: [-8, 8],
-        3: [-14, 0, 14],
-        4: [-18, -6, 6, 18],
-        5: [-22, -10, 0, 10, 22],
-        6: [-26, -14, -4, 4, 14, 26]
-      };
-      const offsets = spreadMap[Math.min(6, state.firepower)] || [0];
-      for (const offset of offsets) {
-        state.bullets.push({ x: laneX + offset, y: 600, speed: 560 + state.firepower * 8 });
-      }
+    function addScreenShake(amount = 8, flash = 0.08) {
+      screenShake = Math.max(screenShake, amount);
+      hitFlash = Math.max(hitFlash, flash);
     }
 
-    function useMinigun() {
-      if (!state || state.paused || state.gameOver || state.minigunUsed) return;
-      state.minigunUsed = true;
-      const baseY = 590;
-      for (let lane = 0; lane < 3; lane++) {
-        for (let i = -3; i <= 3; i++) {
-          state.bullets.push({ x: LANES[lane] + i * 8, y: baseY - Math.abs(i) * 6, speed: 720 });
-        }
-        spawnBurst(LANES[lane], 594, 'rgba(250,204,21,0.95)', 18, 150);
-      }
-      cameraShake = Math.max(cameraShake, 10);
-      playTone(180, 0.1, 'sawtooth', 0.03);
-      playTone(240, 0.12, 'square', 0.025);
-      showShopFeedback(`Wave ${state.wave} minigun unleashed.`, true);
-      syncHud();
-    }
-
-    function spawnObject(forceZombie = false) {
+    function spawnBossWave() {
       const lane = rand(0, 2);
-      const roll = forceZombie ? 0 : Math.random();
-      let obj;
-      if (roll < 0.42) {
-        const waveTier = Math.floor((state.wave - 1) / 2);
-        const minReward = Math.min(4, 1 + waveTier);
-        const maxReward = Math.min(6, 3 + waveTier);
-        const reward = rand(minReward, maxReward);
-        const hp = reward + Math.floor(state.wave / 3);
-        obj = { type:'zombie', lane, x:LANES[lane], y:-70, hp, reward, size:52 + reward * 7 + state.wave * 1.5 };
+      bossWave = true;
+      state.objects.push({ type:'boss', lane, x:LANES[lane], y:-130, hp:18 + state.wave * 2, reward:8, size:82, speedFactor:0.65 });
+      state.objects.push({ type:'shield', lane:(lane + 1) % 3, x:LANES[(lane + 1) % 3], y:-90, hp:7 + Math.floor(state.wave * 0.7), reward:3, size:52, speedFactor:0.85 });
+      addScreenShake(12, 0.12);
+      playTone(90, 0.26, 'sawtooth', 1.8);
+    }
+
+    function spawnObject() {
+      if (state.wave > 0 && state.wave % 6 === 0 && !bossWave && !state.objects.some(obj => obj.type === 'boss')) {
+        spawnBossWave();
+        return;
       }
-      else if (roll < 0.70) obj = { type:'wall', lane, x:LANES[lane], y:-80, hp:rand(2, Math.max(4, 2 + Math.floor(state.wave/2))), reward:0, size:58 };
-      else if (roll < 0.88) obj = { type:'crate', lane, x:LANES[lane], y:-50, hp:1, reward:1, size:32 };
+      const lane = rand(0, 2);
+      const roll = Math.random();
+      let obj;
+      if (roll < 0.32) obj = { type:'zombie', lane, x:LANES[lane], y:-60, hp:rand(3, 5 + Math.floor(state.wave / 2)), reward:rand(1,3), size:36 };
+      else if (roll < 0.52) obj = { type:'wall', lane, x:LANES[lane], y:-80, hp:rand(2, Math.max(4, 2 + Math.floor(state.wave/2))), reward:0, size:58 };
+      else if (roll < 0.66) obj = { type:'runner', lane, x:LANES[lane], y:-55, hp:rand(2, 4 + Math.floor(state.wave / 3)), reward:2, size:28, speedFactor:1.45 };
+      else if (roll < 0.78) obj = { type:'shield', lane, x:LANES[lane], y:-70, hp:rand(5, 7 + Math.floor(state.wave / 2)), reward:3, size:48, speedFactor:0.9 };
+      else if (roll < 0.89) obj = { type:'crate', lane, x:LANES[lane], y:-50, hp:1, reward:1, size:32 };
       else obj = { type:'coin', lane, x:LANES[lane], y:-40, hp:1, reward:rand(2,5), size:24 };
       state.objects.push(obj);
     }
 
-    function update(dt) {
-      for (const particle of particles) {
-        particle.x += particle.vx * dt;
-        particle.y += particle.vy * dt;
-        particle.vx *= 0.97;
-        particle.vy = particle.vy * 0.97 + 18 * dt;
-        particle.life -= dt;
-      }
-      particles = particles.filter(p => p.life > 0);
-      cameraShake *= 0.84;
+    function flashMinigunButton(message) {
+      [minigunBtn, floatingMinigunBtn].forEach(btn => btn && btn.classList.remove('ready'));
+      [minigunBtn?.querySelector('.battle-side-status'), floatingMinigunStatus].forEach(label => {
+        if (!label) return;
+        const original = label.dataset.original || label.textContent;
+        label.dataset.original = original;
+        label.textContent = message;
+      });
+      clearTimeout(flashMinigunButton.timer);
+      flashMinigunButton.timer = setTimeout(() => {
+        [minigunBtn?.querySelector('.battle-side-status'), floatingMinigunStatus].forEach(label => {
+          if (!label) return;
+          label.textContent = label.dataset.original || 'Tap when ready';
+        });
+      }, 700);
+    }
 
+    function activateMinigun(event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      if (state.paused) {
+        flashMinigunButton('Start run');
+        return;
+      }
+      if (state.gameOver) {
+        flashMinigunButton('Game over');
+        return;
+      }
+      if (state.minigunCharge < 100) {
+        flashMinigunButton(`${Math.floor(state.minigunCharge)}%`);
+        return;
+      }
+      const nowMs = performance.now();
+      state.minigunCharge = 0;
+      state.minigunActiveUntil = nowMs + 2600;
+      state.lastMinigunBurst = nowMs - 120;
+      playTone(140, 0.22, 'sawtooth', 2);
+
+      for (const obj of state.objects) {
+        if (obj.type === 'zombie' || obj.type === 'wall') {
+          obj.hp -= 3;
+          state.particles.push({ x: obj.x, y: obj.y, life: 0.22, color: '#fed7aa', ring: '#ea580c', burst: true, size: 18 });
+          if (obj.hp <= 0) handleDestroyed(obj);
+        }
+      }
+      state.objects = state.objects.filter(o => o.hp > 0 && o.y < 740);
+
+      for (let lane = 0; lane < LANES.length; lane++) {
+        fireAtLane(lane, 4, 260, { silent: true, noVibrate: true, muzzleScale: 1.1 });
+      }
+      flashMinigunButton('Firing');
+      syncHud();
+    }
+
+    function update(dt) {
       if (!state.running || state.paused || state.gameOver) return;
       state.distance += dt * (state.speed / 12);
-      const waveLength = 260;
-      const prevWave = state.wave;
-      state.wave = 1 + Math.floor(state.distance / waveLength);
-      const waveProgress = (state.distance % waveLength) / waveLength;
-      if (state.wave !== prevWave) {
-        state.minigunUsed = false;
-        state.minigunReadyWave = state.wave;
-        state.surgeWave = 0;
-        showShopFeedback(`Wave ${state.wave}: Minigun reloaded.`, true);
-        playTone(700, 0.12, 'triangle', 0.018);
-      }
-      if (waveProgress > 0.82 && state.surgeWave !== state.wave) {
-        state.surgeWave = state.wave;
-        showShopFeedback(`Wave ${state.wave}: zombie surge incoming.`, false);
-        playTone(150, 0.18, 'sawtooth', 0.026);
-        for (let i = 0; i < 4 + Math.floor(state.wave / 2); i++) spawnObject(true);
-      }
+      state.wave = 1 + Math.floor(state.distance / 180);
       state.speed = 190 + state.wave * 8;
-      const distanceCoins = Math.floor(state.distance / 100);
-      if (distanceCoins > state.distanceCoinsTick) { addCoins(distanceCoins - state.distanceCoinsTick); state.distanceCoinsTick = distanceCoins; }
+      state.minigunCharge = Math.min(100, state.minigunCharge + dt * 8);
+      screenShake = Math.max(0, screenShake - dt * 26);
+      hitFlash = Math.max(0, hitFlash - dt * 1.8);
+      const nowMs = performance.now();
+      if (state.minigunActiveUntil > nowMs) {
+        if (nowMs - state.lastMinigunBurst > 90) {
+          for (let lane = 0; lane < LANES.length; lane++) {
+            fireAtLane(lane, 4, 260, { silent: true, noVibrate: true, muzzleScale: 0.65 });
+          }
+          state.lastMinigunBurst = nowMs;
+          playTone(150 + rand(0, 40), 0.05, 'sawtooth', 0.55);
+        }
+      }
+      const roundCoins = Math.floor(state.distance / 180) * 2;
+      if (roundCoins > state.distanceCoinsTick) { addCoins(roundCoins - state.distanceCoinsTick); state.distanceCoinsTick = roundCoins; }
       state.spawnTimer -= dt;
-      const spawnCadence = waveProgress > 0.82 ? Math.max(0.2, 0.72 - state.wave * 0.025) : Math.max(0.42, 1.15 - state.wave * 0.022);
-      if (state.spawnTimer <= 0) { spawnObject(waveProgress > 0.82 && Math.random() < 0.7); state.spawnTimer = spawnCadence; }
-      for (const bullet of state.bullets) bullet.y -= bullet.speed * dt;
-      state.bullets = state.bullets.filter(b => b.y > -20);
-      for (const obj of state.objects) obj.y += state.speed * dt;
+      if (state.spawnTimer <= 0) { spawnObject(); state.spawnTimer = Math.max(0.32, 1.05 - state.wave * 0.03); }
+      for (const bullet of state.bullets) {
+        bullet.y -= bullet.speed * dt;
+        bullet.x += (bullet.drift || 0) * dt;
+      }
+      state.bullets = state.bullets.filter(b => b.y > -30 && b.x > -40 && b.x < canvas.width + 40);
+      for (const obj of state.objects) obj.y += state.speed * (obj.speedFactor || 1) * dt;
       for (const bullet of state.bullets) {
         for (const obj of state.objects) {
           if (obj.hp <= 0) continue;
           if (Math.abs(bullet.x - obj.x) < obj.size * 0.55 && Math.abs(bullet.y - obj.y) < obj.size * 0.55) {
-            obj.hp -= 1;
-            bullet.y = -100;
-            spawnBurst(bullet.x, bullet.y, obj.type === 'zombie' ? 'rgba(74,222,128,0.9)' : obj.type === 'wall' ? 'rgba(248,113,113,0.9)' : 'rgba(191,219,254,0.9)', 7, 90);
-            cameraShake = Math.max(cameraShake, obj.type === 'wall' ? 7 : 4.5);
+            obj.hp -= bullet.damage || 1;
+            addScreenShake(bullet.style === 'minigun' ? 4 : bullet.style === 'plasma' ? 6 : 3, bullet.style === 'plasma' ? 0.08 : 0.04);
+            state.particles.push({ x: obj.x, y: obj.y, life: 0.18, color: bullet.glow ? bullet.color || '#fde68a' : '#f8fafc', ring: bullet.ring || '#ffffff', size: (bullet.radius || 5) * 2.2, burst: bullet.style === 'arc' || bullet.style === 'plasma' });
+            if (bullet.splash) applySplashDamage(obj.x, obj.y, bullet.splash, (bullet.damage || 1) * 0.55, bullet.ring, bullet.color);
+            if (bullet.chain) applyChainDamage(obj, bullet.chain, bullet.damage || 1, bullet.ring, bullet.color);
+            bullet.hits = (bullet.hits || 0) + 1;
             if (obj.hp <= 0) handleDestroyed(obj);
-            break;
+            if (bullet.hits > (bullet.pierce || 0)) {
+              bullet.y = -100;
+              break;
+            }
           }
         }
       }
       state.bullets = state.bullets.filter(b => b.y > -20);
+      for (const particle of state.particles) particle.life -= dt;
+      state.particles = state.particles.filter(p => p.life > 0).slice(-220);
       for (const obj of state.objects) {
         if (obj.y >= 570) {
           if (obj.type === 'wall' && obj.hp > 0) state.squad -= obj.hp;
           else if (obj.type === 'zombie' && obj.hp > 0) state.squad -= Math.max(1, obj.reward - 1);
+          else if (obj.type === 'runner' && obj.hp > 0) state.squad -= Math.max(2, obj.reward);
+          else if (obj.type === 'shield' && obj.hp > 0) state.squad -= Math.max(2, Math.ceil(obj.hp / 2));
+          else if (obj.type === 'boss' && obj.hp > 0) state.squad -= Math.max(6, Math.ceil(obj.hp / 2));
           else if (obj.type === 'coin' && obj.hp > 0) addCoins(obj.reward);
+          if (obj.type === 'boss') bossWave = false;
+          if (obj.hp > 0 && obj.type !== 'coin') addScreenShake(obj.type === 'boss' ? 18 : 10, obj.type === 'boss' ? 0.16 : 0.08);
           obj.hp = 0;
         }
       }
@@ -627,26 +1348,13 @@
     }
 
     function handleDestroyed(obj) {
-      if (obj.type === 'zombie') {
-        playTone(180 + obj.reward * 24, 0.09, 'sawtooth', 0.02);
-        spawnBurst(obj.x, obj.y, 'rgba(74,222,128,0.95)', 10, 120);
-        state.squad += obj.reward; addCoins(obj.reward); updateMission('survivors', obj.reward);
-      }
-      else if (obj.type === 'crate') {
-        playTone(640, 0.1, 'triangle', 0.02);
-        spawnBurst(obj.x, obj.y, 'rgba(96,165,250,0.95)', 10, 110);
-        state.firepower = Math.min(6, state.firepower + obj.reward);
-      }
-      else if (obj.type === 'coin') {
-        playTone(880, 0.08, 'triangle', 0.018);
-        spawnBurst(obj.x, obj.y, 'rgba(250,204,21,0.95)', 10, 105);
-        addCoins(obj.reward);
-      }
-      else if (obj.type === 'wall') {
-        playTone(120, 0.16, 'sawtooth', 0.03);
-        spawnBurst(obj.x, obj.y, 'rgba(248,113,113,0.95)', 14, 135);
-        updateMission('walls', 1);
-      }
+      if (obj.type === 'zombie') { state.squad += obj.reward; addCoins(obj.reward); updateMission('survivors', obj.reward); playTone(220, 0.12, 'sawtooth', 1.4); }
+      else if (obj.type === 'runner') { state.squad += obj.reward + 1; addCoins(obj.reward + 1); updateMission('survivors', obj.reward + 1); playTone(320, 0.08, 'triangle', 1.5); }
+      else if (obj.type === 'shield') { state.squad += obj.reward; addCoins(obj.reward + 1); updateMission('survivors', obj.reward); playTone(150, 0.14, 'square', 1.8); }
+      else if (obj.type === 'boss') { state.squad += obj.reward + 6; addCoins(obj.reward + 8); updateMission('survivors', obj.reward + 6); playTone(110, 0.26, 'sawtooth', 2.1); addScreenShake(16, 0.18); bossWave = false; }
+      else if (obj.type === 'crate') { state.firepower = Math.min(12, state.firepower + obj.reward); playTone(540, 0.1, 'triangle', 1.2); }
+      else if (obj.type === 'coin') { addCoins(obj.reward); playTone(1100, 0.08, 'triangle', 1.3); }
+      else if (obj.type === 'wall') { updateMission('walls', 1); playTone(180, 0.16, 'square', 1.6); }
     }
 
     function maybeReviveOrEnd() {
@@ -657,12 +1365,8 @@
         overlay.innerHTML = `
           <div class="message">
             <h2>Squad Revived</h2>
-            <div class="badge-line">
-              <span class="badge">Emergency revive</span>
-              <span class="badge">Back with 4 troopers</span>
-            </div>
             <p>Your team barely made it. You spent one revive and returned with 4 squad members.</p>
-            <button data-action="resume">🟢 Keep Running</button>
+            <button onclick="window.closeOverlayAndResume()">Keep Running</button>
           </div>`;
         state.paused = true;
         return;
@@ -673,617 +1377,409 @@
     function endGame() {
       state.gameOver = true;
       state.running = false;
-      avatarCoins += state.coins;
       bankCoins = state.coins; saveMeta();
       overlay.innerHTML = `
         <div class="message">
           <h2>Run Over</h2>
-          <div class="badge-line">
-            <span class="badge">Distance ${Math.floor(state.distance)}</span>
-            <span class="badge">Coins ${state.coins}</span>
-            <span class="badge">Best ${best}</span>
-          </div>
-          <p>Upgrade firepower, grow your squad, and save your revive for a brutal boss-wall hit.</p>
-          <button data-action="rewarded-revive">🎁 Mock Rewarded Revive Offer</button>
-          <button data-action="restart">🔁 Play Again</button>
+          <p>Distance: <strong>${Math.floor(state.distance)}</strong> | Coins: <strong>${state.coins}</strong></p>
+          <p>Upgrade firepower, grow your squad, and save your revive for a brutal wall hit.</p>
+          <button onclick="window.mockRewardedReviveOffer()">Mock Rewarded Revive Offer</button>
+          <button onclick="window.restartZombieRun()">Play Again</button>
         </div>`;
       syncHud();
     }
 
     function drawRoad() {
-      ctx.clearRect(0,0,800,680);
-
-      const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      sky.addColorStop(0, '#020617');
-      sky.addColorStop(0.32, '#0f172a');
-      sky.addColorStop(0.72, '#172033');
-      sky.addColorStop(1, '#111827');
-      ctx.fillStyle = sky;
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-
-      const moon = ctx.createRadialGradient(680, 90, 18, 680, 90, 90);
-      moon.addColorStop(0, 'rgba(248,250,252,0.95)');
-      moon.addColorStop(0.25, 'rgba(191,219,254,0.35)');
-      moon.addColorStop(1, 'rgba(148,163,184,0)');
-      ctx.fillStyle = moon;
-      ctx.beginPath();
-      ctx.arc(680, 90, 90, 0, Math.PI * 2);
-      ctx.fill();
-
-      for (let i = 0; i < 18; i++) {
-        const sx = (i * 47 + 23) % canvas.width;
-        const sy = (i * 71 + 31) % 220;
-        ctx.fillStyle = i % 3 === 0 ? 'rgba(255,255,255,0.85)' : 'rgba(148,163,184,0.55)';
-        ctx.fillRect(sx, sy, 2, 2);
-      }
-
-      const horizonY = 190;
-      const nebula = ctx.createRadialGradient(160, 120, 30, 160, 120, 220);
-      nebula.addColorStop(0, 'rgba(56,189,248,0.12)');
-      nebula.addColorStop(1, 'rgba(56,189,248,0)');
-      ctx.fillStyle = nebula;
-      ctx.fillRect(0, 0, 420, 280);
-      ctx.fillStyle = 'rgba(15,23,42,0.9)';
-      ctx.beginPath();
-      ctx.moveTo(0, horizonY + 34);
-      ctx.lineTo(50, horizonY + 8);
-      ctx.lineTo(110, horizonY + 26);
-      ctx.lineTo(180, horizonY - 6);
-      ctx.lineTo(250, horizonY + 28);
-      ctx.lineTo(330, horizonY + 4);
-      ctx.lineTo(420, horizonY + 22);
-      ctx.lineTo(510, horizonY - 8);
-      ctx.lineTo(610, horizonY + 24);
-      ctx.lineTo(700, horizonY + 6);
-      ctx.lineTo(800, horizonY + 36);
-      ctx.lineTo(800, 0);
-      ctx.lineTo(0, 0);
-      ctx.closePath();
-      ctx.fill();
-
-      const fog = ctx.createLinearGradient(0, horizonY - 20, 0, horizonY + 120);
-      fog.addColorStop(0, 'rgba(16,185,129,0.04)');
-      fog.addColorStop(1, 'rgba(15,23,42,0.0)');
-      ctx.fillStyle = fog;
-      ctx.fillRect(0, horizonY - 30, canvas.width, 160);
-
-      for (let i = 0; i < 7; i++) {
-        const lx = 46 + i * 118;
-        const pulse = 0.45 + 0.2 * Math.sin((state.distance / 32) + i);
-        ctx.fillStyle = `rgba(248,250,252,${pulse})`;
-        ctx.fillRect(lx, horizonY + 18, 3, 58);
-        ctx.fillStyle = 'rgba(56,189,248,0.16)';
-        ctx.beginPath();
-        ctx.arc(lx + 1.5, horizonY + 20, 14, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = '#0f172a'; ctx.fillRect(0,0,canvas.width,canvas.height);
       for (let i=0;i<3;i++) {
         const x = 80 + i*240;
-        const laneGrad = ctx.createLinearGradient(x, 0, x + 180, 0);
-        laneGrad.addColorStop(0, '#111827');
-        laneGrad.addColorStop(0.5, '#334155');
-        laneGrad.addColorStop(1, '#0f172a');
-        ctx.fillStyle = laneGrad;
-        ctx.fillRect(x,0,180,canvas.height);
-
-        ctx.fillStyle = 'rgba(255,255,255,0.03)';
-        for (let y = -60; y < canvas.height; y += 90) {
-          const yy = (y + (state.distance * 2.6)) % (canvas.height + 90);
-          ctx.fillRect(x + 12, yy, 156, 2);
-        }
-
-        ctx.strokeStyle = 'rgba(148,163,184,0.36)';
-        ctx.lineWidth = 4;
+        ctx.fillStyle = COLORS.road; ctx.fillRect(x,0,180,canvas.height);
+        ctx.strokeStyle = COLORS.line; ctx.lineWidth = 4;
         for (let y=-40;y<canvas.height;y+=80) {
-          const yy = (y + (state.distance * 2.2)) % (canvas.height + 80);
           ctx.beginPath();
-          ctx.moveTo(x+90, yy - 24);
-          ctx.lineTo(x+90, yy + 24);
+          ctx.moveTo(x+90,(y+(state.distance*2))%80+y);
+          ctx.lineTo(x+90,(y+(state.distance*2))%80+y+40);
           ctx.stroke();
         }
-
-        ctx.strokeStyle = 'rgba(14,165,233,0.16)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x + 2, 0, 176, canvas.height);
-      }
-
-      const headlight = ctx.createLinearGradient(0, canvas.height - 220, 0, canvas.height);
-      headlight.addColorStop(0, 'rgba(250,204,21,0)');
-      headlight.addColorStop(1, 'rgba(250,204,21,0.08)');
-      ctx.fillStyle = headlight;
-      ctx.beginPath();
-      ctx.moveTo(210, canvas.height - 10);
-      ctx.lineTo(590, canvas.height - 10);
-      ctx.lineTo(520, canvas.height - 240);
-      ctx.lineTo(280, canvas.height - 240);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = 'rgba(0,0,0,0.18)';
-      ctx.fillRect(0, 680 - 130, 800, 130);
-
-      ctx.fillStyle = 'rgba(255,255,255,0.035)';
-      for (let y = 0; y < 680; y += 4) {
-        ctx.fillRect(0, y, 800, 1);
       }
     }
 
-    function drawWeapon(type = 'rifle') {
-      if (type === 'rifle') {
-        ctx.fillStyle = '#94a3b8';
-        ctx.fillRect(6, -6, 24, 4);
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(10, -2, 12, 5);
-        ctx.fillRect(6, -2, 5, 10);
-        ctx.fillStyle = '#e2e8f0';
-        ctx.fillRect(28, -6, 5, 2);
-      } else if (type === 'carbine') {
-        ctx.fillStyle = '#cbd5e1';
-        ctx.fillRect(6, -7, 26, 5);
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(16, -3, 9, 4);
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(8, -2, 5, 10);
-        ctx.fillStyle = '#bae6fd';
-        ctx.fillRect(28, -7, 6, 2);
-      } else if (type === 'blaster') {
-        ctx.fillStyle = '#f59e0b';
-        ctx.fillRect(6, -8, 30, 7);
-        ctx.fillStyle = '#facc15';
-        ctx.fillRect(24, -6, 10, 3);
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(11, -1, 7, 11);
-        ctx.fillStyle = '#fde68a';
-        ctx.fillRect(32, -8, 4, 2);
-      } else if (type === 'spreadgun') {
-        ctx.fillStyle = '#e2e8f0';
-        ctx.fillRect(6, -8, 30, 7);
-        ctx.fillStyle = '#60a5fa';
-        ctx.fillRect(24, -7, 12, 2);
-        ctx.fillRect(24, -3, 12, 2);
-        ctx.fillRect(24, 1, 12, 2);
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(12, -1, 7, 11);
-      } else if (type === 'heavy') {
-        ctx.fillStyle = '#fde047';
-        ctx.fillRect(4, -10, 34, 9);
-        ctx.fillStyle = '#f97316';
-        ctx.fillRect(28, -7, 10, 3);
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(10, -1, 9, 13);
-        ctx.fillStyle = '#fff7ed';
-        ctx.fillRect(34, -10, 4, 2);
-      }
-    }
-
-    function drawHumanoid(x, y, scale, palette, mood = 'human', gear = 'rifle') {
+    function drawPerson(x, y, color, scale = 1, depth = 0) {
+      const head = 8 * scale;
+      const bodyW = 13 * scale;
+      const bodyH = 24 * scale;
+      const armW = 8 * scale;
+      const armH = 4 * scale;
+      const legH = 10 * scale;
+      const gunW = 12 * scale;
+      const gunH = 3.5 * scale;
+      const helmetW = 14 * scale;
+      const helmetH = 5 * scale;
+      const bob = Math.sin((x + y + depth * 13) * 0.03) * scale * 1.1;
       ctx.save();
-      ctx.translate(x, y);
-      ctx.scale(scale, scale);
+      ctx.translate(0, bob);
 
-      ctx.fillStyle = 'rgba(0,0,0,0.32)';
+      ctx.shadowColor = 'rgba(0,0,0,0.22)';
+      ctx.shadowBlur = 8 * scale;
+      ctx.shadowOffsetY = 2 * scale;
+
+      ctx.fillStyle = 'rgba(15,23,42,0.45)';
       ctx.beginPath();
-      ctx.ellipse(0, 26, 18, 8, 0, 0, Math.PI * 2);
+      ctx.ellipse(x, y + bodyH + 7 * scale, 10 * scale, 4 * scale, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      const bodyGrad = ctx.createLinearGradient(0, -28, 0, 20);
-      bodyGrad.addColorStop(0, palette.bodyHi);
-      bodyGrad.addColorStop(1, palette.bodyLo);
-      ctx.fillStyle = bodyGrad;
+      const skinTone = depth % 4 === 0 ? '#f1c27d' : depth % 4 === 1 ? '#e0ac69' : depth % 4 === 2 ? '#c68642' : '#8d5524';
+      ctx.fillStyle = skinTone;
       ctx.beginPath();
-      ctx.roundRect(-11, -6, 22, 28, 8);
+      ctx.arc(x, y - 10 * scale, head, 0, Math.PI * 2);
       ctx.fill();
 
-      if (mood === 'human') {
-        ctx.fillStyle = palette.vest || '#1f2937';
-        ctx.beginPath();
-        ctx.roundRect(-10, -5, 20, 20, 7);
-        ctx.fill();
-        ctx.fillStyle = 'rgba(255,255,255,0.16)';
-        ctx.fillRect(-8, -3, 16, 3);
-        ctx.fillStyle = 'rgba(15,23,42,0.3)';
-        ctx.fillRect(-1, -3, 2, 18);
-        ctx.fillStyle = palette.shoulder || '#65a30d';
-        ctx.beginPath(); ctx.arc(-10, -2, 4, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(10, -2, 4, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = 'rgba(245,158,11,0.8)';
-        ctx.fillRect(-3, 2, 6, 4);
-        ctx.fillStyle = 'rgba(255,255,255,0.18)';
-        ctx.fillRect(-6, 8, 12, 2);
-      } else {
-        ctx.fillStyle = 'rgba(127,29,29,0.45)';
-        ctx.fillRect(-8, 3, 15, 5);
-      }
+      ctx.fillStyle = '#1d4ed8';
+      ctx.fillRect(x - helmetW / 2, y - 18 * scale, helmetW, helmetH);
+      ctx.fillStyle = '#93c5fd';
+      ctx.fillRect(x - helmetW * 0.25, y - 16.5 * scale, helmetW * 0.5, 1.5 * scale);
+      ctx.fillStyle = '#eff6ff';
+      ctx.fillRect(x - helmetW * 0.08, y - 14.8 * scale, helmetW * 0.16, 1.3 * scale);
 
-      ctx.fillStyle = palette.leg;
-      ctx.fillRect(-10, 18, 7, 18);
-      ctx.fillRect(3, 18, 7, 18);
-      ctx.fillStyle = palette.shoe;
-      ctx.fillRect(-12, 34, 10, 4);
-      ctx.fillRect(2, 34, 10, 4);
+      const bodyGradient = ctx.createLinearGradient(x, y - 2 * scale, x, y + bodyH);
+      bodyGradient.addColorStop(0, '#bfdbfe');
+      bodyGradient.addColorStop(0.55, '#93c5fd');
+      bodyGradient.addColorStop(1, color);
+      ctx.fillStyle = bodyGradient;
+      ctx.fillRect(x - bodyW / 2, y - 2 * scale, bodyW, bodyH);
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.fillRect(x - bodyW * 0.34, y, bodyW * 0.18, bodyH * 0.72);
 
-      ctx.save();
-      ctx.rotate(-0.35);
-      ctx.fillStyle = palette.arm;
-      ctx.fillRect(-18, -4, 8, 22);
-      ctx.restore();
-      ctx.save();
-      ctx.rotate(0.08);
-      ctx.fillStyle = palette.arm;
-      ctx.fillRect(7, -8, 10, 22);
-      ctx.translate(8, -3);
-      if (mood === 'human') drawWeapon(gear);
-      ctx.restore();
+      ctx.fillStyle = '#dbeafe';
+      ctx.fillRect(x - bodyW * 0.18, y + 4 * scale, bodyW * 0.36, 3 * scale);
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(x - bodyW / 2 - armW * 0.72, y + 2 * scale, armW, armH);
+      ctx.fillRect(x + bodyW / 2 - armW * 0.28, y + 2 * scale, armW, armH);
 
-      const headGrad = ctx.createRadialGradient(-2, -27, 3, 0, -22, 14);
-      headGrad.addColorStop(0, palette.skinHi);
-      headGrad.addColorStop(1, palette.skinLo);
-      ctx.fillStyle = headGrad;
-      ctx.beginPath();
-      ctx.arc(0, -21, 12, 0, Math.PI * 2);
-      ctx.fill();
+      const gunGradient = ctx.createLinearGradient(x, y, x + gunW, y);
+      gunGradient.addColorStop(0, '#94a3b8');
+      gunGradient.addColorStop(1, '#e2e8f0');
+      ctx.fillStyle = gunGradient;
+      ctx.fillRect(x + bodyW * 0.2, y + 3 * scale, gunW, gunH);
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(x + bodyW * 0.2 + gunW * 0.62, y + 3.4 * scale, gunW * 0.22, gunH * 0.4);
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(x + bodyW * 0.05, y + 4.2 * scale, gunW * 0.24, gunH * 0.6);
 
-      ctx.fillStyle = palette.hair;
-      if (mood === 'human') {
-        ctx.beginPath();
-        ctx.moveTo(-12, -25);
-        ctx.lineTo(-6, -34);
-        ctx.lineTo(8, -34);
-        ctx.lineTo(13, -25);
-        ctx.lineTo(10, -18);
-        ctx.lineTo(-10, -18);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = palette.helmet || '#334155';
-        ctx.beginPath();
-        ctx.arc(0, -25, 12, Math.PI, Math.PI * 2);
-        ctx.lineTo(11, -18);
-        ctx.lineTo(-11, -18);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = 'rgba(255,255,255,0.12)';
-        ctx.fillRect(-8, -30, 16, 3);
-        ctx.fillStyle = palette.visor || 'rgba(56,189,248,0.55)';
-        ctx.fillRect(-8, -24, 16, 4);
-        ctx.fillStyle = palette.comms || '#a3e635';
-        ctx.beginPath();
-        ctx.arc(10, -21, 2.5, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        ctx.beginPath();
-        ctx.arc(0, -25, 11, Math.PI, Math.PI * 2);
-        ctx.lineTo(10, -20);
-        ctx.quadraticCurveTo(0, -34, -10, -20);
-        ctx.closePath();
-        ctx.fill();
-      }
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(x - bodyW * 0.35, y + bodyH - 1 * scale, bodyW * 0.28, legH);
+      ctx.fillRect(x + bodyW * 0.07, y + bodyH - 1 * scale, bodyW * 0.28, legH);
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(x - bodyW * 0.37, y + bodyH + legH - 2 * scale, bodyW * 0.32, 2 * scale);
+      ctx.fillRect(x + bodyW * 0.05, y + bodyH + legH - 2 * scale, bodyW * 0.32, 2 * scale);
 
-      if (mood === 'zombie') {
-        ctx.fillStyle = '#dcfce7';
-        ctx.beginPath(); ctx.arc(-4, -22, 1.8, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(4, -22, 1.8, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#7f1d1d';
-        ctx.lineWidth = 1.8;
-        ctx.beginPath();
-        ctx.moveTo(-5, -14);
-        ctx.lineTo(3, -12);
-        ctx.stroke();
-        ctx.strokeStyle = 'rgba(0,0,0,0.35)';
-        ctx.beginPath();
-        ctx.moveTo(-7, -6);
-        ctx.lineTo(7, 8);
-        ctx.stroke();
-      } else {
-        ctx.fillStyle = '#dbeafe';
-        ctx.beginPath(); ctx.arc(-4, -22, 1.5, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(4, -22, 1.5, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#bfdbfe';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(-4, -13);
-        ctx.quadraticCurveTo(0, -11, 4, -13);
-        ctx.stroke();
-      }
-
+      ctx.shadowBlur = 0;
       ctx.restore();
     }
 
-    function squadGearForFirepower(level) {
-      if (selectedAvatar === 'tank') return 'heavy';
-      if (level <= 1) return 'rifle';
-      if (level === 2) return 'carbine';
-      if (level === 3) return 'blaster';
-      if (level === 4) return 'spreadgun';
-      return 'heavy';
+    function drawZombie(x, y, scale = 1, depth = 0, variant = 'zombie') {
+      const head = 8 * scale;
+      const bodyW = 13 * scale;
+      const bodyH = 24 * scale;
+      const bob = Math.sin((x * 0.03) + depth * 0.5 + performance.now() * 0.01) * scale * 1.3;
+      ctx.save();
+      ctx.translate(0, bob);
+      ctx.fillStyle = 'rgba(15,23,42,0.5)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + bodyH + 7 * scale, 11 * scale, 4.2 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      const skin = variant === 'boss' ? '#6d28d9' : variant === 'shield' ? '#64748b' : variant === 'runner' ? '#84cc16' : '#65a30d';
+      ctx.fillStyle = skin;
+      ctx.beginPath();
+      ctx.arc(x, y - 10 * scale, head, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = variant === 'boss' ? '#4c1d95' : '#1f2937';
+      ctx.fillRect(x - bodyW / 2, y - 1 * scale, bodyW, bodyH);
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath();
+      ctx.arc(x - 3 * scale, y - 11 * scale, 1.8 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 3 * scale, y - 11 * scale, 1.8 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#f87171';
+      ctx.lineWidth = Math.max(1, 1.2 * scale);
+      ctx.beginPath();
+      ctx.moveTo(x - 4 * scale, y - 4 * scale);
+      ctx.lineTo(x - 1 * scale, y - 1 * scale);
+      ctx.lineTo(x + 1 * scale, y - 4 * scale);
+      ctx.lineTo(x + 4 * scale, y - 1 * scale);
+      ctx.stroke();
+      ctx.strokeStyle = '#a3e635';
+      ctx.lineWidth = Math.max(1, 1.1 * scale);
+      ctx.beginPath();
+      ctx.moveTo(x - bodyW * 0.75, y + 3 * scale);
+      ctx.lineTo(x - bodyW * 0.1, y + 8 * scale);
+      ctx.moveTo(x + bodyW * 0.75, y + 3 * scale);
+      ctx.lineTo(x + bodyW * 0.1, y + 8 * scale);
+      ctx.stroke();
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(x - bodyW * 0.36, y + bodyH - 1 * scale, bodyW * 0.28, 10 * scale);
+      ctx.fillRect(x + bodyW * 0.08, y + bodyH - 1 * scale, bodyW * 0.28, 10 * scale);
+      ctx.restore();
     }
 
-    function avatarPalette() {
-      if (selectedAvatar === 'desert') {
-        return {
-          bodyHi: '#fde68a', bodyLo: '#92400e', vest: '#78350f', shoulder: '#f59e0b', leg: '#a16207', shoe: '#1f2937',
-          arm: '#d97706', skinHi: '#fde68a', skinLo: '#b45309', hair: '#3f3f46', helmet: '#a16207', visor: 'rgba(253,224,71,0.45)', comms: '#fef3c7'
-        };
-      }
-      if (selectedAvatar === 'shadow') {
-        return {
-          bodyHi: '#cbd5e1', bodyLo: '#0f172a', vest: '#111827', shoulder: '#475569', leg: '#1e293b', shoe: '#020617',
-          arm: '#334155', skinHi: '#f1c27d', skinLo: '#8d5524', hair: '#111827', helmet: '#1f2937', visor: 'rgba(125,211,252,0.35)', comms: '#38bdf8'
-        };
-      }
-      if (selectedAvatar === 'bio') {
-        return {
-          bodyHi: '#bef264', bodyLo: '#166534', vest: '#14532d', shoulder: '#22c55e', leg: '#166534', shoe: '#052e16',
-          arm: '#4ade80', skinHi: '#d9f99d', skinLo: '#65a30d', hair: '#14532d', helmet: '#166534', visor: 'rgba(74,222,128,0.45)', comms: '#86efac'
-        };
-      }
-      if (selectedAvatar === 'police') {
-        return {
-          bodyHi: '#dbeafe', bodyLo: '#1e3a8a', vest: '#1e293b', shoulder: '#60a5fa', leg: '#1e40af', shoe: '#020617',
-          arm: '#3b82f6', skinHi: '#fde68a', skinLo: '#b45309', hair: '#111827', helmet: '#0f172a', visor: 'rgba(147,197,253,0.45)', comms: '#e0f2fe'
-        };
-      }
-      if (selectedAvatar === 'tank') {
-        return {
-          bodyHi: '#fef08a', bodyLo: '#854d0e', vest: '#713f12', shoulder: '#f59e0b', leg: '#92400e', shoe: '#111827',
-          arm: '#fbbf24', skinHi: '#fde68a', skinLo: '#b45309', hair: '#451a03', helmet: '#78350f', visor: 'rgba(251,191,36,0.45)', comms: '#fff7ed'
-        };
-      }
-      return {
-        bodyHi: '#d9f99d', bodyLo: '#166534', vest: '#14532d', shoulder: '#84cc16', leg: '#3f6212', shoe: '#111827',
-        arm: '#65a30d', skinHi: '#fde68a', skinLo: '#b45309', hair: '#0f172a', helmet: '#365314', visor: 'rgba(110,231,183,0.55)', comms: '#facc15'
-      };
+    function drawTinySoldier(x, y, tint, scale = 1, depth = 0) {
+      const bodyW = Math.max(1.2, 6 * scale);
+      const bodyH = Math.max(2, 9 * scale);
+      const head = Math.max(1, 2.8 * scale);
+      const marchPhase = performance.now() * 0.0065;
+      const bob = Math.sin((x + depth * 11) * 0.035 + marchPhase) * scale * 0.35;
+      const sway = Math.sin((depth * 0.8) + marchPhase + x * 0.01) * scale * 0.45;
+      ctx.save();
+      ctx.translate(sway, bob);
+      ctx.fillStyle = 'rgba(15,23,42,0.26)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + bodyH * 0.9, bodyW * 0.9, Math.max(0.8, 1.8 * scale), 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = tint;
+      ctx.fillRect(x - bodyW / 2, y - bodyH * 0.45, bodyW, bodyH);
+      ctx.fillStyle = '#dbeafe';
+      ctx.beginPath();
+      ctx.arc(x, y - bodyH * 0.6, head, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#1e3a8a';
+      ctx.fillRect(x - bodyW * 0.62, y + bodyH * 0.1, bodyW * 1.24, Math.max(0.9, 1.4 * scale));
+      ctx.restore();
     }
 
     function drawSquad() {
-      const count = Math.min(state.squad, 12);
-      const gear = squadGearForFirepower(state.firepower);
-      const palette = avatarPalette();
-      for (let i=0;i<count;i++) {
-        const lane = i%3; const row = Math.floor(i/3);
-        const x = LANES[lane] + (lane===1?0:(lane===0?-10:10)); const y = 596 + row*20;
-        const scale = selectedAvatar === 'tank' ? 1.12 : 0.92;
-        drawHumanoid(x, y, scale, palette, 'human', gear);
+      const total = Math.max(0, state.squad);
+      if (!total) return;
+
+      const crowdWidth = 760;
+      const crowdHeight = 270;
+      const startY = 636;
+      const normalRowCap = 12;
+      const armyMode = total >= 300;
+      const ultraArmyMode = total >= 500;
+      const minScale = ultraArmyMode ? 0.022 : armyMode ? 0.03 : total > 220 ? 0.045 : total > 140 ? 0.055 : total > 80 ? 0.065 : 0.08;
+      const maxScale = ultraArmyMode ? 0.34 : armyMode ? 0.5 : 0.95;
+      const baseBodyWidth = armyMode ? 8 : 18;
+      const baseBodyHeight = armyMode ? 10 : 24;
+
+      const maxColumnsThatFit = Math.max(1, Math.floor(crowdWidth / Math.max(baseBodyWidth * minScale, 1)) + 1);
+      let columns;
+      let rows;
+      if (ultraArmyMode) {
+        columns = Math.min(total, maxColumnsThatFit, 36);
+        rows = Math.max(1, Math.ceil(total / columns));
+      } else if (armyMode) {
+        columns = Math.min(total, maxColumnsThatFit, 26);
+        rows = Math.max(1, Math.ceil(total / columns));
+      } else {
+        columns = Math.min(total, maxColumnsThatFit, normalRowCap);
+        rows = Math.max(1, Math.ceil(total / normalRowCap));
       }
-    }
 
-    function drawZombie(x, y, reward = 1) {
-      const zombiePalettes = [
-        { bodyHi: '#6ee7b7', bodyLo: '#166534', leg: '#14532d', shoe: '#052e16', arm: '#4ade80', skinHi: '#d9f99d', skinLo: '#65a30d', hair: '#14532d' },
-        { bodyHi: '#a7f3d0', bodyLo: '#064e3b', leg: '#134e4a', shoe: '#022c22', arm: '#34d399', skinHi: '#ecfccb', skinLo: '#4d7c0f', hair: '#022c22' },
-        { bodyHi: '#86efac', bodyLo: '#14532d', leg: '#166534', shoe: '#052e16', arm: '#22c55e', skinHi: '#bef264', skinLo: '#3f6212', hair: '#365314' }
-      ];
-      const palette = zombiePalettes[reward % zombiePalettes.length];
-      const scale = 1.12 + reward * 0.14;
+      const rawGapX = columns > 1 ? crowdWidth / Math.max(columns - 1, 1) : crowdWidth;
+      const rawGapY = rows > 1 ? crowdHeight / Math.max(rows - 1, 1) : crowdHeight;
+      const scale = Math.max(minScale, Math.min(maxScale, rawGapX / baseBodyWidth, rawGapY / baseBodyHeight));
+      const gapY = rows > 1 ? crowdHeight / Math.max(rows - 1, 1) : 0;
+      const visibleSoldiers = [];
 
-      ctx.save();
-      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      const marchPhase = performance.now() * 0.004;
+      const crowdGlow = ctx.createRadialGradient(canvas.width / 2, 585, 20, canvas.width / 2, 585, armyMode ? 300 : 260);
+      crowdGlow.addColorStop(0, armyMode ? 'rgba(96,165,250,0.24)' : 'rgba(96,165,250,0.18)');
+      crowdGlow.addColorStop(1, 'rgba(96,165,250,0)');
+      ctx.fillStyle = crowdGlow;
       ctx.beginPath();
-      ctx.ellipse(x, y + 26, 26 + reward * 4, 11 + reward * 1.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(canvas.width / 2, 590 + (armyMode ? Math.sin(marchPhase) * 3 : 0), armyMode ? 300 : 280, armyMode ? 132 + Math.sin(marchPhase * 1.3) * 4 : 120, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
 
-      drawHumanoid(x, y, scale, palette, 'zombie');
-
-      ctx.save();
-      const aura = ctx.createRadialGradient(x, y - 18, 10, x, y - 18, 42 + reward * 8);
-      aura.addColorStop(0, reward >= 3 ? 'rgba(239,68,68,0.22)' : 'rgba(190,242,100,0.16)');
-      aura.addColorStop(1, 'rgba(190,242,100,0)');
-      ctx.fillStyle = aura;
-      ctx.beginPath();
-      ctx.arc(x, y - 18, 42 + reward * 8, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-
-      if (reward >= 2) {
-        ctx.fillStyle = 'rgba(127,29,29,0.45)';
-        ctx.beginPath();
-        ctx.moveTo(x - 16, y - 42);
-        ctx.lineTo(x - 6, y - 58);
-        ctx.lineTo(x + 4, y - 40);
-        ctx.closePath();
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(x + 16, y - 42);
-        ctx.lineTo(x + 6, y - 58);
-        ctx.lineTo(x - 4, y - 40);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = 'rgba(127,29,29,0.32)';
-        ctx.fillRect(x - 8, y - 8, 16, 6);
+      for (let i = 0; i < total; i++) {
+        const row = Math.floor(i / columns);
+        const col = i % columns;
+        const rowStartIndex = row * columns;
+        const rowCount = Math.min(columns, total - rowStartIndex);
+        const rowSlotWidth = crowdWidth / Math.max(rowCount, 1);
+        const rowLeft = (canvas.width - crowdWidth) / 2;
+        const x = rowLeft + rowSlotWidth * (col + 0.5);
+        const y = startY - row * gapY;
+        visibleSoldiers.push({ x, y, row, col, rowCount });
       }
 
-      if (reward >= 3) {
-        ctx.fillStyle = '#fecaca';
-        ctx.font = 'bold 11px system-ui';
-        ctx.textAlign = 'center';
-        ctx.fillText('ELITE', x, y - 58);
-      }
-      ctx.fillStyle='rgba(220,252,231,0.96)';
-      ctx.font='bold 16px system-ui';
-      ctx.textAlign='center';
-      ctx.fillText(`+${reward}`,x,y-42);
-    }
+      const bannerGradient = ctx.createLinearGradient(0, 0, 220, 0);
+      bannerGradient.addColorStop(0, 'rgba(15,23,42,.96)');
+      bannerGradient.addColorStop(1, 'rgba(30,64,175,.78)');
+      ctx.fillStyle = bannerGradient;
+      ctx.fillRect(18, 108, 210, 50);
+      ctx.strokeStyle = 'rgba(147,197,253,.35)';
+      ctx.strokeRect(18, 108, 210, 50);
+      ctx.fillStyle = '#eff6ff';
+      ctx.font = 'bold 22px system-ui';
+      ctx.textAlign = 'left';
+      ctx.fillText(`Soldiers ${state.squad}`, 32, 141);
 
-    function drawCrate(x, y) {
-      const grad = ctx.createLinearGradient(x - 24, y - 24, x + 24, y + 24);
-      grad.addColorStop(0, '#60a5fa');
-      grad.addColorStop(1, '#1d4ed8');
-      ctx.fillStyle = grad;
-      ctx.fillRect(x-24, y-24, 48, 48);
-      ctx.strokeStyle = 'rgba(219,234,254,0.9)';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x-24, y-24, 48, 48);
-      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-      ctx.beginPath(); ctx.moveTo(x-20,y-8); ctx.lineTo(x+20,y-8); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x-20,y+8); ctx.lineTo(x+20,y+8); ctx.stroke();
-      ctx.fillStyle='#dbeafe'; ctx.font='bold 22px system-ui'; ctx.textAlign='center'; ctx.fillText('G',x,y+8);
-    }
+      visibleSoldiers.sort((a, b) => a.y - b.y);
+      for (const soldier of visibleSoldiers) {
+        const tint = soldier.row % 4 === 0 ? '#60a5fa' : soldier.row % 4 === 1 ? '#93c5fd' : soldier.row % 4 === 2 ? '#3b82f6' : '#2563eb';
+        if (armyMode) drawTinySoldier(soldier.x, soldier.y, tint, scale, soldier.row);
+        else drawPerson(soldier.x, soldier.y, tint, scale, soldier.row);
+      }
 
-    function drawWall(x, y, hp) {
-      const front = ctx.createLinearGradient(x - 52, y - 30, x + 52, y + 30);
-      front.addColorStop(0, '#7c2d12');
-      front.addColorStop(0.5, '#b45309');
-      front.addColorStop(1, '#7f1d1d');
-      ctx.fillStyle = '#5b1d0f';
-      ctx.beginPath();
-      ctx.moveTo(x + 52, y - 30);
-      ctx.lineTo(x + 68, y - 22);
-      ctx.lineTo(x + 68, y + 38);
-      ctx.lineTo(x + 52, y + 30);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#a16207';
-      ctx.beginPath();
-      ctx.moveTo(x - 52, y - 30);
-      ctx.lineTo(x + 52, y - 30);
-      ctx.lineTo(x + 68, y - 22);
-      ctx.lineTo(x - 36, y - 22);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = front;
-      ctx.fillRect(x-52, y-30, 104, 60);
-      ctx.strokeStyle = '#fecaca';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(x-52, y-30, 104, 60);
-      ctx.fillStyle = 'rgba(255,255,255,0.08)';
-      ctx.fillRect(x-48, y-26, 96, 8);
-      ctx.strokeStyle = 'rgba(0,0,0,0.22)';
-      ctx.lineWidth = 1.5;
-      for (let row = 0; row < 3; row++) {
-        const yy = y - 20 + row * 20;
-        ctx.beginPath(); ctx.moveTo(x - 52, yy); ctx.lineTo(x + 52, yy); ctx.stroke();
-      }
-      for (let col = 0; col < 4; col++) {
-        const xx = x - 39 + col * 26;
-        ctx.beginPath(); ctx.moveTo(xx, y - 30); ctx.lineTo(xx, y + 30); ctx.stroke();
-      }
-      ctx.fillStyle = 'rgba(255,255,255,0.06)';
-      for (let row = 0; row < 3; row++) {
-        for (let col = 0; col < 2; col++) {
-          ctx.fillRect(x - 46 + col * 52 + row * 4, y - 24 + row * 20, 20, 6);
-        }
-      }
-      ctx.fillStyle = 'rgba(127,29,29,0.9)';
-      ctx.beginPath();
-      ctx.moveTo(x - 18, y - 30);
-      ctx.lineTo(x, y - 48);
-      ctx.lineTo(x + 18, y - 30);
-      ctx.closePath();
-      ctx.fill();
-      if (hp >= 4) {
-        ctx.fillStyle = '#fecaca';
-        ctx.font = 'bold 10px system-ui';
-        ctx.textAlign = 'center';
-        ctx.fillText('BOSS WALL', x, y - 10);
-      }
-      ctx.fillStyle='#fee2e2'; ctx.font='bold 24px system-ui'; ctx.textAlign='center'; ctx.fillText(String(hp),x,y+8);
-    }
-
-    function drawCoin(x, y) {
-      const coinGrad = ctx.createRadialGradient(x - 4, y - 6, 3, x, y, 18);
-      coinGrad.addColorStop(0, '#fef9c3');
-      coinGrad.addColorStop(0.45, '#facc15');
-      coinGrad.addColorStop(1, '#ca8a04');
-      ctx.fillStyle = coinGrad;
-      ctx.beginPath(); ctx.arc(x,y,18,0,Math.PI*2); ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.45)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.fillStyle = 'rgba(255,255,255,0.18)';
-      ctx.beginPath();
-      ctx.arc(x - 5, y - 6, 5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#78350f'; ctx.font='bold 18px system-ui'; ctx.textAlign='center'; ctx.fillText('$',x,y+6);
+      ctx.fillStyle = 'rgba(15,23,42,.88)';
+      ctx.fillRect(18, 162, 300, 36);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = 'bold 16px system-ui';
+      ctx.fillText(`Squad ${total} • Rows ${rows} • Per row ${columns}`, 32, 185);
     }
 
     function drawObjects() {
       for (const obj of state.objects) {
-        if (obj.type === 'zombie') drawZombie(obj.x, obj.y, obj.reward);
-        else if (obj.type === 'crate') drawCrate(obj.x, obj.y);
-        else if (obj.type === 'wall') drawWall(obj.x, obj.y, obj.hp);
-        else if (obj.type === 'coin') drawCoin(obj.x, obj.y);
+        if (obj.type === 'zombie') {
+          drawZombie(obj.x, obj.y, 1, 1, 'zombie');
+          ctx.fillStyle='#dcfce7'; ctx.font='bold 16px system-ui'; ctx.textAlign='center'; ctx.fillText(`+${obj.reward}`,obj.x,obj.y-28);
+        } else if (obj.type === 'runner') {
+          drawZombie(obj.x, obj.y, 0.88, 2, 'runner');
+          ctx.fillStyle='#ffedd5'; ctx.font='bold 15px system-ui'; ctx.textAlign='center'; ctx.fillText('FAST',obj.x,obj.y-24);
+        } else if (obj.type === 'shield') {
+          drawZombie(obj.x, obj.y, 1.04, 3, 'shield');
+          ctx.strokeStyle='#e2e8f0'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(obj.x, obj.y + 2, 22, 0, Math.PI * 2); ctx.stroke();
+          ctx.fillStyle='#f8fafc'; ctx.font='bold 18px system-ui'; ctx.textAlign='center'; ctx.fillText(String(Math.ceil(obj.hp)),obj.x,obj.y+8);
+        } else if (obj.type === 'boss') {
+          drawZombie(obj.x, obj.y, 1.45, 5, 'boss');
+          ctx.strokeStyle='#fda4ff'; ctx.lineWidth=5; ctx.strokeRect(obj.x - 42, obj.y - 46, 84, 92);
+          ctx.fillStyle='rgba(15,23,42,.92)'; ctx.fillRect(obj.x - 44, obj.y - 68, 88, 12);
+          ctx.fillStyle='#ef4444'; ctx.fillRect(obj.x - 42, obj.y - 66, 84 * Math.max(0, obj.hp / (18 + state.wave * 2)), 8);
+          ctx.fillStyle='#f5d0fe'; ctx.font='bold 15px system-ui'; ctx.textAlign='center'; ctx.fillText('BOSS',obj.x,obj.y-54);
+        } else if (obj.type === 'crate') {
+          ctx.fillStyle=COLORS.crate; ctx.fillRect(obj.x-24,obj.y-24,48,48);
+          ctx.fillStyle='#dbeafe'; ctx.font='bold 22px system-ui'; ctx.textAlign='center'; ctx.fillText('G',obj.x,obj.y+8);
+        } else if (obj.type === 'wall') {
+          ctx.fillStyle=COLORS.wall; ctx.fillRect(obj.x-52,obj.y-30,104,60);
+          ctx.strokeStyle='#fca5a5'; ctx.lineWidth=3; ctx.strokeRect(obj.x-52,obj.y-30,104,60);
+          ctx.fillStyle='#fee2e2'; ctx.font='bold 22px system-ui'; ctx.textAlign='center'; ctx.fillText(String(Math.ceil(obj.hp)),obj.x,obj.y+8);
+        } else if (obj.type === 'coin') {
+          ctx.fillStyle = COLORS.coin; ctx.beginPath(); ctx.arc(obj.x,obj.y,18,0,Math.PI*2); ctx.fill();
+          ctx.fillStyle = '#78350f'; ctx.font='bold 18px system-ui'; ctx.textAlign='center'; ctx.fillText('$',obj.x,obj.y+6);
+        }
       }
     }
 
     function drawBullets() {
       for (const bullet of state.bullets) {
-        const trail = ctx.createLinearGradient(bullet.x, bullet.y + 20, bullet.x, bullet.y - 20);
-        trail.addColorStop(0, 'rgba(253,224,71,0)');
-        trail.addColorStop(1, 'rgba(253,224,71,0.55)');
-        ctx.strokeStyle = trail;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(bullet.x, bullet.y + 18);
-        ctx.lineTo(bullet.x, bullet.y - 14);
-        ctx.stroke();
+        ctx.save();
+        ctx.shadowColor = bullet.trail || bullet.color || '#facc15';
+        ctx.shadowBlur = bullet.glow ? 16 : 8;
+        ctx.fillStyle = bullet.color || COLORS.bullet;
+        ctx.strokeStyle = bullet.core || '#fff';
+        ctx.lineWidth = 1.4;
 
-        const glow = ctx.createRadialGradient(bullet.x, bullet.y, 1, bullet.x, bullet.y, 12);
-        glow.addColorStop(0, 'rgba(255,255,255,0.98)');
-        glow.addColorStop(0.35, 'rgba(253,224,71,0.95)');
-        glow.addColorStop(1, 'rgba(253,224,71,0)');
-        ctx.fillStyle = glow;
-        ctx.beginPath();
-        ctx.arc(bullet.x, bullet.y, 12, 0, Math.PI * 2);
-        ctx.fill();
+        if (bullet.style === 'laser') {
+          ctx.fillRect(bullet.x - 2, bullet.y - 14, 4, 18);
+          ctx.strokeRect(bullet.x - 1, bullet.y - 10, 2, 10);
+        } else if (bullet.style === 'plasma') {
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, bullet.radius || 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, (bullet.radius || 6) * 0.55, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (bullet.style === 'pulse') {
+          ctx.beginPath();
+          ctx.ellipse(bullet.x, bullet.y, (bullet.radius || 5.5) + 2, bullet.radius || 5.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, (bullet.radius || 5.5) + 4, 0, Math.PI * 2);
+          ctx.globalAlpha = 0.22;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        } else if (bullet.style === 'scatter') {
+          ctx.save();
+          ctx.translate(bullet.x, bullet.y);
+          ctx.rotate((bullet.drift || 0) * 0.01);
+          ctx.fillRect(-3, -10, 6, 16);
+          ctx.strokeRect(-1.4, -7, 2.8, 8);
+          ctx.restore();
+        } else if (bullet.style === 'arc') {
+          ctx.beginPath();
+          ctx.moveTo(bullet.x - 5, bullet.y + 6);
+          ctx.quadraticCurveTo(bullet.x + 8, bullet.y, bullet.x - 1, bullet.y - 12);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, (bullet.radius || 6) * 0.65, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (bullet.style === 'minigun') {
+          ctx.fillRect(bullet.x - 2.5, bullet.y - 12, 5, 14);
+          ctx.strokeRect(bullet.x - 1.2, bullet.y - 8, 2.4, 8);
+        } else {
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, bullet.radius || 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
 
-        ctx.fillStyle = COLORS.bullet;
-        ctx.beginPath();
-        ctx.arc(bullet.x, bullet.y, 4.5, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.globalAlpha = 0.45;
+        ctx.fillStyle = bullet.trail || '#fde68a';
+        ctx.fillRect(bullet.x - 1.5, bullet.y + 4, 3, 12);
+        ctx.restore();
       }
+      ctx.globalAlpha = 1;
     }
 
     function drawParticles() {
-      for (const particle of particles) {
-        const alpha = Math.max(0, particle.life / particle.maxLife);
-        ctx.fillStyle = particle.color.replace(/0\.[0-9]+\)|1\)/, `${Math.min(0.95, alpha)})`);
+      for (const particle of state.particles) {
+        const alpha = Math.max(0, particle.life / 0.18);
+        const size = particle.size || 8;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = particle.color;
         ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
+        ctx.arc(particle.x, particle.y, size * particle.life / 0.18, 0, Math.PI * 2);
         ctx.fill();
+        if (particle.ring) {
+          ctx.strokeStyle = particle.ring;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, size * 0.8 * particle.life / 0.18, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        if (particle.burst) {
+          ctx.strokeStyle = particle.ring || '#fff';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(particle.x - size * 0.6, particle.y);
+          ctx.lineTo(particle.x + size * 0.6, particle.y);
+          ctx.moveTo(particle.x, particle.y - size * 0.6);
+          ctx.lineTo(particle.x, particle.y + size * 0.6);
+          ctx.stroke();
+        }
       }
+      ctx.globalAlpha = 1;
     }
 
     function drawHint() {
-      const mission = activeMission();
-      ctx.fillStyle='rgba(15,23,42,.78)';
-      ctx.beginPath();
-      ctx.roundRect(18,18,500,126,18);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(125,211,252,0.18)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
+      ctx.fillStyle='rgba(15,23,42,.85)'; ctx.fillRect(20,20,360,84);
       ctx.fillStyle='#e5e7eb'; ctx.font='bold 24px system-ui'; ctx.textAlign='left'; ctx.fillText('Zombie Squad Run',36,52);
-      ctx.fillStyle='#94a3b8'; ctx.font='16px system-ui'; ctx.fillText('Contra-style lane action. Boss walls, zombie waves, weapon upgrades.',36,80);
-      ctx.fillStyle='#86efac'; ctx.font='bold 14px system-ui'; ctx.fillText(`Tier: ${weaponTierName(state.firepower)}  •  Wave ${state.wave}`,36,102);
-      ctx.fillStyle='#fef08a'; ctx.font='bold 13px system-ui'; ctx.fillText(`Objective: ${mission.label} (${Math.min(missionProgress, mission.target)}/${mission.target})`,36,122);
-      ctx.fillStyle='#fca5a5'; ctx.font='bold 12px system-ui'; ctx.fillText('Tip: Elite zombies glow harder, boss walls hit harder.',36,140);
+      ctx.fillStyle='#94a3b8'; ctx.font='16px system-ui'; ctx.fillText('Shoot zombies and crates. Break walls. Stack your squad.',36,80);
+      ctx.fillStyle='rgba(15,23,42,.82)'; ctx.fillRect(canvas.width - 170, 20, 140, 58);
+      ctx.fillStyle=state.minigunCharge >= 100 ? '#fca5a5' : '#fecaca'; ctx.font='bold 14px system-ui'; ctx.fillText('MINIGUN', canvas.width - 154, 44);
+      ctx.fillStyle='#fff'; ctx.font='bold 24px system-ui'; ctx.fillText(`${Math.floor(state.minigunCharge)}%`, canvas.width - 154, 68);
+      ctx.fillStyle='rgba(255,255,255,.12)'; ctx.fillRect(canvas.width - 154, 76, 112, 8);
+      ctx.fillStyle=state.minigunCharge >= 100 ? '#ef4444' : '#f59e0b'; ctx.fillRect(canvas.width - 154, 76, 112 * (state.minigunCharge / 100), 8);
+      [minigunBtn, floatingMinigunBtn].forEach(btn => btn && btn.classList.toggle('ready', state.minigunCharge >= 100 && !state.paused && !state.gameOver));
     }
 
     function render() {
       ctx.save();
-      const shakeX = cameraShake > 0.2 ? (Math.random() - 0.5) * cameraShake : 0;
-      const shakeY = cameraShake > 0.2 ? (Math.random() - 0.5) * cameraShake : 0;
-      ctx.translate(shakeX, shakeY);
-      drawRoad();
-      drawSquad();
-      drawObjects();
-      drawBullets();
-      drawParticles();
-
-      const bloom = ctx.createRadialGradient(400, 520, 80, 400, 520, 340);
-      bloom.addColorStop(0, 'rgba(250,204,21,0.08)');
-      bloom.addColorStop(0.45, 'rgba(56,189,248,0.04)');
-      bloom.addColorStop(1, 'rgba(15,23,42,0)');
-      ctx.fillStyle = bloom;
-      ctx.fillRect(0, 0, 800, 680);
-
-      drawHint();
-      if (state.paused && !state.gameOver && !overlay.innerHTML) {
-        ctx.fillStyle='rgba(0,0,0,.45)'; ctx.fillRect(0,0,800,680);
-        ctx.fillStyle='#fff'; ctx.font='bold 42px system-ui'; ctx.textAlign='center'; ctx.fillText('Paused',400,340);
+      if (screenShake > 0.1) {
+        const dx = (Math.random() - 0.5) * screenShake;
+        const dy = (Math.random() - 0.5) * screenShake;
+        ctx.translate(dx, dy);
       }
+      drawRoad(); drawSquad(); drawObjects(); drawBullets(); drawParticles(); drawHint();
       ctx.restore();
+      if (hitFlash > 0.01) {
+        ctx.fillStyle = `rgba(255,255,255,${Math.min(0.22, hitFlash)})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      if (state.paused && !state.gameOver && !overlay.innerHTML) {
+        ctx.fillStyle='rgba(0,0,0,.45)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle='#fff'; ctx.font='bold 42px system-ui'; ctx.textAlign='center'; ctx.fillText('Paused',canvas.width/2,canvas.height/2);
+      }
     }
 
     function tick(now) {
@@ -1292,84 +1788,147 @@
 
     function laneFromX(x) { return x < canvas.width/3 ? 0 : x < canvas.width*2/3 ? 1 : 2; }
     canvas.addEventListener('click', e => { const rect=canvas.getBoundingClientRect(); const x=((e.clientX-rect.left)/rect.width)*canvas.width; fireAtLane(laneFromX(x)); });
-    overlay.addEventListener('click', event => {
-      const action = event.target?.dataset?.action;
-      if (!action) return;
-      if (action === 'start') window.startZombieRun();
-      else if (action === 'resume') window.closeOverlayAndResume();
-      else if (action === 'restart') window.restartZombieRun();
-      else if (action === 'rewarded-revive') window.mockRewardedReviveOffer();
-    });
     window.addEventListener('keydown', e => { if (e.key==='1') fireAtLane(0); if (e.key==='2') fireAtLane(1); if (e.key==='3') fireAtLane(2); });
-    avatarMenuBtn.addEventListener('click', () => {
-      avatarMenuOpen = !avatarMenuOpen;
-      syncAvatarHud();
-    });
-    minigunBtn.addEventListener('click', () => useMinigun());
     restartBtn.addEventListener('click', () => window.restartZombieRun());
-    pauseBtn.addEventListener('click', () => { state.paused=!state.paused; pauseBtn.textContent=state.paused?'Resume':'Pause'; syncHud(); });
+    pauseBtn.addEventListener('click', () => { state.paused=!state.paused; pauseBtn.textContent=state.paused?'Resume':'Pause'; });
+    [minigunBtn, floatingMinigunBtn].forEach(btn => {
+      btn.addEventListener('click', activateMinigun);
+      btn.addEventListener('pointerdown', activateMinigun);
+      btn.addEventListener('touchstart', activateMinigun, { passive: false });
+    });
+    moneyBtn.addEventListener('click', openMoneyPanel);
+    enhanceBtn.addEventListener('click', openEnhancementPanel);
+    avatarBtn.addEventListener('click', openAvatarPanel);
+    settingsBtn.addEventListener('click', openSettingsPanel);
+    battleSettingsBtn.addEventListener('click', openSettingsPanel);
+    floatingSettingsBtn.addEventListener('click', openSettingsPanel);
+    youtubeBtn.addEventListener('click', () => {
+      state.paused = true;
+      window.openYoutubeReward();
+    });
+    battleYoutubeBtn.addEventListener('click', () => {
+      state.paused = true;
+      window.openYoutubeReward();
+    });
     laneLeftBtn.addEventListener('click', () => fireAtLane(0));
     laneCenterBtn.addEventListener('click', () => fireAtLane(1));
     laneRightBtn.addEventListener('click', () => fireAtLane(2));
 
-    function unlockOrSelectAvatar(id, cost, label) {
-      if (!unlockedAvatars.includes(id)) {
-        if (avatarCoins < cost) {
-          avatarFeedback.textContent = `Need ${cost} saved avatar coins for ${label}.`;
-          avatarFeedback.style.color = '#fca5a5';
-          return;
-        }
-        avatarCoins -= cost;
-        unlockedAvatars.push(id);
-      }
-      selectedAvatar = id;
-      avatarFeedback.textContent = `${label} selected.`;
-      avatarFeedback.style.color = '#86efac';
-      saveMeta();
-      syncAvatarHud();
-    }
-
     buyGunBtn.addEventListener('click', () => {
-      const nextTier = weaponTierName(Math.min(6, (state?.firepower ?? 1) + 1));
-      purchaseUpgrade(10, () => {
-        state.firepower = Math.min(6, state.firepower + 1);
-      }, `Firepower upgraded to ${nextTier}.`);
+      if (state.coins >= gunPrice) {
+        state.coins -= gunPrice;
+        state.firepower = Math.min(12, state.firepower + 1);
+        gunPrice += 10;
+        bankCoins = state.coins;
+        saveMeta();
+        syncHud();
+      }
     });
-    buySquadBtn.addEventListener('click', () => purchaseUpgrade(8, () => {
-      state.squad += 3;
-    }, 'Squad reinforced with 3 more troopers.'));
-    buyReviveBtn.addEventListener('click', () => purchaseUpgrade(15, () => {
-      state.revives += 1;
-    }, 'Extra revive stocked.'));
-    avatarDefaultBtn.addEventListener('click', () => unlockOrSelectAvatar('default', 0, 'Default Trooper'));
-    avatarDesertBtn.addEventListener('click', () => unlockOrSelectAvatar('desert', 25, 'Desert Ranger'));
-    avatarShadowBtn.addEventListener('click', () => unlockOrSelectAvatar('shadow', 40, 'Shadow Commando'));
-    avatarBioBtn.addEventListener('click', () => unlockOrSelectAvatar('bio', 60, 'Bio Armor'));
-    avatarPoliceBtn.addEventListener('click', () => unlockOrSelectAvatar('police', 500, 'Police Officers'));
-    avatarTankBtn.addEventListener('click', () => unlockOrSelectAvatar('tank', 10000, 'Tanks'));
+    buySquadBtn.addEventListener('click', () => {
+      if (state.coins >= squadPrice) {
+        state.coins -= squadPrice;
+        state.squad += 3;
+        squadPrice += 10;
+        bankCoins = state.coins;
+        saveMeta();
+        syncHud();
+      }
+    });
+    buyReviveBtn.addEventListener('click', () => {
+      if (state.coins >= revivePrice) {
+        state.coins -= revivePrice;
+        state.revives += 1;
+        revivePrice += 10;
+        bankCoins = state.coins;
+        saveMeta();
+        syncHud();
+      }
+    });
 
-    window.closeOverlayAndResume = function() { overlay.innerHTML=''; state.paused=false; startMusic(); };
-    window.startZombieRun = function() { ensureAudio(); overlay.innerHTML=''; state.paused=false; state.running=true; state.gameOver=false; startMusic(); };
+    window.buyStarterPack = function() {
+      if (starterPackClaimed) {
+        overlay.innerHTML = moneyPanelMarkup();
+        return;
+      }
+      addCoins(100);
+      starterPackClaimed = true;
+      saveMeta();
+      overlay.innerHTML = `
+        <div class="message">
+          <h2>Starter Pack Added</h2>
+          <p>Your featured pack added <strong>100 coins</strong> to the run.</p>
+          <button onclick="window.openMoneyPanel()">Back To Shop</button>
+        </div>`;
+      syncHud();
+    };
+    window.openYoutubeReward = function() {
+      if (youtubeVisitClaimed) {
+        overlay.innerHTML = moneyPanelMarkup();
+        return;
+      }
+      addCoins(100);
+      youtubeVisitClaimed = true;
+      saveMeta();
+      syncHud();
+
+      const opened = window.open(YOUTUBE_CHANNEL_URL, '_blank', 'noopener,noreferrer');
+      if (!opened) {
+        overlay.innerHTML = `
+          <div class="message">
+            <h2>YouTube Reward Added</h2>
+            <p>You received <strong>100 coins</strong>. Your browser blocked the popup, so use the button below to open <strong>@ColtRT-e5n2h</strong>.</p>
+            <button class="warn" onclick="window.location.href='${YOUTUBE_CHANNEL_URL}'">Open YouTube Channel</button>
+            <button class="secondary" onclick="window.closeOverlayAndResume()">Back To Run</button>
+          </div>`;
+        return;
+      }
+      overlay.innerHTML = `
+        <div class="message">
+          <h2>YouTube Reward Added</h2>
+          <p>You opened <strong>@ColtRT-e5n2h</strong> and received 100 coins.</p>
+          <button onclick="window.openMoneyPanel()">Back To Shop</button>
+        </div>`;
+    };
+    window.claimSubscribeReward = function() {
+      if (youtubeSubscribeClaimed) {
+        overlay.innerHTML = moneyPanelMarkup();
+        return;
+      }
+      addCoins(1000);
+      youtubeSubscribeClaimed = true;
+      saveMeta();
+      overlay.innerHTML = `
+        <div class="message">
+          <h2>Subscription Reward Claimed</h2>
+          <p>1000 coins were added for subscribing to <strong>@ColtRT-e5n2h</strong>.</p>
+          <p class="mini-note">This is currently an honor-system reward until a real verification flow exists.</p>
+          <button onclick="window.openMoneyPanel()">Back To Shop</button>
+        </div>`;
+      syncHud();
+    };
+    window.closeOverlayAndResume = function() { overlay.innerHTML=''; state.paused=false; };
+    window.startZombieRun = function() { overlay.innerHTML=''; state.paused=false; state.running=true; state.gameOver=false; refreshMusicState(); };
     window.mockRewardedReviveOffer = function() {
       state.coins += 5;
       bankCoins = state.coins;
       saveMeta();
       resetGame();
     };
-    window.restartZombieRun = function() { bankCoins = state.coins; saveMeta(); resetGame(); pauseBtn.textContent='Pause'; stopMusic(); };
+    window.restartZombieRun = function() { bankCoins = state.coins; saveMeta(); resetGame(); pauseBtn.textContent='Pause'; refreshMusicState(); };
 
     soundBtn.addEventListener('click', () => {
       soundOn = !soundOn;
       soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
-      if (!soundOn) stopMusic();
-      else if (state && state.running && !state.paused && !state.gameOver) startMusic();
+      if (soundOn) playTone(720, 0.08, 'triangle', 1.3);
+      refreshMusicState();
       saveMeta();
     });
-    titleBtn.addEventListener('click', () => { stopMusic(); showTitleScreen(); });
+    titleBtn.addEventListener('click', () => { showTitleScreen(); refreshMusicState(); });
 
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    applyDisplaySettings();
+    applyControlsMode();
     resetGame();
+    refreshMusicState();
     requestAnimationFrame(tick);
   </script>
 </body>

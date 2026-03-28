@@ -206,6 +206,10 @@
   <script>
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
+    let audioCtx = null;
+    let masterGain = null;
+    let musicTimer = null;
+    let musicStep = 0;
     const overlay = document.getElementById('overlay');
     const squadStat = document.getElementById('squadStat');
     const gunStat = document.getElementById('gunStat');
@@ -247,6 +251,65 @@
     soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
 
     function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+    function resizeCanvas() {
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      const logicalWidth = 800;
+      const logicalHeight = 680;
+      canvas.width = Math.floor(logicalWidth * ratio);
+      canvas.height = Math.floor(logicalHeight * ratio);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+    }
+
+    function ensureAudio() {
+      if (!soundOn) return null;
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = 0.05;
+        masterGain.connect(audioCtx.destination);
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    function playTone(freq = 220, duration = 0.08, type = 'square', volume = 0.03) {
+      const ac = ensureAudio();
+      if (!ac || !masterGain) return;
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(volume, ac.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start();
+      osc.stop(ac.currentTime + duration);
+    }
+
+    function startMusic() {
+      const ac = ensureAudio();
+      if (!ac || musicTimer) return;
+      const melody = [220, 247, 262, 294, 330, 294, 262, 247, 196, 220, 247, 262, 330, 392, 330, 294];
+      musicTimer = window.setInterval(() => {
+        if (!soundOn || !state || state.paused || state.gameOver) return;
+        const waveBoost = Math.min(1.35, 1 + (state.wave * 0.04));
+        const note = melody[musicStep % melody.length] * waveBoost;
+        playTone(note, 0.16, 'triangle', 0.018);
+        if (musicStep % 4 === 0) playTone(note / 2, 0.12, 'sawtooth', 0.012);
+        musicStep += 1;
+      }, 180);
+    }
+
+    function stopMusic() {
+      if (musicTimer) {
+        clearInterval(musicTimer);
+        musicTimer = null;
+      }
+    }
+
     function saveMeta(){
       localStorage.setItem('zombie-squad-run-best', String(best));
       localStorage.setItem('zombie-squad-run-coins', String(bankCoins));
@@ -358,6 +421,7 @@
     function fireAtLane(laneIndex) {
       if (!state.running || state.paused || state.gameOver) return;
       if (navigator.vibrate) navigator.vibrate(12);
+      playTone(520 + state.firepower * 36, 0.05, 'square', 0.028);
       const laneX = LANES[laneIndex];
       spawnBurst(laneX, 598, 'rgba(250,204,21,0.9)', 6 + state.firepower, 80 + state.firepower * 10);
       cameraShake = Math.max(cameraShake, 4 + state.firepower * 0.7);
@@ -437,18 +501,22 @@
 
     function handleDestroyed(obj) {
       if (obj.type === 'zombie') {
+        playTone(180 + obj.reward * 24, 0.09, 'sawtooth', 0.02);
         spawnBurst(obj.x, obj.y, 'rgba(74,222,128,0.95)', 10, 120);
         state.squad += obj.reward; addCoins(obj.reward); updateMission('survivors', obj.reward);
       }
       else if (obj.type === 'crate') {
+        playTone(640, 0.1, 'triangle', 0.02);
         spawnBurst(obj.x, obj.y, 'rgba(96,165,250,0.95)', 10, 110);
         state.firepower = Math.min(6, state.firepower + obj.reward);
       }
       else if (obj.type === 'coin') {
+        playTone(880, 0.08, 'triangle', 0.018);
         spawnBurst(obj.x, obj.y, 'rgba(250,204,21,0.95)', 10, 105);
         addCoins(obj.reward);
       }
       else if (obj.type === 'wall') {
+        playTone(120, 0.16, 'sawtooth', 0.03);
         spawnBurst(obj.x, obj.y, 'rgba(248,113,113,0.95)', 14, 135);
         updateMission('walls', 1);
       }
@@ -495,7 +563,7 @@
     }
 
     function drawRoad() {
-      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.clearRect(0,0,800,680);
 
       const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
       sky.addColorStop(0, '#020617');
@@ -522,6 +590,11 @@
       }
 
       const horizonY = 190;
+      const nebula = ctx.createRadialGradient(160, 120, 30, 160, 120, 220);
+      nebula.addColorStop(0, 'rgba(56,189,248,0.12)');
+      nebula.addColorStop(1, 'rgba(56,189,248,0)');
+      ctx.fillStyle = nebula;
+      ctx.fillRect(0, 0, 420, 280);
       ctx.fillStyle = 'rgba(15,23,42,0.9)';
       ctx.beginPath();
       ctx.moveTo(0, horizonY + 34);
@@ -600,7 +673,12 @@
       ctx.fill();
 
       ctx.fillStyle = 'rgba(0,0,0,0.18)';
-      ctx.fillRect(0, canvas.height - 130, canvas.width, 130);
+      ctx.fillRect(0, 680 - 130, 800, 130);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.035)';
+      for (let y = 0; y < 680; y += 4) {
+        ctx.fillRect(0, y, 800, 1);
+      }
     }
 
     function drawWeapon(type = 'rifle') {
@@ -978,23 +1056,27 @@
     buySquadBtn.addEventListener('click', () => { if (state.coins >= 8) { state.coins -= 8; state.squad += 3; bankCoins = state.coins; saveMeta(); syncHud(); } });
     buyReviveBtn.addEventListener('click', () => { if (state.coins >= 15) { state.coins -= 15; state.revives += 1; bankCoins = state.coins; saveMeta(); syncHud(); } });
 
-    window.closeOverlayAndResume = function() { overlay.innerHTML=''; state.paused=false; };
-    window.startZombieRun = function() { overlay.innerHTML=''; state.paused=false; state.running=true; state.gameOver=false; };
+    window.closeOverlayAndResume = function() { overlay.innerHTML=''; state.paused=false; startMusic(); };
+    window.startZombieRun = function() { ensureAudio(); overlay.innerHTML=''; state.paused=false; state.running=true; state.gameOver=false; startMusic(); };
     window.mockRewardedReviveOffer = function() {
       state.coins += 5;
       bankCoins = state.coins;
       saveMeta();
       resetGame();
     };
-    window.restartZombieRun = function() { bankCoins = state.coins; saveMeta(); resetGame(); pauseBtn.textContent='Pause'; };
+    window.restartZombieRun = function() { bankCoins = state.coins; saveMeta(); resetGame(); pauseBtn.textContent='Pause'; stopMusic(); };
 
     soundBtn.addEventListener('click', () => {
       soundOn = !soundOn;
       soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
+      if (!soundOn) stopMusic();
+      else if (state && state.running && !state.paused && !state.gameOver) startMusic();
       saveMeta();
     });
-    titleBtn.addEventListener('click', () => showTitleScreen());
+    titleBtn.addEventListener('click', () => { stopMusic(); showTitleScreen(); });
 
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
     resetGame();
     requestAnimationFrame(tick);
   </script>

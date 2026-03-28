@@ -307,8 +307,26 @@
       margin-top: 0;
       flex: 1 1 180px;
     }
-    .touch-row { display: none; gap: 10px; padding: 0 16px 16px; background: rgba(255,255,255,0.03); }
-    .touch-btn { flex: 1; min-height: 52px; font-size: 16px; }
+    .touch-row { display: none; gap: 10px; padding: 0 16px 16px; background: rgba(255,255,255,0.03); flex-wrap: wrap; }
+    .touch-btn { flex: 1 1 120px; min-height: 56px; font-size: 16px; }
+    .touch-btn.special {
+      flex: 1 1 140px;
+      background: linear-gradient(180deg, rgba(239,68,68,.96), rgba(127,29,29,.98));
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    .touch-btn.utility {
+      flex: 1 1 120px;
+      background: linear-gradient(180deg, rgba(71,85,105,.96), rgba(30,41,59,.98));
+      color: #e2e8f0;
+    }
+    .touch-btn .tiny-status {
+      display: block;
+      margin-top: 4px;
+      font-size: 11px;
+      opacity: 0.82;
+    }
     @media (max-width: 920px) {
       .topbar { grid-template-columns: repeat(4, 1fr); }
       .content { grid-template-columns: 1fr; }
@@ -343,13 +361,6 @@
     <section class="content">
       <div class="canvas-wrap">
         <canvas id="game" width="800" height="680"></canvas>
-        <div class="battle-side-ui">
-          <button class="battle-side-btn" id="minigunBtn" aria-label="Activate minigun" type="button">
-            <span class="big">🔥</span>
-            <span>Minigun</span>
-            <span class="battle-side-status" style="font-size:11px;opacity:.86;">Tap when ready</span>
-          </button>
-        </div>
         <div class="overlay" id="overlay"></div>
       </div>
 
@@ -423,9 +434,11 @@
     </section>
 
     <section class="touch-row">
-      <button class="secondary touch-btn" id="laneLeftBtn">Shoot Left</button>
-      <button class="secondary touch-btn" id="laneCenterBtn">Shoot Center</button>
-      <button class="secondary touch-btn" id="laneRightBtn">Shoot Right</button>
+      <button class="secondary touch-btn" id="laneLeftBtn">⬅️ Shoot Left</button>
+      <button class="secondary touch-btn" id="laneCenterBtn">🎯 Shoot Center</button>
+      <button class="secondary touch-btn" id="laneRightBtn">➡️ Shoot Right</button>
+      <button class="touch-btn special" id="minigunBtn" aria-label="Activate minigun" type="button">🔥 Minigun<span class="tiny-status battle-side-status">Tap when ready</span></button>
+      <button class="touch-btn utility" id="battleSettingsBtn" aria-label="Open settings" type="button">⚙️ Settings<span class="tiny-status">Brightness, volume, controls</span></button>
     </section>
   </main>
 
@@ -455,6 +468,7 @@
     const enhanceBtn = document.getElementById('enhanceBtn');
     const avatarBtn = document.getElementById('avatarBtn');
     const settingsBtn = document.getElementById('settingsBtn');
+    const battleSettingsBtn = document.getElementById('battleSettingsBtn');
     const youtubeBtn = document.getElementById('youtubeBtn');
     const laneLeftBtn = document.getElementById('laneLeftBtn');
     const laneCenterBtn = document.getElementById('laneCenterBtn');
@@ -472,7 +486,7 @@
     let bankCoins = Number(localStorage.getItem('zombie-squad-run-coins') || 0);
     let avatarCoins = Number(localStorage.getItem('zombie-squad-run-avatar-coins') || 0);
     let soundOn = localStorage.getItem('zombie-squad-run-sound') !== 'off';
-    let volumeLevel = Number(localStorage.getItem('zombie-squad-run-volume') || 70);
+    let volumeLevel = Number(localStorage.getItem('zombie-squad-run-volume') || 140);
     let brightnessLevel = Number(localStorage.getItem('zombie-squad-run-brightness') || 100);
     let controlsMode = localStorage.getItem('zombie-squad-run-controls') || 'tap';
     let missionIndex = Number(localStorage.getItem('zombie-squad-run-mission-index') || 0);
@@ -613,26 +627,26 @@
       if (!ctxAudio) return;
       if (ctxAudio.state === 'suspended') ctxAudio.resume();
       const now = ctxAudio.currentTime + 0.02;
-      const stepDur = 0.22;
-      const root = state ? 92 + Math.min(26, state.wave * 2) : 96;
-      const bassLine = [0, 0, 3, 0, 5, 3, 7, 5];
-      const leadLine = [12, 10, 12, 15, 17, 15, 12, 10];
+      const stepDur = 0.2;
+      const root = state ? 82 + Math.min(34, state.wave * 2) : 88;
       const intensity = musicIntensity();
+      const chordProgression = [0, 3, 7, 10];
+      const bassPattern = [0, 0, 7, 0, 3, 0, 10, 7];
+      const arpPattern = [12, 15, 19, 15, 22, 19, 15, 12];
+      const chord = chordProgression[Math.floor((musicStep / 8) % chordProgression.length)];
 
       for (let i = 0; i < 8; i++) {
         const stepTime = now + i * stepDur;
-        const bassFreq = root * Math.pow(2, bassLine[(musicStep + i) % bassLine.length] / 12);
-        playMusicNote(bassFreq, stepTime, 0.18, 'sawtooth', 0.65 * intensity);
-        playMusicNote(bassFreq * 2, stepTime, 0.34, 'triangle', 0.25 * intensity);
-
-        if (i % 2 === 0) {
-          const leadFreq = root * Math.pow(2, leadLine[(musicStep + i) % leadLine.length] / 12);
-          playMusicNote(leadFreq * 2, stepTime, 0.16, 'square', 0.24 * intensity);
-        }
-        if (i % 4 === 0) playKick(stepTime, 1.1 * intensity);
-        if (i % 2 === 1) playNoiseHit(stepTime, 0.06, 0.6 * intensity);
+        const bassFreq = root * Math.pow(2, (bassPattern[i] + chord) / 12);
+        const arpFreq = root * Math.pow(2, (arpPattern[i] + chord) / 12);
+        playMusicNote(bassFreq * 0.5, stepTime, 0.22, 'sawtooth', 0.95 * intensity);
+        playMusicNote(bassFreq, stepTime, 0.3, 'triangle', 0.38 * intensity);
+        playMusicNote(arpFreq, stepTime, 0.16, i % 2 === 0 ? 'square' : 'triangle', 0.34 * intensity);
+        if (i % 2 === 1) playMusicNote(arpFreq * 2, stepTime, 0.08, 'sawtooth', 0.18 * intensity);
+        if (i % 4 === 0) playKick(stepTime, 1.45 * intensity);
+        if (i % 2 === 1) playNoiseHit(stepTime, 0.07, 0.95 * intensity);
       }
-      musicStep = (musicStep + 8) % 8;
+      musicStep = (musicStep + 8) % 32;
     }
 
     function startMusicLoop() {
@@ -1755,6 +1769,7 @@
     enhanceBtn.addEventListener('click', openEnhancementPanel);
     avatarBtn.addEventListener('click', openAvatarPanel);
     settingsBtn.addEventListener('click', openSettingsPanel);
+    battleSettingsBtn.addEventListener('click', openSettingsPanel);
     youtubeBtn.addEventListener('click', () => {
       state.paused = true;
       window.openYoutubeReward();

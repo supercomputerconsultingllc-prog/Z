@@ -336,9 +336,13 @@
             <li>Buy 100 coins</li>
             <li>Starter bundle with revive</li>
             <li>Premium squad skin pack</li>
+            <li>Visit YouTube channel for 100 coins</li>
+            <li>Subscribe reward banner for 1000 coins</li>
           </ul>
-          <p class="mini-note">Hook this button up to your real payment flow when you are ready.</p>
-          <button onclick="window.closeOverlayAndResume()">Close</button>
+          <p class="mini-note">YouTube reward uses the channel link you provided. Real subscription verification still needs a backend or manual confirmation.</p>
+          <button class="warn" onclick="window.openYoutubeReward()">Get 100 Coins</button>
+          <button onclick="window.claimSubscribeReward()">I Subscribed, Claim 1000 Coins</button>
+          <button class="secondary" onclick="window.closeOverlayAndResume()">Close</button>
         </div>`;
     }
 
@@ -757,6 +761,28 @@
     buySquadBtn.addEventListener('click', () => { if (state.coins >= 8) { state.coins -= 8; state.squad += 3; bankCoins = state.coins; saveMeta(); syncHud(); } });
     buyReviveBtn.addEventListener('click', () => { if (state.coins >= 15) { state.coins -= 15; state.revives += 1; bankCoins = state.coins; saveMeta(); syncHud(); } });
 
+    window.openYoutubeReward = function() {
+      window.open('https://www.youtube.com/@ColtRT-e5n2h', '_blank', 'noopener');
+      addCoins(100);
+      overlay.innerHTML = `
+        <div class="message">
+          <h2>YouTube Reward Added</h2>
+          <p>You opened <strong>@ColtRT-e5n2h</strong> and received 100 coins.</p>
+          <button onclick="window.closeOverlayAndResume()">Back To Game</button>
+        </div>`;
+      syncHud();
+    };
+    window.claimSubscribeReward = function() {
+      addCoins(1000);
+      overlay.innerHTML = `
+        <div class="message">
+          <h2>Subscription Reward Claimed</h2>
+          <p>1000 coins were added for subscribing to <strong>@ColtRT-e5n2h</strong>.</p>
+          <p class="mini-note">This is currently an honor-system reward until a real verification flow exists.</p>
+          <button onclick="window.closeOverlayAndResume()">Back To Game</button>
+        </div>`;
+      syncHud();
+    };
     window.closeOverlayAndResume = function() { overlay.innerHTML=''; state.paused=false; };
     window.startZombieRun = function() { overlay.innerHTML=''; state.paused=false; state.running=true; state.gameOver=false; };
     window.mockRewardedReviveOffer = function() {

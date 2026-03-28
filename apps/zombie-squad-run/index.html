@@ -1465,16 +1465,15 @@
       const baseBodyHeight = armyMode ? 10 : 24;
 
       const maxColumnsThatFit = Math.max(1, Math.floor(crowdWidth / Math.max(baseBodyWidth * minScale, 1)) + 1);
-      const rowDensity = ultraArmyMode ? 4.1 : armyMode ? 3.2 : total > 220 ? 2.3 : total > 140 ? 2.05 : total > 80 ? 1.75 : 1.35;
-      const targetRows = Math.max(2, Math.ceil(Math.sqrt(total) / rowDensity));
-      const columns = Math.max(1, Math.min(maxColumnsThatFit, Math.ceil(total / targetRows)));
+      const growthCap = ultraArmyMode ? maxColumnsThatFit : armyMode ? Math.min(maxColumnsThatFit, 26) : total <= 12 ? 12 : total <= 36 ? 18 : total <= 90 ? 24 : 28;
+      const columns = Math.max(1, Math.min(total, growthCap, maxColumnsThatFit));
       const rows = Math.max(1, Math.ceil(total / columns));
 
       const rawGapX = columns > 1 ? crowdWidth / (columns - 1) : crowdWidth;
-      const rawGapY = rows > 1 ? crowdHeight / (rows - 1) : crowdHeight;
+      const rawGapY = rows > 1 ? crowdHeight / Math.max(rows - 1, 1) : crowdHeight;
       const scale = Math.max(minScale, Math.min(maxScale, rawGapX / baseBodyWidth, rawGapY / baseBodyHeight));
       const gapX = columns > 1 ? crowdWidth / (columns - 1) : 0;
-      const gapY = rows > 1 ? crowdHeight / (rows - 1) : 0;
+      const gapY = rows > 1 ? crowdHeight / Math.max(rows - 1, 1) : 0;
       const formationWidth = gapX * Math.max(columns - 1, 0);
       const startX = (canvas.width - formationWidth) / 2;
       const visibleSoldiers = [];

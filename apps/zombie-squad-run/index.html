@@ -516,6 +516,8 @@
     let squadPrice = Number(localStorage.getItem('zombie-squad-run-squad-price') || 8);
     let revivePrice = Number(localStorage.getItem('zombie-squad-run-revive-price') || 15);
     const mobileSafeMode = window.innerWidth <= 920 || ('ontouchstart' in window);
+    let lastShotSoundAt = 0;
+    let lastEffectSoundAt = 0;
     let screenShake = 0;
     let hitFlash = 0;
     let bossWave = false;
@@ -562,6 +564,9 @@
 
     function playTone(freq, duration = 0.08, type = 'square', gainBoost = 1) {
       if (!soundOn || volumeLevel <= 0) return;
+      const nowMs = performance.now();
+      if (mobileSafeMode && nowMs - lastEffectSoundAt < 45) return;
+      lastEffectSoundAt = nowMs;
       const ctxAudio = ensureAudio();
       if (!ctxAudio) return;
       if (ctxAudio.state === 'suspended') ctxAudio.resume();
@@ -580,6 +585,9 @@
 
     function playShotSound(power = 1) {
       if (!soundOn || volumeLevel <= 0) return;
+      const nowMs = performance.now();
+      if (nowMs - lastShotSoundAt < (mobileSafeMode ? 95 : 55)) return;
+      lastShotSoundAt = nowMs;
       const ctxAudio = ensureAudio();
       if (!ctxAudio) return;
       if (ctxAudio.state === 'suspended') ctxAudio.resume();
@@ -679,13 +687,14 @@
       if (!ctxAudio) return;
       if (ctxAudio.state === 'suspended') ctxAudio.resume();
       const now = ctxAudio.currentTime + 0.02;
-      const stepDur = 0.19;
+      const stepDur = mobileSafeMode ? 0.24 : 0.19;
       const root = state ? 146 + Math.min(24, state.wave) : 146;
-      const intensity = musicIntensity();
+      const intensity = musicIntensity() * (mobileSafeMode ? 0.82 : 1);
       const mountainKing = [0, 1, 3, 5, 3, 1, 0, -1, 0, 1, 3, 5, 6, 5, 3, 1];
       const bassOffsets = [0, 0, -5, 0, -7, -5, -8, -7, 0, 0, -5, 0, -7, -5, -8, -7];
+      const steps = mobileSafeMode ? 8 : 16;
 
-      for (let i = 0; i < 16; i++) {
+      for (let i = 0; i < steps; i++) {
         const stepTime = now + i * stepDur;
         const note = mountainKing[(musicStep + i) % mountainKing.length];
         const bass = bassOffsets[(musicStep + i) % bassOffsets.length];
@@ -696,7 +705,7 @@
         if (i % 4 === 0) playKick(stepTime, 1.4 * intensity);
         if (i % 4 === 2) playNoiseHit(stepTime, 0.05, 0.45 * intensity);
       }
-      musicStep = (musicStep + 16) % 16;
+      musicStep = (musicStep + steps) % 16;
     }
 
     function startMusicLoop() {
@@ -1866,7 +1875,22 @@
     }
 
     function tick(now) {
-      const dt = Math.min(0.033,(now-state.lastTime)/1000); state.lastTime=now; update(dt); render(); requestAnimationFrame(tick);
+      try {
+        const dt = Math.min(0.033,(now-state.lastTime)/1000);
+        state.lastTime = now;
+        update(dt);
+        render();
+      } catch (err) {
+        console.error('Zombie Squad Run tick error', err);
+        state.paused = true;
+        overlay.innerHTML = `
+          <div class="message">
+            <h2>Performance pause</h2>
+            <p>The game hit a runtime issue and paused instead of crashing. Restart the run to continue.</p>
+            <button onclick="window.restartZombieRun()">Restart Run</button>
+          </div>`;
+      }
+      requestAnimationFrame(tick);
     }
 
     function laneFromX(x) { return x < canvas.width/3 ? 0 : x < canvas.width*2/3 ? 1 : 2; }

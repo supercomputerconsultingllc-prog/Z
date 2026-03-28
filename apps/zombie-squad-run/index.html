@@ -655,6 +655,8 @@
       ];
     }
 
+    const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@ColtRT-e5n2h';
+
     function moneyPanelMarkup() {
       return `
         <div class="message">
@@ -1486,7 +1488,11 @@
         overlay.innerHTML = moneyPanelMarkup();
         return;
       }
-      window.open('https://www.youtube.com/@ColtRT-e5n2h', '_blank', 'noopener');
+      const opened = window.open(YOUTUBE_CHANNEL_URL, '_blank', 'noopener,noreferrer');
+      if (!opened) {
+        window.location.href = YOUTUBE_CHANNEL_URL;
+        return;
+      }
       addCoins(100);
       youtubeVisitClaimed = true;
       saveMeta();

@@ -515,6 +515,7 @@
     let gunPrice = Number(localStorage.getItem('zombie-squad-run-gun-price') || 10);
     let squadPrice = Number(localStorage.getItem('zombie-squad-run-squad-price') || 8);
     let revivePrice = Number(localStorage.getItem('zombie-squad-run-revive-price') || 15);
+    const mobileSafeMode = window.innerWidth <= 920 || ('ontouchstart' in window);
     let screenShake = 0;
     let hitFlash = 0;
     let bossWave = false;
@@ -1265,9 +1266,9 @@
 
     function trimRuntimeLoad() {
       const crowdSafeMode = state && state.squad >= 120;
-      const maxObjects = crowdSafeMode ? 18 : 26;
-      const maxBullets = crowdSafeMode ? 140 : 220;
-      const maxParticles = crowdSafeMode ? 90 : 150;
+      const maxObjects = mobileSafeMode ? (crowdSafeMode ? 12 : 16) : (crowdSafeMode ? 18 : 26);
+      const maxBullets = mobileSafeMode ? (crowdSafeMode ? 90 : 120) : (crowdSafeMode ? 140 : 220);
+      const maxParticles = mobileSafeMode ? (crowdSafeMode ? 45 : 70) : (crowdSafeMode ? 90 : 150);
       if (state.objects.length > maxObjects) state.objects.splice(0, state.objects.length - maxObjects);
       if (state.bullets.length > maxBullets) state.bullets.splice(0, state.bullets.length - maxBullets);
       if (state.particles.length > maxParticles) state.particles.splice(0, state.particles.length - maxParticles);
@@ -1379,8 +1380,9 @@
       if (roundCoins > state.distanceCoinsTick) { addCoins(roundCoins - state.distanceCoinsTick); state.distanceCoinsTick = roundCoins; }
       state.spawnTimer -= dt;
       if (state.spawnTimer <= 0) {
-        if (state.objects.length < (state.squad >= 120 ? 14 : 20)) spawnObject();
-        state.spawnTimer = Math.max(state.squad >= 120 ? 0.48 : 0.38, 1.05 - state.wave * 0.03);
+        const objectCap = mobileSafeMode ? (state.squad >= 120 ? 10 : 12) : (state.squad >= 120 ? 14 : 20);
+        if (state.objects.length < objectCap) spawnObject();
+        state.spawnTimer = Math.max(mobileSafeMode ? (state.squad >= 120 ? 0.66 : 0.54) : (state.squad >= 120 ? 0.48 : 0.38), 1.05 - state.wave * 0.03);
       }
       for (const bullet of state.bullets) {
         bullet.y -= bullet.speed * dt;
@@ -1408,7 +1410,8 @@
       }
       state.bullets = state.bullets.filter(b => b.y > -20);
       for (const particle of state.particles) particle.life -= dt;
-      state.particles = state.particles.filter(p => p.life > 0).slice(-(state.squad >= 120 ? 90 : 150));
+      const particleCap = mobileSafeMode ? (state.squad >= 120 ? 40 : 65) : (state.squad >= 120 ? 90 : 150);
+      state.particles = state.particles.filter(p => p.life > 0).slice(-particleCap);
       for (const obj of state.objects) {
         if (obj.y >= 570) {
           if (obj.type === 'wall' && obj.hp > 0) state.squad -= obj.hp;
@@ -1641,14 +1644,14 @@
 
       const centerX = canvas.width / 2;
       const baseY = 628;
-      const armyMode = total >= 140;
-      const ultraArmyMode = total >= 320;
-      const maxDraw = ultraArmyMode ? Math.min(total, 700) : Math.min(total, 420);
+      const armyMode = total >= 220;
+      const ultraArmyMode = total >= 420;
+      const maxDraw = ultraArmyMode ? Math.min(total, mobileSafeMode ? 260 : 420) : Math.min(total, mobileSafeMode ? 190 : 280);
       const step = total > maxDraw ? total / maxDraw : 1;
-      const crowdRadiusX = ultraArmyMode ? 300 : armyMode ? 255 : 220;
-      const crowdRadiusY = ultraArmyMode ? 138 : armyMode ? 122 : 108;
-      const minScale = ultraArmyMode ? 0.03 : armyMode ? 0.05 : 0.11;
-      const maxScale = ultraArmyMode ? 0.24 : armyMode ? 0.36 : 0.88;
+      const crowdRadiusX = ultraArmyMode ? 290 : armyMode ? 248 : 220;
+      const crowdRadiusY = ultraArmyMode ? 134 : armyMode ? 120 : 108;
+      const minScale = ultraArmyMode ? 0.055 : armyMode ? 0.075 : total > 150 ? 0.1 : 0.12;
+      const maxScale = ultraArmyMode ? 0.34 : armyMode ? 0.46 : 0.9;
       const visibleSoldiers = [];
       const marchPhase = performance.now() * 0.004;
 
@@ -1671,7 +1674,7 @@
         const y = baseY - Math.sin(angle) * crowdRadiusY * radius;
         const clampedY = Math.min(baseY, y);
         const depth = (baseY - clampedY) / Math.max(crowdRadiusY, 1);
-        const scale = Math.max(minScale, Math.min(maxScale, maxScale - depth * (armyMode ? 0.12 : 0.18)));
+        const scale = Math.max(minScale, Math.min(maxScale, maxScale - depth * (armyMode ? 0.08 : 0.14)));
         visibleSoldiers.push({ x, y: clampedY, scale, depth, index: drawIndex++ });
       }
 
@@ -1734,7 +1737,8 @@
     }
 
     function drawBullets() {
-      for (const bullet of state.bullets) {
+      const bulletsToDraw = mobileSafeMode && state.bullets.length > 90 ? state.bullets.filter((_, i) => i % 2 === 0) : state.bullets;
+      for (const bullet of bulletsToDraw) {
         ctx.save();
         ctx.shadowColor = bullet.trail || bullet.color || '#facc15';
         ctx.shadowBlur = bullet.glow ? 16 : 8;
@@ -1794,7 +1798,8 @@
     }
 
     function drawParticles() {
-      for (const particle of state.particles) {
+      const particlesToDraw = mobileSafeMode && state.particles.length > 40 ? state.particles.filter((_, i) => i % 2 === 0) : state.particles;
+      for (const particle of particlesToDraw) {
         const alpha = Math.max(0, particle.life / 0.18);
         const size = particle.size || 8;
         ctx.globalAlpha = alpha;

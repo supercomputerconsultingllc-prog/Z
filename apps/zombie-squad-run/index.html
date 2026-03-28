@@ -1536,6 +1536,16 @@
       return { armorTop: '#bfdbfe', armorMid: '#93c5fd', armorBottom: color || '#2563eb', helmet: '#1d4ed8', visor: '#eff6ff', accent: '#dbeafe' };
     }
 
+    function addRimLight(x, y, radius, color, alpha = 0.3) {
+      const glow = ctx.createRadialGradient(x, y, radius * 0.15, x, y, radius);
+      glow.addColorStop(0, color.replace('ALPHA', String(alpha)));
+      glow.addColorStop(1, color.replace('ALPHA', '0'));
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
     function drawPerson(x, y, color, scale = 1, depth = 0) {
       const head = 8 * scale;
       const bodyW = 13 * scale;
@@ -1561,6 +1571,7 @@
       ctx.fill();
 
       const skinTone = depth % 4 === 0 ? '#f1c27d' : depth % 4 === 1 ? '#e0ac69' : depth % 4 === 2 ? '#c68642' : '#8d5524';
+      addRimLight(x, y - 4 * scale, 20 * scale, 'rgba(96,165,250,ALPHA)', 0.16);
       const faceGrad = ctx.createRadialGradient(x - head * 0.3, y - 12 * scale, 1, x, y - 10 * scale, head);
       faceGrad.addColorStop(0, '#fff7ed');
       faceGrad.addColorStop(1, skinTone);
@@ -1625,6 +1636,7 @@
       ctx.ellipse(x, y + bodyH + 7 * scale, 11 * scale, 4.2 * scale, 0, 0, Math.PI * 2);
       ctx.fill();
       const skin = variant === 'boss' ? '#6d28d9' : variant === 'shield' ? '#64748b' : variant === 'runner' ? '#84cc16' : '#65a30d';
+      addRimLight(x, y - 2 * scale, variant === 'boss' ? 34 * scale : 22 * scale, variant === 'boss' ? 'rgba(239,68,68,ALPHA)' : 'rgba(163,230,53,ALPHA)', variant === 'boss' ? 0.28 : 0.16);
       const skullGrad = ctx.createRadialGradient(x - head * 0.35, y - 12 * scale, 1, x, y - 10 * scale, head * 1.1);
       skullGrad.addColorStop(0, variant === 'boss' ? '#c4b5fd' : '#d9f99d');
       skullGrad.addColorStop(1, skin);
@@ -1786,9 +1798,10 @@
           ctx.fillStyle='#ef4444'; ctx.beginPath(); ctx.arc(obj.x - 5, obj.y - 5, 2.3, 0, Math.PI * 2); ctx.arc(obj.x + 5, obj.y - 5, 2.3, 0, Math.PI * 2); ctx.fill();
           ctx.strokeStyle='#fecaca'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(obj.x - 6, obj.y + 7); ctx.lineTo(obj.x - 2, obj.y + 11); ctx.lineTo(obj.x + 2, obj.y + 7); ctx.lineTo(obj.x + 6, obj.y + 11); ctx.stroke();
         } else if (obj.type === 'wall') {
+          addRimLight(obj.x, obj.y, 70, 'rgba(248,113,113,ALPHA)', 0.12);
           const wallGrad = ctx.createLinearGradient(obj.x, obj.y - 30, obj.x, obj.y + 30);
-          wallGrad.addColorStop(0, '#fca5a5');
-          wallGrad.addColorStop(0.45, '#b91c1c');
+          wallGrad.addColorStop(0, '#fecaca');
+          wallGrad.addColorStop(0.45, '#dc2626');
           wallGrad.addColorStop(1, '#7f1d1d');
           ctx.fillStyle = wallGrad;
           ctx.fillRect(obj.x-52,obj.y-30,104,60);
@@ -1826,7 +1839,7 @@
       for (const bullet of bulletsToDraw) {
         ctx.save();
         ctx.shadowColor = bullet.trail || bullet.color || '#facc15';
-        ctx.shadowBlur = bullet.glow ? 16 : 8;
+        ctx.shadowBlur = bullet.glow ? 22 : 12;
         ctx.fillStyle = bullet.color || COLORS.bullet;
         ctx.strokeStyle = bullet.core || '#fff';
         ctx.lineWidth = 1.4;
@@ -1874,9 +1887,11 @@
           ctx.fill();
         }
 
-        ctx.globalAlpha = 0.45;
+        ctx.globalAlpha = 0.55;
         ctx.fillStyle = bullet.trail || '#fde68a';
         ctx.fillRect(bullet.x - 1.5, bullet.y + 4, 3, 12);
+        ctx.globalAlpha = 0.2;
+        ctx.fillRect(bullet.x - 4, bullet.y + 2, 8, 18);
         ctx.restore();
       }
       ctx.globalAlpha = 1;
@@ -1914,6 +1929,10 @@
     }
 
     function drawHint() {
+      const titleGlow = ctx.createLinearGradient(20, 20, 380, 104);
+      titleGlow.addColorStop(0, 'rgba(59,130,246,.18)');
+      titleGlow.addColorStop(1, 'rgba(236,72,153,.14)');
+      ctx.fillStyle = titleGlow; ctx.fillRect(16,16,368,92);
       const titleGrad = ctx.createLinearGradient(20, 20, 380, 104);
       titleGrad.addColorStop(0, 'rgba(15,23,42,.94)');
       titleGrad.addColorStop(1, 'rgba(30,64,175,.72)');

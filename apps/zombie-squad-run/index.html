@@ -1234,8 +1234,8 @@
       if (!silent) playShotSound(state.firepower + powerBoost);
       const laneX = LANES[laneIndex];
       const requestedCount = state.firepower + powerBoost;
-      const crowdSafeMode = mobileSafeMode || state.squad >= 120 || state.bullets.length > 90;
-      const bulletCount = Math.max(1, Math.min(requestedCount, crowdSafeMode ? 4 : 7));
+      const crowdSafeMode = true;
+      const bulletCount = Math.max(1, Math.min(requestedCount, mobileSafeMode ? 2 : 3));
       const effectivePower = state.firepower + powerBoost;
       const profile = weaponProfile(effectivePower);
       for (let i = 0; i < bulletCount; i++) {
@@ -1271,10 +1271,10 @@
     }
 
     function trimRuntimeLoad() {
-      const crowdSafeMode = state && state.squad >= 120;
-      const maxObjects = mobileSafeMode ? (crowdSafeMode ? 12 : 16) : (crowdSafeMode ? 18 : 26);
-      const maxBullets = mobileSafeMode ? (crowdSafeMode ? 90 : 120) : (crowdSafeMode ? 140 : 220);
-      const maxParticles = mobileSafeMode ? (crowdSafeMode ? 45 : 70) : (crowdSafeMode ? 90 : 150);
+      const crowdSafeMode = true;
+      const maxObjects = mobileSafeMode ? 8 : 12;
+      const maxBullets = mobileSafeMode ? 36 : 54;
+      const maxParticles = mobileSafeMode ? 20 : 32;
       if (state.objects.length > maxObjects) state.objects.splice(0, state.objects.length - maxObjects);
       if (state.bullets.length > maxBullets) state.bullets.splice(0, state.bullets.length - maxBullets);
       if (state.particles.length > maxParticles) state.particles.splice(0, state.particles.length - maxParticles);
@@ -1386,9 +1386,9 @@
       if (roundCoins > state.distanceCoinsTick) { addCoins(roundCoins - state.distanceCoinsTick); state.distanceCoinsTick = roundCoins; }
       state.spawnTimer -= dt;
       if (state.spawnTimer <= 0) {
-        const objectCap = mobileSafeMode ? (state.squad >= 120 ? 10 : 12) : (state.squad >= 120 ? 14 : 20);
+        const objectCap = mobileSafeMode ? 6 : 9;
         if (state.objects.length < objectCap) spawnObject();
-        state.spawnTimer = Math.max(mobileSafeMode ? (state.squad >= 120 ? 0.66 : 0.54) : (state.squad >= 120 ? 0.48 : 0.38), 1.05 - state.wave * 0.03);
+        state.spawnTimer = Math.max(mobileSafeMode ? 0.78 : 0.62, 1.15 - state.wave * 0.025);
       }
       for (const bullet of state.bullets) {
         bullet.y -= bullet.speed * dt;
@@ -1396,7 +1396,7 @@
       }
       state.bullets = state.bullets.filter(b => b.y > -30 && b.x > -40 && b.x < canvas.width + 40);
       for (const obj of state.objects) obj.y += state.speed * (obj.speedFactor || 1) * dt;
-      const collisionBullets = mobileSafeMode && state.bullets.length > 100 ? state.bullets.filter((_, i) => i % 2 === 0) : state.bullets;
+      const collisionBullets = state.bullets.length > (mobileSafeMode ? 24 : 36) ? state.bullets.filter((_, i) => i % 2 === 0) : state.bullets;
       for (const bullet of collisionBullets) {
         for (const obj of state.objects) {
           if (obj.hp <= 0) continue;
@@ -1417,7 +1417,7 @@
       }
       state.bullets = state.bullets.filter(b => b.y > -20);
       for (const particle of state.particles) particle.life -= dt;
-      const particleCap = mobileSafeMode ? (state.squad >= 120 ? 40 : 65) : (state.squad >= 120 ? 90 : 150);
+      const particleCap = mobileSafeMode ? 18 : 28;
       state.particles = state.particles.filter(p => p.life > 0).slice(-particleCap);
       for (const obj of state.objects) {
         if (obj.y >= 570) {

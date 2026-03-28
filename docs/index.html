@@ -520,6 +520,7 @@
     let screenShake = 0;
     let hitFlash = 0;
     let bossWave = false;
+    let missionPopup = null;
     const impactDecals = [];
     const shellCasings = [];
     const muzzleFlashes = [];
@@ -1015,13 +1016,14 @@
         grantCoins(10);
         missionIndex += 1;
         missionProgress = 0;
-        overlay.innerHTML = `
-          <div class="message">
-            <h2>Mission Complete</h2>
-            <p>${mission.label}</p>
-            <p>You earned a 10-coin bonus.</p>
-            <button onclick="window.closeOverlayAndResume()">Keep Running</button>
-          </div>`;
+        missionPopup = {
+          title: 'Mission Complete',
+          label: mission.label,
+          reward: 10,
+          button: 'Continue',
+          rect: null
+        };
+        overlay.innerHTML = '';
         state.paused = true;
       }
       saveMeta();
@@ -2248,6 +2250,65 @@
       ctx.globalAlpha = 1;
     }
 
+    function drawMissionPopup() {
+      if (!missionPopup) return;
+      const cardW = Math.min(420, canvas.width - 60);
+      const cardH = 220;
+      const cardX = (canvas.width - cardW) / 2;
+      const cardY = canvas.height * 0.24;
+      const buttonW = 180;
+      const buttonH = 50;
+      const buttonX = cardX + (cardW - buttonW) / 2;
+      const buttonY = cardY + 146;
+      missionPopup.rect = { x: buttonX, y: buttonY, w: buttonW, h: buttonH };
+
+      ctx.fillStyle = 'rgba(2,6,23,0.38)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const glow = ctx.createRadialGradient(cardX + cardW / 2, cardY + 30, 20, cardX + cardW / 2, cardY + 60, 220);
+      glow.addColorStop(0, 'rgba(250,204,21,0.18)');
+      glow.addColorStop(1, 'rgba(250,204,21,0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(cardX - 20, cardY - 20, cardW + 40, cardH + 40);
+
+      const panel = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH);
+      panel.addColorStop(0, 'rgba(15,23,42,0.96)');
+      panel.addColorStop(1, 'rgba(30,64,175,0.82)');
+      ctx.fillStyle = panel;
+      ctx.beginPath();
+      ctx.roundRect(cardX, cardY, cardW, cardH, 26);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(253,224,71,0.55)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = '#fde68a';
+      ctx.font = 'bold 32px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText(missionPopup.title, cardX + cardW / 2, cardY + 56);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 22px system-ui';
+      ctx.fillText(missionPopup.label, cardX + cardW / 2, cardY + 98);
+      ctx.fillStyle = '#fef3c7';
+      ctx.font = '18px system-ui';
+      ctx.fillText(`+${missionPopup.reward} coins earned`, cardX + cardW / 2, cardY + 128);
+
+      const buttonGrad = ctx.createLinearGradient(buttonX, buttonY, buttonX, buttonY + buttonH);
+      buttonGrad.addColorStop(0, '#facc15');
+      buttonGrad.addColorStop(1, '#f59e0b');
+      ctx.fillStyle = buttonGrad;
+      ctx.beginPath();
+      ctx.roundRect(buttonX, buttonY, buttonW, buttonH, 18);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      ctx.fillRect(buttonX + 8, buttonY + 6, buttonW - 16, 12);
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#111827';
+      ctx.font = 'bold 24px system-ui';
+      ctx.fillText(missionPopup.button, buttonX + buttonW / 2, buttonY + 33);
+    }
+
     function drawHint() {
       const titleGlow = ctx.createLinearGradient(20, 20, 380, 104);
       titleGlow.addColorStop(0, 'rgba(59,130,246,.18)');
@@ -2285,6 +2346,7 @@
         ctx.translate(dx, dy);
       }
       drawRoad(); drawHeatHaze(); drawSquad(); drawObjects(); drawMuzzleFlashes(); drawBullets(); drawShellCasings(); drawParticles(); drawDepthFog(); drawHint();
+      if (missionPopup) drawMissionPopup();
       ctx.restore();
       if (hitFlash > 0.01) {
         ctx.fillStyle = `rgba(255,255,255,${Math.min(0.22, hitFlash)})`;
@@ -2303,7 +2365,20 @@
     }
 
     function laneFromX(x) { return x < canvas.width/3 ? 0 : x < canvas.width*2/3 ? 1 : 2; }
-    canvas.addEventListener('click', e => { const rect=canvas.getBoundingClientRect(); const x=((e.clientX-rect.left)/rect.width)*canvas.width; fireAtLane(laneFromX(x)); });
+    canvas.addEventListener('click', e => {
+      const rect=canvas.getBoundingClientRect();
+      const x=((e.clientX-rect.left)/rect.width)*canvas.width;
+      const y=((e.clientY-rect.top)/rect.height)*canvas.height;
+      if (missionPopup?.rect) {
+        const { x: bx, y: by, w, h } = missionPopup.rect;
+        if (x >= bx && x <= bx + w && y >= by && y <= by + h) {
+          missionPopup = null;
+          state.paused = false;
+          return;
+        }
+      }
+      fireAtLane(laneFromX(x));
+    });
     window.addEventListener('keydown', e => { if (e.key==='1') fireAtLane(0); if (e.key==='2') fireAtLane(1); if (e.key==='3') fireAtLane(2); });
     restartBtn.addEventListener('click', () => window.restartZombieRun());
     pauseBtn.addEventListener('click', () => { state.paused=!state.paused; pauseBtn.textContent=state.paused?'Resume':'Pause'; });
@@ -2423,7 +2498,7 @@
         </div>`;
       syncHud();
     };
-    window.closeOverlayAndResume = function() { overlay.innerHTML=''; state.paused=false; };
+    window.closeOverlayAndResume = function() { overlay.innerHTML=''; missionPopup = null; state.paused=false; };
     window.startZombieRun = function() { overlay.innerHTML=''; state.paused=false; state.running=true; state.gameOver=false; refreshMusicState(); };
     window.mockRewardedReviveOffer = function() {
       state.coins += 5;

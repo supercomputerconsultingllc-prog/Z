@@ -1920,6 +1920,7 @@
       if (state.coins >= squadPrice) {
         state.coins -= squadPrice;
         state.squad += 3;
+        updateMission('survivors', 3);
         squadPrice += 10;
         bankCoins = state.coins;
         saveMeta();

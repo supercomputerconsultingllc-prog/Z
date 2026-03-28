@@ -307,7 +307,12 @@
       flex: 1 1 180px;
     }
     .touch-row { display: none; gap: 10px; padding: 0 16px 16px; background: rgba(255,255,255,0.03); flex-wrap: wrap; }
-    .touch-btn { flex: 1 1 120px; min-height: 56px; font-size: 16px; }
+    .touch-btn { flex: 1 1 120px; min-height: 56px; font-size: 16px; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease; }
+    .touch-btn.danger {
+      box-shadow: 0 0 0 2px rgba(248,113,113,0.34), 0 0 24px rgba(239,68,68,0.18);
+      border-color: rgba(248,113,113,0.7);
+      transform: translateY(-1px);
+    }
     .touch-btn.special {
       flex: 1 1 140px;
       background: linear-gradient(180deg, rgba(239,68,68,.96), rgba(127,29,29,.98));
@@ -1090,6 +1095,7 @@
           <h1>Zombie Squad Run</h1>
           <p>Run with your squad, shoot the right lane, smash walls before impact, and spend coins to upgrade your survival chances.</p>
           <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best}</p>
+          <p class="mini-note">Build: Beta V1.0</p>
           <button onclick="window.startZombieRun()">Start Run</button>
         </div>`;
     }
@@ -2918,6 +2924,16 @@
       return threats;
     }
 
+    function updateLaneButtonThreats() {
+      const laneButtons = [laneLeftBtn, laneCenterBtn, laneRightBtn];
+      const threats = getLaneThreats();
+      laneButtons.forEach((btn, index) => {
+        if (!btn) return;
+        const danger = threats[index]?.danger || 0;
+        btn.classList.toggle('danger', danger > 0.55 && !state?.paused && !state?.gameOver);
+      });
+    }
+
     function drawLaneWarnings() {
       const threats = getLaneThreats();
       const perfTier = squadPerfTier();
@@ -2959,6 +2975,7 @@
       ctx.fillStyle = gloss; ctx.fillRect(90,10,canvas.width - 180,12);
       ctx.strokeStyle = 'rgba(148,163,184,.22)'; ctx.lineWidth = 1.5; ctx.strokeRect(86,8,canvas.width - 172,46);
       ctx.fillStyle='#e5e7eb'; ctx.font='bold 24px system-ui'; ctx.textAlign='center'; ctx.fillText('Zombie Squad Run',canvas.width / 2,39);
+      ctx.fillStyle='rgba(251,191,36,0.9)'; ctx.font='bold 11px system-ui'; ctx.fillText('BETA V1.0', canvas.width / 2, 53);
       const minigunGlow = ctx.createLinearGradient(canvas.width - 176, 20, canvas.width - 30, 84);
       minigunGlow.addColorStop(0, 'rgba(127,29,29,0.92)');
       minigunGlow.addColorStop(1, 'rgba(30,41,59,0.88)');
@@ -2983,6 +3000,7 @@
       }
 
       const laneThreats = getLaneThreats();
+      updateLaneButtonThreats();
       const urgentThreat = laneThreats.reduce((best, threat) => threat.danger > best.danger ? threat : best, laneThreats[0]);
       let statusText = controlsMode === 'buttons' ? 'Use lane buttons for quick shots' : 'Tap any lane to fire';
       if (urgentThreat?.obj && urgentThreat.danger > 0.58) {
@@ -3050,9 +3068,25 @@
       }
       fireAtLane(laneFromX(x));
     });
-    window.addEventListener('keydown', e => { if (e.key==='1') fireAtLane(0); if (e.key==='2') fireAtLane(1); if (e.key==='3') fireAtLane(2); });
+    window.addEventListener('keydown', e => {
+      if (e.key === '1') fireAtLane(0);
+      if (e.key === '2') fireAtLane(1);
+      if (e.key === '3') fireAtLane(2);
+      if (e.key.toLowerCase() === 'p' && state?.running && !overlay.innerHTML) {
+        state.paused = !state.paused;
+        pauseBtn.textContent = state.paused ? 'Resume' : 'Pause';
+      }
+      if (e.key.toLowerCase() === 'r' && state?.running) window.restartZombieRun();
+      if (e.key.toLowerCase() === 'm') activateMinigun();
+    });
     restartBtn.addEventListener('click', () => window.restartZombieRun());
     pauseBtn.addEventListener('click', () => { state.paused=!state.paused; pauseBtn.textContent=state.paused?'Resume':'Pause'; });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && state?.running && !state?.gameOver) {
+        state.paused = true;
+        pauseBtn.textContent = 'Resume';
+      }
+    });
     [minigunBtn, floatingMinigunBtn].forEach(btn => {
       btn.addEventListener('click', activateMinigun);
       btn.addEventListener('pointerdown', activateMinigun);

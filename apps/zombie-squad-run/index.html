@@ -499,7 +499,7 @@
     let musicTimer = null;
     let musicStep = 0;
     let best = Number(localStorage.getItem('zombie-squad-run-best') || 0);
-    let bankCoins = Number(localStorage.getItem('zombie-squad-run-coins') || 0);
+    let bankCoins = 0;
     let avatarCoins = Number(localStorage.getItem('zombie-squad-run-avatar-coins') || 0);
     let soundOn = localStorage.getItem('zombie-squad-run-sound') !== 'off';
     let volumeLevel = Number(localStorage.getItem('zombie-squad-run-volume') || 140);
@@ -1012,8 +1012,8 @@
       missionProgress = 1;
 
       if (scene === 'title') {
-        bankCoins = 42;
-        best = 312;
+        bankCoins = 0;
+        best = Math.max(best, 312);
         syncHud();
         showTitleScreen();
         return;
@@ -1102,6 +1102,7 @@
         minigunCharge: 100, minigunActiveUntil: 0, lastMinigunBurst: 0
       };
       bankCoins = 0;
+      localStorage.setItem('zombie-squad-run-coins', '0');
       syncHud();
       syncMissionHud();
       if (sceneMode) {

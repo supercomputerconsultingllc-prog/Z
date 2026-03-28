@@ -43,6 +43,7 @@ Skills are shared. Your setup is yours. Keeping them apart means you can update 
 - PATs that push workflow file changes need workflow permission. A classic token with `repo` and `workflow` scopes works when fine-grained tokens are too narrow.
 - For syntax-checking JavaScript extracted from inline HTML `<script>` tags, write the extracted code to a real temp file first, then run `node --check /tmp/file.js`. In this shell/runtime, `node --check <( ... )` can fail on the process-substitution path.
 - When refactoring JavaScript threshold logic, declare derived mode flags before any expression that uses them. A later `const` like `dotArmyMode` cannot be referenced earlier in the same block without triggering a runtime error.
+- For milestone game builds, create both a workspace snapshot folder under `backups/<name>/` and a matching git tag (for example `zombie-squad-run-v1.1`) before pushing. That gives a fast file restore path and a clean git restore path.
 
 ---
 

@@ -251,15 +251,16 @@
       if (mission.event !== eventName) return;
       missionProgress += amount;
       if (missionProgress >= mission.target) {
-        addCoins(10);
         missionIndex += 1;
         missionProgress = 0;
+        state.coins += 10;
+        bankCoins = state.coins;
         overlay.innerHTML = `
           <div class="message">
             <h2>Mission Complete</h2>
             <p>${mission.label}</p>
             <p>You earned a 10-coin bonus.</p>
-            <button onclick="window.closeOverlayAndResume()">Keep Running</button>
+            <button data-action="resume">Keep Running</button>
           </div>`;
         state.paused = true;
       }
@@ -274,7 +275,7 @@
           <h1>Zombie Squad Run</h1>
           <p>Run with your squad, shoot the right lane, smash walls before impact, and spend coins to upgrade your survival chances.</p>
           <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best}</p>
-          <button onclick="window.startZombieRun()">Start Run</button>
+          <button data-action="start">Start Run</button>
         </div>`;
     }
 
@@ -375,7 +376,7 @@
           <div class="message">
             <h2>Squad Revived</h2>
             <p>Your team barely made it. You spent one revive and returned with 4 squad members.</p>
-            <button onclick="window.closeOverlayAndResume()">Keep Running</button>
+            <button data-action="resume">Keep Running</button>
           </div>`;
         state.paused = true;
         return;
@@ -392,8 +393,8 @@
           <h2>Run Over</h2>
           <p>Distance: <strong>${Math.floor(state.distance)}</strong> | Coins: <strong>${state.coins}</strong></p>
           <p>Upgrade firepower, grow your squad, and save your revive for a brutal wall hit.</p>
-          <button onclick="window.mockRewardedReviveOffer()">Mock Rewarded Revive Offer</button>
-          <button onclick="window.restartZombieRun()">Play Again</button>
+          <button data-action="rewarded-revive">Mock Rewarded Revive Offer</button>
+          <button data-action="restart">Play Again</button>
         </div>`;
       syncHud();
     }
@@ -472,6 +473,14 @@
 
     function laneFromX(x) { return x < canvas.width/3 ? 0 : x < canvas.width*2/3 ? 1 : 2; }
     canvas.addEventListener('click', e => { const rect=canvas.getBoundingClientRect(); const x=((e.clientX-rect.left)/rect.width)*canvas.width; fireAtLane(laneFromX(x)); });
+    overlay.addEventListener('click', event => {
+      const action = event.target?.dataset?.action;
+      if (!action) return;
+      if (action === 'start') window.startZombieRun();
+      else if (action === 'resume') window.closeOverlayAndResume();
+      else if (action === 'restart') window.restartZombieRun();
+      else if (action === 'rewarded-revive') window.mockRewardedReviveOffer();
+    });
     window.addEventListener('keydown', e => { if (e.key==='1') fireAtLane(0); if (e.key==='2') fireAtLane(1); if (e.key==='3') fireAtLane(2); });
     restartBtn.addEventListener('click', () => window.restartZombieRun());
     pauseBtn.addEventListener('click', () => { state.paused=!state.paused; pauseBtn.textContent=state.paused?'Resume':'Pause'; });

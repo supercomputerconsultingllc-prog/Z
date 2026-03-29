@@ -785,9 +785,11 @@
     const shellCasings = [];
     const muzzleFlashes = [];
     const MISSIONS = [
-      { label: 'Break 12 walls', target: 12, event: 'walls' },
-      { label: 'Recruit 32 survivors', target: 32, event: 'survivors' },
-      { label: 'Collect 80 coins', target: 80, event: 'coins' }
+      { label: 'Break 12 walls', target: 12, event: 'walls', rewardCoins: 10, rewardXp: 12, hint: 'Walls hit hard, burn them down early.' },
+      { label: 'Recruit 32 survivors', target: 32, event: 'survivors', rewardCoins: 12, rewardXp: 12, hint: 'Big rescues scale your crowd faster.' },
+      { label: 'Collect 80 coins', target: 80, event: 'coins', rewardCoins: 14, rewardXp: 14, hint: 'Clean runs keep your spend rate healthy.' },
+      { label: 'Push 540 distance', target: 540, event: 'distance', rewardCoins: 16, rewardXp: 16, hint: 'Long pushes juice the pass and your wallet.' },
+      { label: 'Down 2 bosses', target: 2, event: 'bosses', rewardCoins: 20, rewardXp: 18, hint: 'Boss clears now anchor the late mission track.' }
     ];
     const PASS_REWARDS = [
       { icon: '🪙', title: '100 coin crate', detail: 'Big coin drop for your next push.', xp: 40, grant: { coins: 100 } },
@@ -795,7 +797,15 @@
       { icon: '❤️', title: 'Bonus revive', detail: 'Start a run with one extra safety heart.', xp: 60, grant: { runRevives: 1 } },
       { icon: '👥', title: 'Squad drop', detail: 'Begin with 2 extra squad members.', xp: 70, grant: { startSquad: 2 } },
       { icon: '🔫', title: 'Power spark', detail: 'Start with +1 firepower.', xp: 80, grant: { startFirepower: 1 } },
-      { icon: '🌟', title: 'Hero crate', detail: 'Coins, avatar coins, and hype all at once.', xp: 90, grant: { coins: 180, avatarCoins: 2 } }
+      { icon: '🌟', title: 'Hero crate', detail: 'Coins, avatar coins, and hype all at once.', xp: 90, grant: { coins: 180, avatarCoins: 2 } },
+      { icon: '🎁', title: 'Safehouse supply drop', detail: 'Extra run coins and an avatar coin bundle.', xp: 98, grant: { coins: 120, avatarCoins: 1 } },
+      { icon: '⚡', title: 'Overdrive prep', detail: 'Start stronger with coins and extra firepower.', xp: 108, grant: { coins: 90, startFirepower: 1 } }
+    ];
+    const PASS_UNLOCKS = [
+      { level: 2, title: 'Surplus Bonus', detail: 'Distance coins pay out 1 extra coin per road checkpoint.' },
+      { level: 4, title: 'Avatar Exchange+', detail: 'Avatar trades get cheaper, 20 coins for 1 avatar coin.' },
+      { level: 6, title: 'Safehouse Bundle', detail: 'Shop unlocks a mid-run care package for deeper pushes.' },
+      { level: 8, title: 'Neon District', detail: 'The world gains richer premium skyline accents.' }
     ];
     bestStat.textContent = best;
     soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
@@ -832,6 +842,11 @@
 
     function activeMission() { return MISSIONS[missionIndex % MISSIONS.length]; }
     function currentPassReward() { return PASS_REWARDS[(Math.max(1, passLevel) - 1) % PASS_REWARDS.length]; }
+    function unlockedPassBenefits() { return PASS_UNLOCKS.filter(unlock => passLevel >= unlock.level); }
+    function nextPassUnlock() { return PASS_UNLOCKS.find(unlock => passLevel < unlock.level) || null; }
+    function avatarExchangeRate() { return passLevel >= 4 ? 20 : 25; }
+    function carePackageUnlocked() { return passLevel >= 6; }
+    function neonDistrictUnlocked() { return passLevel >= 8; }
     function passXpForLevel(level = passLevel) {
       const reward = PASS_REWARDS[(Math.max(1, level) - 1) % PASS_REWARDS.length];
       return reward.xp + Math.max(0, level - 1) * 4;
@@ -1213,6 +1228,7 @@
 
     function moneyPanelMarkup() {
       const home = homeStatusSummary();
+      const exchangeRate = avatarExchangeRate();
       return `
         <div class="message settings-page">
           <h2>Squad Shop</h2>
@@ -1251,8 +1267,16 @@
                 <button onclick="window.claimSubscribeReward()" ${youtubeSubscribeClaimed ? 'disabled' : ''}>${youtubeSubscribeClaimed ? '1000 Coins Claimed' : 'Claim 1000 Coins'}</button>
               </div>
             </div>
+            <div class="shop-card balance">
+              <h4><span>🎨 Avatar Exchange</span><span class="shop-badge">${exchangeRate} Coins</span></h4>
+              <p>Premium pass training improves your exchange rate. Trade regular coins into avatar unlock fuel.</p>
+              <div class="cta-row">
+                <button class="secondary" onclick="window.openAvatarPanel()">Open Avatar Exchange</button>
+              </div>
+            </div>
+            ${carePackageUnlocked() ? `<div class="shop-card featured"><h4><span>🚁 Safehouse Care Package</span><span class="shop-badge">220 Coins</span></h4><p>Late-pass bundle for longer pushes, +160 coins, +1 revive, and +2 squad.</p><div class="cta-row"><button onclick="window.buyCarePackage()">Buy Care Package</button></div></div>` : ''}
           </div>
-          <p class="mini-note">Channel rewards are one-time bonuses. Subscribe still uses honor-system claiming until real verification exists.</p>
+          <p class="mini-note">Channel rewards are one-time bonuses. Subscribe still uses honor-system claiming until real verification exists. Avatar exchange is now <strong>${exchangeRate} coins</strong> per avatar coin.</p>
           <button class="secondary" onclick="window.closeOverlayAndResume()">Close</button>
         </div>`;
     }
@@ -1295,10 +1319,11 @@
           <div class="settings-grid">
             <div class="settings-card">
               <h4>Currency Exchange</h4>
-              <p><strong>25 coins = 1 avatar coin</strong></p>
+              <p><strong>${avatarExchangeRate()} coins = 1 avatar coin</strong></p>
               <p>You have <strong>${state.coins}</strong> coins and <strong>${avatarCoins}</strong> avatar coins.</p>
+              <p><strong>${unlockedAvatars.length}</strong> avatars unlocked, next pass unlock is <strong>${nextPassUnlock() ? nextPassUnlock().title : 'maxed out'}</strong>.</p>
               <p class="mini-note">Equipped now: <strong>${avatars.find(a => a.id === selectedAvatar)?.name || 'Default Trooper'}</strong></p>
-              <button class="warn" id="tradeAvatarCoinBtn" style="width:auto;">Trade 25 Coins For 1 Avatar Coin</button>
+              <button class="warn" id="tradeAvatarCoinBtn" style="width:auto;">Trade ${avatarExchangeRate()} Coins For 1 Avatar Coin</button>
             </div>
             <div class="settings-card">
               <h4>Avatar Unlocks</h4>
@@ -1337,8 +1362,9 @@
 
       const tradeAvatarCoinBtn = document.getElementById('tradeAvatarCoinBtn');
       tradeAvatarCoinBtn.addEventListener('click', () => {
-        if (state.coins < 25) return;
-        state.coins -= 25;
+        const exchangeRate = avatarExchangeRate();
+        if (state.coins < exchangeRate) return;
+        state.coins -= exchangeRate;
         bankCoins = state.coins;
         avatarCoins += 1;
         saveMeta();
@@ -1509,11 +1535,12 @@
       const clamped = Math.max(0, Math.min(mission.target, missionProgress));
       const pct = Math.max(0, Math.min(100, (clamped / mission.target) * 100));
       missionTitle.textContent = mission.label;
-      missionRewardTag.textContent = '+10 coins + 12 XP';
+      missionRewardTag.textContent = `+${mission.rewardCoins || 10} coins + ${mission.rewardXp || 12} XP`;
       missionProgressFill.style.width = `${pct}%`;
       missionProgressText.textContent = `${clamped} / ${mission.target}`;
       const remain = Math.max(0, mission.target - clamped);
       missionNextText.textContent = remain === 0 ? 'Reward ready' : `${remain} to mission clear`;
+      missionHud.title = mission.hint || '';
       missionHud.classList.toggle('next-goal', remain <= Math.max(2, Math.ceil(mission.target * 0.2)));
     }
 
@@ -1525,7 +1552,7 @@
       const pct = Math.max(0, Math.min(100, (clamped / need) * 100));
       seasonLevelTag.textContent = `Lv. ${passLevel}`;
       seasonRewardTitle.textContent = reward.title;
-      seasonRewardText.textContent = reward.detail;
+      seasonRewardText.textContent = nextPassUnlock() ? `${reward.detail} Next unlock: ${nextPassUnlock().title}.` : reward.detail;
       seasonProgressFill.style.width = `${pct}%`;
       seasonProgressText.textContent = `${clamped} / ${need} XP`;
       const remain = Math.max(0, need - clamped);
@@ -1544,14 +1571,14 @@
       if (mission.event !== eventName) return;
       missionProgress += amount;
       if (missionProgress >= mission.target) {
-        grantCoins(10);
-        addPassXp(12, 'mission clear on deck');
+        grantCoins(mission.rewardCoins || 10);
+        addPassXp(mission.rewardXp || 12, 'mission clear on deck');
         missionIndex += 1;
         missionProgress = 0;
         missionPopup = {
           title: 'Mission Complete',
           label: mission.label,
-          reward: '10 coins + 12 pass XP',
+          reward: `+${mission.rewardCoins || 10} coins + ${mission.rewardXp || 12} pass XP`,
           button: 'Continue',
           rect: null
         };
@@ -1582,6 +1609,7 @@
                   <div class="safehouse-stat"><span class="label">Next Prize</span><strong>${currentPassReward().title}</strong></div>
                   <div class="safehouse-stat"><span class="label">Mission</span><strong>${home.missionLeft === 0 ? 'Ready to clear' : `${home.missionLeft} left`}</strong></div>
                   <div class="safehouse-stat"><span class="label">Pass XP</span><strong>${home.passNeed} to go</strong></div>
+                  <div class="safehouse-stat"><span class="label">Unlock</span><strong>${nextPassUnlock() ? nextPassUnlock().title : 'All unlocked'}</strong></div>
                 </div>
               </div>
               <div class="settings-card" style="background:linear-gradient(180deg, rgba(15,23,42,.92), rgba(30,41,59,.98));">
@@ -1591,7 +1619,7 @@
                   <li><span class="coach-badge">2</span><div><strong>Spend after a tough run</strong><span>More firepower and revives make walls much safer.</span></div></li>
                   <li><span class="coach-badge">3</span><div><strong>Stack rewards</strong><span>Missions and long runs fill the Premium Pass fastest.</span></div></li>
                 </ul>
-                <p class="mini-note">Build: Beta V1.0, includes "In the Hall of the Mountain King" background music.</p>
+                <p class="mini-note">Build: Beta V1.0. Progression unlocks now expand the safehouse economy, avatar exchange, and world polish.</p>
               </div>
             </div>
             ${home.tutorialReady ? `<div class="settings-card" style="background:linear-gradient(135deg, rgba(34,197,94,.14), rgba(15,23,42,.96));border-color:rgba(34,197,94,.24);"><h4>🌟 Quick Start Training</h4><p>New here? Start with a tiny guide that teaches lanes, walls, and where to spend coins.</p><div class="overlay-actions two-up"><button onclick="window.startOnboardingRun()">Start Training Run</button><button class="secondary" onclick="window.skipOnboarding()">Skip Guide</button></div></div>` : ''}
@@ -2030,7 +2058,10 @@
 
     function update(dt) {
       if (!state.running || state.paused || state.gameOver) return;
+      const prevDistanceBand = Math.floor(state.distance / 180);
       state.distance += dt * (state.speed / 12);
+      const nextDistanceBand = Math.floor(state.distance / 180);
+      if (nextDistanceBand > prevDistanceBand) updateMission('distance', (nextDistanceBand - prevDistanceBand) * 180);
       state.wave = 1 + Math.floor(state.distance / 180);
       state.speed = 186 + state.wave * 7.5;
       state.minigunCharge = Math.min(100, state.minigunCharge + dt * 8);
@@ -2047,7 +2078,7 @@
           playTone(150 + rand(0, 40), 0.05, 'sawtooth', 0.55);
         }
       }
-      const roundCoins = Math.floor(state.distance / 180) * 2;
+      const roundCoins = Math.floor(state.distance / 180) * (passLevel >= 2 ? 3 : 2);
       if (roundCoins > state.distanceCoinsTick) { addCoins(roundCoins - state.distanceCoinsTick); state.distanceCoinsTick = roundCoins; }
 
       const nowAudioMs = performance.now();
@@ -2222,7 +2253,7 @@
       }
       else if (obj.type === 'boss') {
         const squadGain = obj.reward + 3;
-        state.squad += squadGain; addCoins(obj.reward + 6); updateMission('survivors', squadGain); playTone(110, 0.26, 'sawtooth', 2.1); addScreenShake(16, 0.18); bossWave = false;
+        state.squad += squadGain; addCoins(obj.reward + 6); updateMission('survivors', squadGain); updateMission('bosses', 1); playTone(110, 0.26, 'sawtooth', 2.1); addScreenShake(16, 0.18); bossWave = false;
         state.rewardPulseUntil = performance.now() + 1600;
         state.overdriveUntil = Math.max(state.overdriveUntil || 0, performance.now() + 1600);
         setCombatFeed('BOSS SHATTERED', 1800);
@@ -2279,7 +2310,7 @@
               <h4>Premium Pass</h4>
               <p><strong>${currentPassReward().title}</strong></p>
               <p>${passNeed} XP more for ${rewardSummary(currentPassReward().grant) || currentPassReward().detail}.</p>
-              <p class="mini-note">Missions and long runs feed this bar fast.</p>
+              <p class="mini-note">${nextPassUnlock() ? `Next unlock: ${nextPassUnlock().title}.` : 'All pass unlocks are active.'} Active perks: ${Math.max(1, unlockedPassBenefits().length)}.</p>
             </div>
             <div class="settings-card">
               <h4>Next Run Plan</h4>
@@ -2295,7 +2326,7 @@
               </div>
             </div>
           </div>
-          <p class="mini-note">Tiny steps stack up. Every mission clear moves your next prize closer.</p>
+          <p class="mini-note">Tiny steps stack up. Every mission clear moves your next prize closer, and later pass levels unlock stronger economy perks.</p>
           <div class="overlay-actions two-up">
             <button onclick="window.restartZombieRun()">Play Again</button>
             <button class="secondary" onclick="window.openMoneyPanel()">Spend Coins</button>
@@ -2353,6 +2384,7 @@
     let frameLaneThreats = null;
     let muzzleFlashSpriteCache = new Map();
     let particleBloomSpriteCache = new Map();
+    let objectSpriteCache = new Map();
 
     function drawRoad() {
       ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -2450,6 +2482,17 @@
           ctx.fill();
         }
       }
+      if (neonDistrictUnlocked() && (!lowPowerMobileMode || state.squad < 90)) {
+        ctx.fillStyle = 'rgba(34,211,238,0.08)';
+        for (let i = 0; i < 5; i++) {
+          const stripX = 54 + i * 146 + Math.sin(state.distance * 0.002 + i) * 8;
+          ctx.fillRect(stripX, 164 + (i % 2) * 8, 64, 3);
+          ctx.fillStyle = 'rgba(244,114,182,0.07)';
+          ctx.fillRect(stripX + 10, 176 + (i % 3) * 6, 42, 2);
+          ctx.fillStyle = 'rgba(34,211,238,0.08)';
+        }
+      }
+
       ctx.fillStyle = 'rgba(15,23,42,0.48)';
       for (let i = 0; i < 6; i++) {
         const w = 70 + i * 12;
@@ -3473,13 +3516,8 @@
             ctx.strokeRect(obj.x - 38, obj.y - 42, 76, 92);
           }
           drawZombie(obj.x, obj.y, 1.72 + Math.sin(renderNow * 0.01) * 0.03, 5, 'boss');
-          const bossGlow = ctx.createRadialGradient(obj.x, obj.y - 18, 12, obj.x, obj.y - 10, 74);
-          bossGlow.addColorStop(0, 'rgba(239,68,68,.3)');
-          bossGlow.addColorStop(1, 'rgba(239,68,68,0)');
-          ctx.fillStyle = bossGlow;
-          ctx.beginPath();
-          ctx.arc(obj.x, obj.y - 8, 76, 0, Math.PI * 2);
-          ctx.fill();
+          const bossAura = getObjectSprite('aura', 76, 'rgba(239,68,68,.3)', 'rgba(239,68,68,0)');
+          ctx.drawImage(bossAura, obj.x - bossAura.width / 2, obj.y - 8 - bossAura.height / 2);
           ctx.strokeStyle='#fda4ff'; ctx.lineWidth=5; ctx.strokeRect(obj.x - 46, obj.y - 52, 92, 104);
           ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fillRect(obj.x - 38, obj.y - 34, 76, 3);
           ctx.fillStyle='rgba(15,23,42,.92)'; ctx.fillRect(obj.x - 52, obj.y - 78, 104, 14);
@@ -3492,7 +3530,7 @@
           ctx.fillStyle='#fef3c7'; ctx.font='bold 14px system-ui'; ctx.textAlign='center'; ctx.fillText('LOOT',obj.x,obj.y-30);
         } else if (obj.type === 'wall') {
           drawObjectGroundShadow(obj, 34, 8, 0.32);
-          addRimLight(obj.x, obj.y, 76, 'rgba(248,113,113,ALPHA)', 0.14);
+          if (perfTier <= 1) addRimLight(obj.x, obj.y, 76, 'rgba(248,113,113,ALPHA)', 0.14);
           const currentHp = Math.max(0, Math.ceil(obj.hp));
           const maxHp = Math.max(currentHp, obj.maxHp || currentHp || 1);
           if (currentHp > 0 && currentHp / maxHp > 0.5) {
@@ -3574,18 +3612,9 @@
           }
           ctx.fillStyle='#fff1f2'; ctx.font='bold 22px system-ui'; ctx.textAlign='center'; ctx.fillText(String(currentHp),obj.x,obj.y-38);
         } else if (obj.type === 'coin') {
-          addRimLight(obj.x, obj.y, 28, 'rgba(250,204,21,ALPHA)', 0.22);
-          const coinGrad = ctx.createRadialGradient(obj.x - 5, obj.y - 6, 2, obj.x, obj.y, 20);
-          coinGrad.addColorStop(0, '#fef9c3');
-          coinGrad.addColorStop(0.38, '#fde047');
-          coinGrad.addColorStop(0.72, '#f59e0b');
-          coinGrad.addColorStop(1, '#92400e');
-          ctx.fillStyle = coinGrad;
-          ctx.beginPath(); ctx.arc(obj.x,obj.y,18,0,Math.PI*2); ctx.fill();
-          ctx.strokeStyle = '#fffbeb'; ctx.lineWidth = 2.2; ctx.stroke();
-          ctx.beginPath(); ctx.arc(obj.x,obj.y,13,0,Math.PI*2); ctx.strokeStyle='rgba(120,53,15,0.45)'; ctx.lineWidth=1.6; ctx.stroke();
-          ctx.fillStyle = 'rgba(255,255,255,0.22)';
-          ctx.beginPath(); ctx.ellipse(obj.x - 5, obj.y - 6, 6, 3.5, -0.35, 0, Math.PI * 2); ctx.fill();
+          if (perfTier <= 1) addRimLight(obj.x, obj.y, 28, 'rgba(250,204,21,ALPHA)', 0.22);
+          const coinSprite = getObjectSprite('coin', 18);
+          ctx.drawImage(coinSprite, obj.x - coinSprite.width / 2, obj.y - coinSprite.height / 2);
           ctx.fillStyle = '#78350f'; ctx.font='bold 18px system-ui'; ctx.textAlign='center'; ctx.fillText('$',obj.x,obj.y+6);
         }
         if (hitPulse > 0.04 && perfTier <= 1 && obj.type !== 'coin') {
@@ -3687,6 +3716,39 @@
       ctx.beginPath();
       ctx.ellipse(obj.x, obj.y + radiusY * 1.45, radiusX, radiusY, 0, 0, Math.PI * 2);
       ctx.fill();
+    }
+
+    function getObjectSprite(kind, size, colorA = '#ffffff', colorB = '#000000') {
+      const key = `${kind}:${Math.round(size)}:${colorA}:${colorB}`;
+      if (objectSpriteCache.has(key)) return objectSpriteCache.get(key);
+      const offscreen = document.createElement('canvas');
+      const dim = Math.max(48, Math.ceil(size * 2.8));
+      offscreen.width = dim;
+      offscreen.height = dim;
+      const octx = offscreen.getContext('2d');
+      const cx = dim / 2;
+      const cy = dim / 2;
+      if (kind === 'coin') {
+        const coinGrad = octx.createRadialGradient(cx - size * 0.22, cy - size * 0.28, 2, cx, cy, size);
+        coinGrad.addColorStop(0, '#fef9c3');
+        coinGrad.addColorStop(0.38, '#fde047');
+        coinGrad.addColorStop(0.72, '#f59e0b');
+        coinGrad.addColorStop(1, '#92400e');
+        octx.fillStyle = coinGrad;
+        octx.beginPath(); octx.arc(cx, cy, size, 0, Math.PI * 2); octx.fill();
+        octx.strokeStyle = '#fffbeb'; octx.lineWidth = 2.2; octx.stroke();
+        octx.beginPath(); octx.arc(cx, cy, size * 0.72, 0, Math.PI * 2); octx.strokeStyle = 'rgba(120,53,15,0.45)'; octx.lineWidth = 1.6; octx.stroke();
+        octx.fillStyle = 'rgba(255,255,255,0.22)';
+        octx.beginPath(); octx.ellipse(cx - size * 0.28, cy - size * 0.34, size * 0.34, size * 0.2, -0.35, 0, Math.PI * 2); octx.fill();
+      } else if (kind === 'aura') {
+        const glow = octx.createRadialGradient(cx, cy, size * 0.12, cx, cy, size);
+        glow.addColorStop(0, colorA);
+        glow.addColorStop(1, colorB);
+        octx.fillStyle = glow;
+        octx.beginPath(); octx.arc(cx, cy, size, 0, Math.PI * 2); octx.fill();
+      }
+      objectSpriteCache.set(key, offscreen);
+      return offscreen;
     }
 
     function getParticleBloomSprite(size, color) {
@@ -4284,6 +4346,18 @@
           <button onclick="window.openMoneyPanel()">Back To Shop</button>
         </div>`;
       syncHud();
+    };
+    window.buyCarePackage = function() {
+      if (!carePackageUnlocked() || state.coins < 220) return;
+      state.coins -= 220;
+      state.revives += 1;
+      state.squad += 2;
+      state.coins += 160;
+      bankCoins = state.coins;
+      triggerUpgradeCelebration('Safehouse care package delivered');
+      saveMeta();
+      syncHud();
+      overlay.innerHTML = moneyPanelMarkup();
     };
     window.openYoutubeReward = function() {
       if (youtubeVisitClaimed) {

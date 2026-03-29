@@ -760,6 +760,7 @@
     let musicTimer = null;
     let musicStep = 0;
     let musicBus = null;
+    let musicShouldResumeAfterPause = false;
     const MUSIC_START_OFFSET = 10;
     let renderNow = performance.now();
     let lastShotSoundAt = 0;
@@ -875,7 +876,7 @@
       };
       overlay.innerHTML = '';
       state.paused = true;
-      stopMusicLoop(false);
+      pauseGameMusic();
     }
     function grantPassReward(reward) {
       const grant = reward?.grant || {};
@@ -958,6 +959,27 @@
     function updateMusicVolume() {
       if (!musicBus) return;
       musicBus.volume = Math.max(0, Math.min(1, musicVolumeLevel / 100));
+    }
+
+    function pauseGameMusic(withCue = false) {
+      const music = musicBus;
+      musicShouldResumeAfterPause = !!(musicEnabled && soundOn && music && !music.paused && !state?.gameOver);
+      if (withCue) playTone(420, 0.04, 'triangle', 0.45);
+      stopMusicLoop(false);
+    }
+
+    function resumeGameMusic(withCue = false) {
+      if (withCue) {
+        playTone(620, 0.05, 'triangle', 0.4);
+        setTimeout(() => playTone(740, 0.04, 'triangle', 0.28), 45);
+      }
+      if (!musicShouldResumeAfterPause) {
+        refreshMusicState();
+        return;
+      }
+      musicShouldResumeAfterPause = false;
+      if (!musicEnabled || !soundOn || document.hidden || state?.paused || state?.gameOver) return;
+      startMusicLoop();
     }
 
     function playTone(freq, duration = 0.08, type = 'square', gainBoost = 1) {
@@ -1109,7 +1131,7 @@
 
     function refreshMusicState() {
       if (!musicEnabled || !soundOn || document.hidden || state?.paused || state?.gameOver) {
-        stopMusicLoop(false);
+        pauseGameMusic();
         return;
       }
       startMusicLoop();
@@ -1228,13 +1250,13 @@
 
     function openMoneyPanel() {
       state.paused = true;
-      stopMusicLoop(false);
+      pauseGameMusic();
       overlay.innerHTML = moneyPanelMarkup();
     }
 
     function openEnhancementPanel() {
       state.paused = true;
-      stopMusicLoop(false);
+      pauseGameMusic();
       overlay.innerHTML = `
         <div class="message">
           <h2>Character Enhancement</h2>
@@ -1257,7 +1279,7 @@
 
     function openAvatarPanel() {
       state.paused = true;
-      stopMusicLoop(false);
+      pauseGameMusic();
       const avatars = AVATARS;
       overlay.innerHTML = `
         <div class="message settings-page">
@@ -1337,7 +1359,7 @@
 
     function openSettingsPanel() {
       state.paused = true;
-      stopMusicLoop(false);
+      pauseGameMusic();
       overlay.innerHTML = `
         <div class="message settings-page">
           <h2>Settings</h2>
@@ -1461,7 +1483,7 @@
       });
 
       testAudioBtn.addEventListener('click', () => {
-        stopMusicLoop(false);
+        pauseGameMusic();
         playTone(660, 0.08, 'square', 1.6);
         setTimeout(() => playTone(880, 0.1, 'sawtooth', 1.4), 70);
         const music = ensureMusicAudio();
@@ -1529,7 +1551,7 @@
         };
         overlay.innerHTML = '';
         state.paused = true;
-        stopMusicLoop(false);
+        pauseGameMusic();
       }
       saveMeta();
       syncMissionHud();
@@ -1537,7 +1559,7 @@
 
     function showTitleScreen() {
       state.paused = true;
-      stopMusicLoop(false);
+      pauseGameMusic();
       pauseBtn.textContent = 'Resume';
       overlay.classList.add('hero-mode');
       overlay.innerHTML = `
@@ -1556,7 +1578,7 @@
 
     function showPauseOverlay() {
       state.paused = true;
-      stopMusicLoop(false);
+      pauseGameMusic();
       pauseBtn.textContent = 'Resume';
       overlay.classList.add('hero-mode');
       overlay.innerHTML = `
@@ -4102,12 +4124,12 @@
     floatingSettingsBtn.addEventListener('click', openSettingsPanel);
     youtubeBtn.addEventListener('click', () => {
       state.paused = true;
-      stopMusicLoop(false);
+      pauseGameMusic();
       window.openYoutubeReward();
     });
     battleYoutubeBtn.addEventListener('click', () => {
       state.paused = true;
-      stopMusicLoop(false);
+      pauseGameMusic();
       window.openYoutubeReward();
     });
     laneLeftBtn.addEventListener('click', () => fireAtLane(0));
@@ -4223,7 +4245,7 @@
       rewardPopup = null;
       state.paused=false;
       pauseBtn.textContent='Pause';
-      refreshMusicState();
+      resumeGameMusic(true);
     };
     window.startZombieRun = function() {
       overlay.classList.remove('hero-mode');
@@ -4232,7 +4254,7 @@
       state.running=true;
       state.gameOver=false;
       pauseBtn.textContent='Pause';
-      refreshMusicState();
+      resumeGameMusic(true);
     };
     window.mockRewardedReviveOffer = function() {
       state.coins += 5;
@@ -4240,7 +4262,7 @@
       saveMeta();
       resetGame();
     };
-    window.restartZombieRun = function() { bankCoins = state.coins; saveMeta(); resetGame(); pauseBtn.textContent='Pause'; refreshMusicState(); };
+    window.restartZombieRun = function() { bankCoins = state.coins; saveMeta(); resetGame(); pauseBtn.textContent='Pause'; musicShouldResumeAfterPause = true; resumeGameMusic(false); };
 
     soundBtn.addEventListener('click', () => {
       soundOn = !soundOn;

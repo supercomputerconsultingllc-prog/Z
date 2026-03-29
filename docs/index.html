@@ -496,7 +496,7 @@
       margin-top: 0;
       flex: 1 1 180px;
     }
-    .touch-row { display: none; gap: 8px; padding: 10px 12px 12px; background: rgba(255,255,255,0.03); border-top: 1px solid rgba(148,163,184,.12); flex-wrap: wrap; align-items: end; }
+    .touch-row { display: none; gap: 8px; padding: 0 12px 12px; background: rgba(255,255,255,0.03); border-top: 0; flex-wrap: wrap; align-items: end; margin-top: -2px; }
     .touch-btn { flex: 1 1 96px; min-height: 48px; font-size: 14px; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease; }
     .touch-btn.danger {
       box-shadow: 0 0 0 2px rgba(248,113,113,0.34), 0 0 24px rgba(239,68,68,0.18);
@@ -540,15 +540,22 @@
       .controls { border-left: 0; border-top: 1px solid rgba(148,163,184,.12); }
       canvas { height: 560px; }
       .shop-hero { grid-template-columns: 1fr; }
+      .canvas-hud-row {
+        display: flex;
+        gap: 8px;
+        padding: 6px 12px 6px;
+      }
+      .battle-side-ui {
+        width: 100%;
+        justify-content: flex-end;
+      }
       .touch-row { display: flex; }
-      .canvas-hud-row { display: flex; gap: 8px; }
       .mission-hud.docked,
       .season-hud.docked {
         width: 100%;
         max-width: none;
         margin-bottom: 10px;
       }
-      .battle-side-ui { width: 100%; justify-content: flex-end; }
     }
     @media (max-width: 560px) {
       .topbar { grid-template-columns: repeat(2, 1fr); }
@@ -624,8 +631,6 @@
         <button class="secondary touch-btn" id="laneLeftBtn">⬅️ Shoot Left</button>
         <button class="secondary touch-btn" id="laneCenterBtn">🎯 Shoot Center</button>
         <button class="secondary touch-btn" id="laneRightBtn">➡️ Shoot Right</button>
-        <button class="touch-btn special" id="minigunBtn" aria-label="Activate minigun" type="button">🔥 Minigun<span class="tiny-status battle-side-status">Tap when ready</span></button>
-        <button class="touch-btn utility" id="battleSettingsBtn" aria-label="Open settings" type="button">⚙️ Settings<span class="tiny-status">Brightness, volume, controls</span></button>
         <button class="touch-btn utility" id="battleYoutubeBtn" aria-label="Open bonus page" type="button">▶️ Bonus<span class="tiny-status">Open channel page</span></button>
       </section>
 
@@ -1531,6 +1536,7 @@
 
     function showTitleScreen() {
       state.paused = true;
+      stopMusicLoop(false);
       pauseBtn.textContent = 'Resume';
       overlay.classList.add('hero-mode');
       overlay.innerHTML = `
@@ -1549,6 +1555,7 @@
 
     function showPauseOverlay() {
       state.paused = true;
+      stopMusicLoop(false);
       pauseBtn.textContent = 'Resume';
       overlay.classList.add('hero-mode');
       overlay.innerHTML = `
@@ -4078,6 +4085,7 @@
     });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden && state?.running && !state?.gameOver) {
+        stopMusicLoop(false);
         showPauseOverlay();
       }
     });

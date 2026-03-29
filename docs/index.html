@@ -59,12 +59,13 @@
     canvas { width: 100%; height: 680px; display: block; touch-action: manipulation; cursor: crosshair; }
     .battle-side-ui {
       position: absolute;
-      right: 14px;
-      bottom: 14px;
+      right: max(14px, env(safe-area-inset-right));
+      bottom: max(14px, env(safe-area-inset-bottom));
       display: flex;
       flex-direction: row;
       gap: 10px;
-      z-index: 4;
+      z-index: 12;
+      pointer-events: none;
     }
     .battle-side-btn {
       width: 86px;
@@ -88,7 +89,10 @@
       -webkit-user-select: none;
       pointer-events: auto;
       position: relative;
-      z-index: 4;
+      z-index: 13;
+      visibility: visible;
+      opacity: 1;
+      flex: 0 0 auto;
     }
     .battle-side-btn.ready {
       box-shadow: 0 0 0 2px rgba(254,202,202,.22), 0 0 24px rgba(248,113,113,.55), 0 18px 36px rgba(0,0,0,.32);
@@ -371,6 +375,7 @@
       canvas { height: 560px; }
       .shop-hero { grid-template-columns: 1fr; }
       .touch-row { display: flex; }
+      .battle-side-ui { right: 12px; bottom: 12px; }
     }
     @media (max-width: 560px) {
       .topbar { grid-template-columns: repeat(2, 1fr); }
@@ -379,6 +384,19 @@
       .controls { padding: 12px; }
       .settings-grid { grid-template-columns: 1fr; }
       button { min-height: 46px; }
+      .battle-side-ui {
+        right: 10px;
+        bottom: 10px;
+        gap: 8px;
+      }
+      .battle-side-btn {
+        width: 78px;
+        min-height: 78px;
+        border-radius: 18px;
+        font-size: 12px;
+        padding: 8px;
+      }
+      .battle-side-btn .big { font-size: 24px; }
     }
   </style>
 </head>

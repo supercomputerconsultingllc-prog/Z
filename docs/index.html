@@ -958,6 +958,26 @@
       };
     }
 
+    function persistGuestProfile() {
+      const profile = capturePlayerProfile();
+      setStored('best', String(profile.best));
+      setStored('coins', String(profile.bankCoins));
+      setStored('avatar-coins', String(profile.avatarCoins));
+      setStored('selected-avatar', profile.selectedAvatar);
+      setStored('unlocked-avatars', JSON.stringify(profile.unlockedAvatars));
+      setStored('mission-index', String(profile.missionIndex));
+      setStored('mission-progress', String(profile.missionProgress));
+      setStored('pass-level', String(profile.passLevel));
+      setStored('pass-xp', String(profile.passXp));
+      setStored('total-runs', String(profile.totalRuns));
+      setStored('youtube-visit', profile.youtubeVisitClaimed ? 'claimed' : 'open');
+      setStored('youtube-subscribe', profile.youtubeSubscribeClaimed ? 'claimed' : 'open');
+      setStored('starter-pack', profile.starterPackClaimed ? 'claimed' : 'open');
+      setStored('gun-price', String(profile.gunPrice));
+      setStored('squad-price', String(profile.squadPrice));
+      setStored('revive-price', String(profile.revivePrice));
+    }
+
     function applyPlayerProfile(profile = {}) {
       best = Number(profile.best || 0);
       bankCoins = Number(profile.bankCoins || 0);
@@ -1159,11 +1179,10 @@
       else loadGuestProfile();
       bestStat.textContent = best;
       soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
+      syncHud();
     }
 
     initializeProfiles();
-    bestStat.textContent = best;
-    soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
 
     function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
     function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
@@ -1174,7 +1193,7 @@
       setStored('music-volume', String(musicVolumeLevel));
       setStored('brightness', String(brightnessLevel));
       setStored('controls', controlsMode);
-      saveAccountProfile();
+      return saveAccountProfile();
     }
 
     function activeMission() { return MISSIONS[missionIndex % MISSIONS.length]; }

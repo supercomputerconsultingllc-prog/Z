@@ -875,6 +875,7 @@
       };
       overlay.innerHTML = '';
       state.paused = true;
+      refreshMusicState();
     }
     function grantPassReward(reward) {
       const grant = reward?.grant || {};
@@ -1227,11 +1228,13 @@
 
     function openMoneyPanel() {
       state.paused = true;
+      refreshMusicState();
       overlay.innerHTML = moneyPanelMarkup();
     }
 
     function openEnhancementPanel() {
       state.paused = true;
+      refreshMusicState();
       overlay.innerHTML = `
         <div class="message">
           <h2>Character Enhancement</h2>
@@ -1254,6 +1257,7 @@
 
     function openAvatarPanel() {
       state.paused = true;
+      refreshMusicState();
       const avatars = AVATARS;
       overlay.innerHTML = `
         <div class="message settings-page">
@@ -1524,6 +1528,7 @@
         };
         overlay.innerHTML = '';
         state.paused = true;
+        refreshMusicState();
       }
       saveMeta();
       syncMissionHud();
@@ -1531,6 +1536,7 @@
 
     function showTitleScreen() {
       state.paused = true;
+      refreshMusicState();
       pauseBtn.textContent = 'Resume';
       overlay.classList.add('hero-mode');
       overlay.innerHTML = `
@@ -1549,6 +1555,7 @@
 
     function showPauseOverlay() {
       state.paused = true;
+      refreshMusicState();
       pauseBtn.textContent = 'Resume';
       overlay.classList.add('hero-mode');
       overlay.innerHTML = `
@@ -4094,10 +4101,12 @@
     floatingSettingsBtn.addEventListener('click', openSettingsPanel);
     youtubeBtn.addEventListener('click', () => {
       state.paused = true;
+      refreshMusicState();
       window.openYoutubeReward();
     });
     battleYoutubeBtn.addEventListener('click', () => {
       state.paused = true;
+      refreshMusicState();
       window.openYoutubeReward();
     });
     laneLeftBtn.addEventListener('click', () => fireAtLane(0));

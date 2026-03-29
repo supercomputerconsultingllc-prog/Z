@@ -2997,32 +2997,6 @@
       ctx.fill();
       const skin = variant === 'boss' ? '#6d28d9' : variant === 'shield' ? '#64748b' : variant === 'runner' ? '#84cc16' : '#65a30d';
       const darkSkin = variant === 'boss' ? '#3b0764' : variant === 'shield' ? '#334155' : variant === 'runner' ? '#4d7c0f' : '#3f6212';
-      if (perfTier >= 2 && variant !== 'boss') {
-        if (perfTier === 2) addRimLight(x, y - 1 * scale, variant === 'shield' ? 24 * scale : 22 * scale, variant === 'shield' ? 'rgba(125,211,252,ALPHA)' : 'rgba(163,230,53,ALPHA)', 0.12);
-        const simpleGrad = ctx.createLinearGradient(x - bodyW / 2, y - head, x + bodyW / 2, y + bodyH);
-        simpleGrad.addColorStop(0, skin);
-        simpleGrad.addColorStop(1, darkSkin);
-        ctx.fillStyle = simpleGrad;
-        ctx.beginPath();
-        ctx.roundRect(x - bodyW / 2, y - 2 * scale, bodyW, bodyH + 4 * scale, 4 * scale);
-        ctx.fill();
-        ctx.fillStyle = perfTier >= 3 ? darkSkin : '#ef4444';
-        ctx.beginPath();
-        ctx.arc(x, y - 9 * scale, head, 0, Math.PI * 2);
-        ctx.fill();
-        if (perfTier === 2) {
-          ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-          ctx.lineWidth = Math.max(0.8, 1 * scale);
-          ctx.strokeRect(x - bodyW / 2, y - 2 * scale, bodyW, bodyH + 4 * scale);
-          ctx.fillStyle = '#fca5a5';
-          ctx.fillRect(x - bodyW * 0.18, y + 3 * scale, bodyW * 0.12, bodyH * 0.42);
-          ctx.fillStyle = '#fef2f2';
-          ctx.fillRect(x - 2.2 * scale, y - 11.5 * scale, 1.2 * scale, 1.2 * scale);
-          ctx.fillRect(x + 1 * scale, y - 11.5 * scale, 1.2 * scale, 1.2 * scale);
-        }
-        ctx.restore();
-        return;
-      }
       addRimLight(x, y - 1 * scale, variant === 'boss' ? 48 * scale : variant === 'shield' ? 30 * scale : 28 * scale, variant === 'boss' ? 'rgba(239,68,68,ALPHA)' : variant === 'shield' ? 'rgba(125,211,252,ALPHA)' : 'rgba(163,230,53,ALPHA)', variant === 'boss' ? 0.34 : 0.24);
 
       const skullGrad = ctx.createRadialGradient(x - head * 0.48, y - 13.5 * scale, 1, x, y - 10 * scale, head * 1.24);
@@ -3143,23 +3117,6 @@
     }
 
     function drawLootZombie(x, y, scale = 1) {
-      const perfTier = squadPerfTier();
-      if (perfTier >= 2) {
-        ctx.fillStyle = 'rgba(127,29,29,0.36)';
-        ctx.beginPath();
-        ctx.ellipse(x, y + 6 * scale, 22 * scale, 10 * scale, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#450a0a';
-        ctx.beginPath();
-        ctx.roundRect(x - 18 * scale, y - 10 * scale, 36 * scale, 20 * scale, 8 * scale);
-        ctx.fill();
-        ctx.fillStyle = '#ef4444';
-        ctx.beginPath();
-        ctx.arc(x - 5 * scale, y - 2 * scale, 2.4 * scale, 0, Math.PI * 2);
-        ctx.arc(x + 5 * scale, y - 2 * scale, 2.4 * scale, 0, Math.PI * 2);
-        ctx.fill();
-        return;
-      }
       const carcassGlow = ctx.createRadialGradient(x, y - 4 * scale, 3, x, y, 34 * scale);
       carcassGlow.addColorStop(0, 'rgba(239,68,68,0.26)');
       carcassGlow.addColorStop(1, 'rgba(239,68,68,0)');
@@ -3197,18 +3154,10 @@
     }
 
     function drawTreasureBox(x, y, scale = 1) {
-      const perfTier = squadPerfTier();
       ctx.fillStyle = 'rgba(15,23,42,0.28)';
       ctx.beginPath();
       ctx.ellipse(x, y + 18 * scale, 22 * scale, 8 * scale, 0, 0, Math.PI * 2);
       ctx.fill();
-      if (perfTier >= 2) {
-        ctx.fillStyle = '#7c2d12';
-        ctx.fillRect(x - 18 * scale, y - 8 * scale, 36 * scale, 22 * scale);
-        ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(x - 2 * scale, y - 8 * scale, 4 * scale, 22 * scale);
-        return;
-      }
       addRimLight(x, y - 2 * scale, 34 * scale, 'rgba(250,204,21,ALPHA)', 0.18);
       const wood = ctx.createLinearGradient(x - 18 * scale, y, x + 18 * scale, y + 22 * scale);
       wood.addColorStop(0, '#92400e');
@@ -3419,27 +3368,16 @@
       ctx.textAlign = 'left';
       ctx.fillText(`Army ${state.squad}`, 32, 141);
 
-      if (perfCrowd) {
-        const cacheKey = `${Math.round(crowdRadiusX)}:${Math.round(crowdRadiusY)}:${visibleSoldiers.length}:${Math.floor(total / 8)}:${sizeTier}`;
-        if (!crowdCache || crowdCache.key !== cacheKey) {
-          crowdCache = { key: cacheKey, layer: buildCrowdCache(visibleSoldiers.slice(), centerX, baseY, crowdRadiusX, crowdRadiusY, total) };
-        }
-        if (crowdCache?.layer?.canvas) {
-          const sway = Math.sin(marchPhase) * (massCrowd ? 1.4 : 2.2);
-          ctx.drawImage(crowdCache.layer.canvas, 0, 0, crowdCache.layer.canvas.width, crowdCache.layer.canvas.height, 0, sway, canvas.width, canvas.height);
-          if (massCrowd) {
-            ctx.fillStyle = 'rgba(255,255,255,0.06)';
-            ctx.beginPath();
-            ctx.ellipse(centerX, 560, crowdRadiusX * 0.7, crowdRadiusY * 0.24, 0, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      } else {
-        for (const soldier of visibleSoldiers) {
-          const tint = soldier.index % 4 === 0 ? '#60a5fa' : soldier.index % 4 === 1 ? '#93c5fd' : soldier.index % 4 === 2 ? '#3b82f6' : '#2563eb';
-          if (dotArmyMode) drawTinySoldier(soldier.x, soldier.y, tint, soldier.scale, soldier.index, true);
-          else drawPerson(soldier.x, soldier.y, tint, soldier.scale, soldier.index);
-        }
+      for (const soldier of visibleSoldiers) {
+        const tint = soldier.index % 4 === 0 ? '#60a5fa' : soldier.index % 4 === 1 ? '#93c5fd' : soldier.index % 4 === 2 ? '#3b82f6' : '#2563eb';
+        if (dotArmyMode) drawTinySoldier(soldier.x, soldier.y, tint, soldier.scale, soldier.index, true);
+        else drawPerson(soldier.x, soldier.y, tint, soldier.scale, soldier.index);
+      }
+      if (massCrowd) {
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.beginPath();
+        ctx.ellipse(centerX, 560, crowdRadiusX * 0.7, crowdRadiusY * 0.24, 0, 0, Math.PI * 2);
+        ctx.fill();
       }
 
     }

@@ -1611,7 +1611,8 @@
           label: mission.label,
           reward: `+${mission.rewardCoins || 10} coins + ${mission.rewardXp || 12} pass XP`,
           button: 'Continue',
-          rect: null
+          rect: null,
+          bornAt: performance.now()
         };
         overlay.innerHTML = '';
         state.paused = true;
@@ -4247,8 +4248,21 @@
       }
     }
 
+    function updatePopupFailSafe(now = performance.now()) {
+      if (missionPopup && now - (missionPopup.bornAt || now) > 2600) {
+        missionPopup = null;
+        state.paused = false;
+        showNextRewardPopup();
+      }
+      if (rewardPopup && now - (rewardPopup.bornAt || now) > 3200) {
+        rewardPopup = null;
+        state.paused = false;
+        showNextRewardPopup();
+      }
+    }
+
     function tick(now) {
-      const dt = Math.min(0.033,(now-state.lastTime)/1000); state.lastTime=now; update(dt); render(); requestAnimationFrame(tick);
+      const dt = Math.min(0.033,(now-state.lastTime)/1000); state.lastTime=now; update(dt); updatePopupFailSafe(now); render(); requestAnimationFrame(tick);
     }
 
     function laneFromX(x) { return x < canvas.width/3 ? 0 : x < canvas.width*2/3 ? 1 : 2; }
@@ -4256,23 +4270,23 @@
       const rect=canvas.getBoundingClientRect();
       const x=((e.clientX-rect.left)/rect.width)*canvas.width;
       const y=((e.clientY-rect.top)/rect.height)*canvas.height;
-      if (missionPopup?.rect) {
-        const { x: bx, y: by, w, h } = missionPopup.rect;
-        if (x >= bx && x <= bx + w && y >= by && y <= by + h) {
+      if (missionPopup) {
+        const rectHit = missionPopup.rect && x >= missionPopup.rect.x && x <= missionPopup.rect.x + missionPopup.rect.w && y >= missionPopup.rect.y && y <= missionPopup.rect.y + missionPopup.rect.h;
+        if (rectHit || performance.now() - (missionPopup.bornAt || 0) > 500) {
           missionPopup = null;
           state.paused = false;
           showNextRewardPopup();
-          return;
         }
+        return;
       }
-      if (rewardPopup?.rect) {
-        const { x: bx, y: by, w, h } = rewardPopup.rect;
-        if (x >= bx && x <= bx + w && y >= by && y <= by + h) {
+      if (rewardPopup) {
+        const rectHit = rewardPopup.rect && x >= rewardPopup.rect.x && x <= rewardPopup.rect.x + rewardPopup.rect.w && y >= rewardPopup.rect.y && y <= rewardPopup.rect.y + rewardPopup.rect.h;
+        if (rectHit || performance.now() - (rewardPopup.bornAt || 0) > 500) {
           rewardPopup = null;
           state.paused = false;
           showNextRewardPopup();
-          return;
         }
+        return;
       }
       markTutorialProgress('laneShots');
       fireAtLane(laneFromX(x));

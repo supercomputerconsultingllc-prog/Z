@@ -630,30 +630,28 @@
       return audioCtx;
     }
 
-    function ensureMusicBus() {
-      const ctxAudio = ensureAudio();
-      if (!ctxAudio) return null;
+    function ensureMusicAudio() {
       if (musicBus) return musicBus;
-      musicBus = ctxAudio.createGain();
-      musicBus.gain.setValueAtTime(1, ctxAudio.currentTime);
-      musicBus.connect(ctxAudio.destination);
+      const audio = new Audio('./assets/audio/mountain-king.mp3');
+      audio.loop = true;
+      audio.preload = 'auto';
+      audio.crossOrigin = 'anonymous';
+      audio.volume = Math.max(0, Math.min(1, (volumeLevel / 100) * 0.35));
+      musicBus = audio;
       return musicBus;
     }
 
-    function silenceMusicBus() {
-      const ctxAudio = ensureAudio();
-      if (!ctxAudio || !musicBus) return;
-      const oldBus = musicBus;
-      musicBus = null;
-      const now = ctxAudio.currentTime;
-      try {
-        oldBus.gain.cancelScheduledValues(now);
-        oldBus.gain.setValueAtTime(oldBus.gain.value || 1, now);
-        oldBus.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
-      } catch (_) {}
-      setTimeout(() => {
-        try { oldBus.disconnect(); } catch (_) {}
-      }, 80);
+    function stopMusicAudio(resetTime = false) {
+      if (!musicBus) return;
+      musicBus.pause();
+      if (resetTime) {
+        try { musicBus.currentTime = 0; } catch (_) {}
+      }
+    }
+
+    function updateMusicVolume() {
+      if (!musicBus) return;
+      musicBus.volume = Math.max(0, Math.min(1, (volumeLevel / 100) * 0.35));
     }
 
     function playTone(freq, duration = 0.08, type = 'square', gainBoost = 1) {
@@ -758,122 +756,25 @@
       raspOsc.stop(now + 0.2);
     }
 
-    function playKick(time, gainBoost = 1) {
-      if (!musicEnabled || volumeLevel <= 0) return;
-      const ctxAudio = ensureAudio();
-      const bus = ensureMusicBus();
-      if (!ctxAudio || !bus) return;
-      const osc = ctxAudio.createOscillator();
-      const gain = ctxAudio.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(140, time);
-      osc.frequency.exponentialRampToValueAtTime(42, time + 0.18);
-      gain.gain.setValueAtTime((volumeLevel / 100) * 0.08 * gainBoost, time);
-      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.18);
-      osc.connect(gain);
-      gain.connect(bus);
-      osc.start(time);
-      osc.stop(time + 0.18);
-    }
-
-    function playNoiseHit(time, duration = 0.08, gainBoost = 0.45) {
-      if (!musicEnabled || volumeLevel <= 0) return;
-      const ctxAudio = ensureAudio();
-      const bus = ensureMusicBus();
-      if (!ctxAudio || !bus) return;
-      const buffer = ctxAudio.createBuffer(1, ctxAudio.sampleRate * duration, ctxAudio.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
-      const source = ctxAudio.createBufferSource();
-      const filter = ctxAudio.createBiquadFilter();
-      const gain = ctxAudio.createGain();
-      source.buffer = buffer;
-      filter.type = 'highpass';
-      filter.frequency.setValueAtTime(1600, time);
-      gain.gain.setValueAtTime((volumeLevel / 100) * 0.05 * gainBoost, time);
-      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-      source.connect(filter);
-      filter.connect(gain);
-      gain.connect(bus);
-      source.start(time);
-    }
-
-    function playMusicNote(freq, time, duration, type = 'triangle', gainBoost = 0.22) {
-      if (!musicEnabled || volumeLevel <= 0) return;
-      const ctxAudio = ensureAudio();
-      const bus = ensureMusicBus();
-      if (!ctxAudio || !bus) return;
-      const osc = ctxAudio.createOscillator();
-      const gain = ctxAudio.createGain();
-      const filter = ctxAudio.createBiquadFilter();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, time);
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(type === 'sawtooth' ? 1800 : 1200, time);
-      gain.gain.setValueAtTime((volumeLevel / 100) * 0.028 * gainBoost, time);
-      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(bus);
-      osc.start(time);
-      osc.stop(time + duration);
-    }
-
-    function musicIntensity() {
-      const waveBoost = Math.min(1.8, state ? state.wave / 6 : 0.5);
-      const minigunBoost = state && state.minigunActiveUntil > performance.now() ? 0.9 : 0;
-      return 0.75 + waveBoost + minigunBoost;
-    }
-
-    function playMusicStep(previewOnly = false) {
-      if (!musicEnabled || !soundOn) return false;
-      const ctxAudio = ensureAudio();
-      if (!ctxAudio) return false;
-      if (ctxAudio.state === 'suspended') ctxAudio.resume();
-      const stepTime = ctxAudio.currentTime + 0.01;
-      const intensity = Math.min(1.45, musicIntensity());
-      const root = 329.63;
-      const melodyOffsets = [0, 1, 3, 0, -2, 0, 1, -2, -5, 0, 1, 3, 0, 1, 3, 5];
-      const bassOffsets = [-24, -24, -24, -24, -24, -24, -24, -24, -12, -12, -12, -12, -24, -24, -24, -24];
-      const accents = [1, 0.32, 0.44, 0.26, 0.62, 0.24, 0.38, 0.22, 0.72, 0.24, 0.38, 0.5, 0.84, 0.32, 0.48, 0.96];
-      const stepDur = Math.max(0.15, 0.205 - Math.min(0.05, Math.max(0, ((state?.wave || 1) - 1)) * 0.003));
-      const note = melodyOffsets[musicStep % melodyOffsets.length];
-      const bass = bassOffsets[musicStep % bassOffsets.length];
-      const accent = accents[musicStep % accents.length];
-      const melodyFreq = root * Math.pow(2, note / 12);
-      const bassFreq = root * Math.pow(2, bass / 12);
-      playMusicNote(melodyFreq, stepTime, stepDur * 0.72, 'square', (0.72 + accent * 0.12) * intensity);
-      if (musicStep % 2 === 0) playMusicNote(bassFreq, stepTime, stepDur * 0.9, 'triangle', (0.22 + accent * 0.04) * intensity);
-      if (!previewOnly && musicStep % 4 === 0) playKick(stepTime, (0.68 + accent * 0.12) * intensity);
-      musicStep = (musicStep + 1) % melodyOffsets.length;
-      return Math.max(120, stepDur * 1000);
-    }
-
     function startMusicLoop() {
-      if (musicTimer || !musicEnabled) return;
-      musicStep = 0;
-      const scheduleNext = () => {
-        if (!musicEnabled || !soundOn || document.hidden || state?.paused || state?.gameOver) {
-          musicTimer = null;
-          return;
-        }
-        const delay = playMusicStep();
-        musicTimer = setTimeout(scheduleNext, delay);
-      };
-      scheduleNext();
+      if (!musicEnabled || !soundOn) return;
+      const music = ensureMusicAudio();
+      if (!music) return;
+      updateMusicVolume();
+      const playPromise = music.play();
+      if (playPromise && typeof playPromise.catch === 'function') playPromise.catch(() => {});
     }
 
-    function stopMusicLoop() {
-      if (musicTimer) {
-        clearTimeout(musicTimer);
-        musicTimer = null;
-      }
-      silenceMusicBus();
+    function stopMusicLoop(resetTime = false) {
+      stopMusicAudio(resetTime);
     }
 
     function refreshMusicState() {
-      stopMusicLoop();
-      if (musicEnabled && soundOn) startMusicLoop();
+      if (!musicEnabled || !soundOn || document.hidden || state?.paused || state?.gameOver) {
+        stopMusicLoop(false);
+        return;
+      }
+      startMusicLoop();
     }
 
     function applyDisplaySettings() {
@@ -1145,6 +1046,7 @@
         volumeLevel = Number(volumeRange.value);
         volumeValue.textContent = `${volumeLevel}%`;
         volumeBarFill.style.width = `${Math.min(volumeLevel, 200) / 2}%`;
+        updateMusicVolume();
         saveMeta();
       });
 
@@ -1179,14 +1081,17 @@
       });
 
       testAudioBtn.addEventListener('click', () => {
-        stopMusicLoop();
+        stopMusicLoop(false);
         playTone(660, 0.08, 'square', 1.6);
         setTimeout(() => playTone(880, 0.1, 'sawtooth', 1.4), 70);
-        setTimeout(() => playMusicStep(true), 120);
-        setTimeout(() => playMusicStep(true), 320);
-        setTimeout(() => playMusicStep(true), 520);
-        setTimeout(() => playMusicStep(true), 720);
-        setTimeout(() => refreshMusicState(), 980);
+        const music = ensureMusicAudio();
+        if (music) {
+          updateMusicVolume();
+          try { music.currentTime = 0; } catch (_) {}
+          const playPromise = music.play();
+          if (playPromise && typeof playPromise.catch === 'function') playPromise.catch(() => {});
+          setTimeout(() => refreshMusicState(), 1200);
+        }
       });
     }
 
@@ -1229,7 +1134,7 @@
           <h1>Zombie Squad Run</h1>
           <p>Run with your squad, shoot the right lane, smash walls before impact, and spend coins to upgrade your survival chances.</p>
           <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best}</p>
-          <p class="mini-note">Build: Beta V1.0, includes the "In the Hall of the Mountain King" synth loop.</p>
+          <p class="mini-note">Build: Beta V1.0, includes "In the Hall of the Mountain King" background music.</p>
           <div class="overlay-actions two-up">
             <button onclick="window.startZombieRun()">Start Run</button>
             <button class="secondary" onclick="window.openSettingsPanel()">Settings</button>

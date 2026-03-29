@@ -47,6 +47,7 @@ Skills are shared. Your setup is yours. Keeping them apart means you can update 
 - For GitHub CLI device login, treat the one-time code as short-lived. After `gh auth login` shows the code, open `https://github.com/login/device` immediately and complete approval before trying other commands, or the code may expire and mislead the next troubleshooting step.
 - For hot JavaScript update/render loops, avoid `filter(...)/sort(...)` and other temporary-array patterns in the per-frame path when an in-place write-index loop or single-pass scan will do. This reduces allocation churn and late-run lag without changing visuals.
 - For pause UX on canvas-based games, do not rely on painted text alone for paused state. Provide a real overlay with resume/unpause and restart actions so users are not stranded when input focus or layout changes.
+- For browser Web Audio changes, do not claim the audible result is confirmed unless it was actually heard by the user or verified with real browser audio output. Distinguish syntax/deploy confirmation from sound confirmation, and when rescheduling looped music add a dedicated music bus or other clean stop path so old scheduled notes do not overlap or glitch.
 
 ---
 

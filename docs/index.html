@@ -558,8 +558,6 @@
     let musicEnabled = localStorage.getItem('zombie-squad-run-music') !== 'off';
     let musicTimer = null;
     let musicStep = 0;
-    let musicNextBarAt = 0;
-    let musicBarDurationMs = 3040;
     let musicBus = null;
     let renderNow = performance.now();
     let lastShotSoundAt = 0;
@@ -827,62 +825,42 @@
       return 0.75 + waveBoost + minigunBoost;
     }
 
-    function scheduleMusicBar(startAt = null) {
+    function playMusicStep(previewOnly = false) {
       if (!musicEnabled || !soundOn) return false;
       const ctxAudio = ensureAudio();
       if (!ctxAudio) return false;
       if (ctxAudio.state === 'suspended') ctxAudio.resume();
-      const now = ctxAudio.currentTime + 0.02;
-      const barStart = Math.max(now, startAt ?? now);
-      const intensity = Math.min(1.75, musicIntensity());
-      const stepDur = Math.max(0.145, 0.2 - Math.min(0.05, Math.max(0, ((state?.wave || 1) - 1)) * 0.0032));
-      const barSteps = 16;
+      const stepTime = ctxAudio.currentTime + 0.01;
+      const intensity = Math.min(1.45, musicIntensity());
       const root = 329.63;
       const melodyOffsets = [0, 1, 3, 0, -2, 0, 1, -2, -5, 0, 1, 3, 0, 1, 3, 5];
       const bassOffsets = [-24, -24, -24, -24, -24, -24, -24, -24, -12, -12, -12, -12, -24, -24, -24, -24];
       const accents = [1, 0.32, 0.44, 0.26, 0.62, 0.24, 0.38, 0.22, 0.72, 0.24, 0.38, 0.5, 0.84, 0.32, 0.48, 0.96];
-
-      for (let i = 0; i < barSteps; i++) {
-        const stepTime = barStart + i * stepDur;
-        const note = melodyOffsets[(musicStep + i) % melodyOffsets.length];
-        const bass = bassOffsets[(musicStep + i) % bassOffsets.length];
-        const accent = accents[(musicStep + i) % accents.length];
-        const melodyFreq = root * Math.pow(2, note / 12);
-        const bassFreq = root * Math.pow(2, bass / 12);
-        playMusicNote(melodyFreq, stepTime, stepDur * 0.74, 'square', (0.78 + accent * 0.14) * intensity);
-        if (i % 2 === 0) playMusicNote(bassFreq, stepTime, stepDur * 0.92, 'triangle', (0.26 + accent * 0.04) * intensity);
-        if (i % 4 === 0) playKick(stepTime, (0.72 + accent * 0.16) * intensity);
-      }
-      musicStep = (musicStep + barSteps) % melodyOffsets.length;
-      musicBarDurationMs = stepDur * barSteps * 1000;
-      musicNextBarAt = performance.now() + Math.max(40, (barStart - ctxAudio.currentTime) * 1000) + musicBarDurationMs;
-      return true;
-    }
-
-    function queueNextMusicBar() {
-      if (!musicEnabled || !soundOn || document.hidden || state?.paused || state?.gameOver) {
-        musicTimer = null;
-        return;
-      }
-      const ctxAudio = ensureAudio();
-      if (!ctxAudio) {
-        musicTimer = null;
-        return;
-      }
-      const aheadTime = 0.08;
-      const targetStart = Math.max(ctxAudio.currentTime + aheadTime, (musicNextBarAt || performance.now()) / 1000);
-      scheduleMusicBar(targetStart);
-      const delay = Math.max(180, musicNextBarAt - performance.now() - 140);
-      musicTimer = setTimeout(queueNextMusicBar, delay);
+      const stepDur = Math.max(0.15, 0.205 - Math.min(0.05, Math.max(0, ((state?.wave || 1) - 1)) * 0.003));
+      const note = melodyOffsets[musicStep % melodyOffsets.length];
+      const bass = bassOffsets[musicStep % bassOffsets.length];
+      const accent = accents[musicStep % accents.length];
+      const melodyFreq = root * Math.pow(2, note / 12);
+      const bassFreq = root * Math.pow(2, bass / 12);
+      playMusicNote(melodyFreq, stepTime, stepDur * 0.72, 'square', (0.72 + accent * 0.12) * intensity);
+      if (musicStep % 2 === 0) playMusicNote(bassFreq, stepTime, stepDur * 0.9, 'triangle', (0.22 + accent * 0.04) * intensity);
+      if (!previewOnly && musicStep % 4 === 0) playKick(stepTime, (0.68 + accent * 0.12) * intensity);
+      musicStep = (musicStep + 1) % melodyOffsets.length;
+      return Math.max(120, stepDur * 1000);
     }
 
     function startMusicLoop() {
       if (musicTimer || !musicEnabled) return;
       musicStep = 0;
-      musicNextBarAt = 0;
-      if (!scheduleMusicBar()) return;
-      const delay = Math.max(180, musicNextBarAt - performance.now() - 140);
-      musicTimer = setTimeout(queueNextMusicBar, delay);
+      const scheduleNext = () => {
+        if (!musicEnabled || !soundOn || document.hidden || state?.paused || state?.gameOver) {
+          musicTimer = null;
+          return;
+        }
+        const delay = playMusicStep();
+        musicTimer = setTimeout(scheduleNext, delay);
+      };
+      scheduleNext();
     }
 
     function stopMusicLoop() {
@@ -890,7 +868,6 @@
         clearTimeout(musicTimer);
         musicTimer = null;
       }
-      musicNextBarAt = 0;
       silenceMusicBus();
     }
 
@@ -1202,9 +1179,14 @@
       });
 
       testAudioBtn.addEventListener('click', () => {
+        stopMusicLoop();
         playTone(660, 0.08, 'square', 1.6);
         setTimeout(() => playTone(880, 0.1, 'sawtooth', 1.4), 70);
-        scheduleMusicBar();
+        setTimeout(() => playMusicStep(true), 120);
+        setTimeout(() => playMusicStep(true), 320);
+        setTimeout(() => playMusicStep(true), 520);
+        setTimeout(() => playMusicStep(true), 720);
+        setTimeout(() => refreshMusicState(), 980);
       });
     }
 

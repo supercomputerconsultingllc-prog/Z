@@ -632,11 +632,14 @@
 
     function ensureMusicAudio() {
       if (musicBus) return musicBus;
-      const audio = new Audio('./assets/audio/mountain-king.mp3');
+      const audio = new Audio();
+      const oggSupported = !!audio.canPlayType && audio.canPlayType('audio/ogg; codecs="vorbis"') !== '';
+      audio.src = oggSupported ? './assets/audio/mountain-king.ogg' : './assets/audio/mountain-king.mp3';
+      audio.dataset.fallbackSrc = './assets/audio/mountain-king.mp3';
       audio.loop = true;
       audio.preload = 'auto';
-      audio.crossOrigin = 'anonymous';
       audio.volume = Math.max(0, Math.min(1, (volumeLevel / 100) * 0.35));
+      audio.load();
       musicBus = audio;
       return musicBus;
     }
@@ -761,8 +764,24 @@
       const music = ensureMusicAudio();
       if (!music) return;
       updateMusicVolume();
-      const playPromise = music.play();
-      if (playPromise && typeof playPromise.catch === 'function') playPromise.catch(() => {});
+      const tryPlay = () => {
+        const playPromise = music.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => {
+            if (music.dataset.fallbackSrc && music.src.indexOf('mountain-king.mp3') === -1) {
+              music.src = music.dataset.fallbackSrc;
+              music.load();
+              const retryPromise = music.play();
+              if (retryPromise && typeof retryPromise.catch === 'function') retryPromise.catch(() => {});
+            }
+          });
+        }
+      };
+      if (music.readyState >= 2) tryPlay();
+      else {
+        music.addEventListener('canplaythrough', tryPlay, { once: true });
+        music.load();
+      }
     }
 
     function stopMusicLoop(resetTime = false) {

@@ -4676,6 +4676,7 @@
           missionPopup = null;
           state.paused = false;
           showNextRewardPopup();
+          if (!rewardPopup) resumeGameMusic(true);
           return;
         }
       }
@@ -4685,6 +4686,7 @@
           rewardPopup = null;
           state.paused = false;
           showNextRewardPopup();
+          if (!rewardPopup) resumeGameMusic(true);
           return;
         }
       }

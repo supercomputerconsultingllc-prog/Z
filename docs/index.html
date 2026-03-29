@@ -955,6 +955,8 @@
     let rewardQueue = [];
     let rewardPopup = null;
     let crowdCache = null;
+    let crowdLayoutCache = null;
+    let crowdLayoutCacheKey = '';
     const impactDecals = [];
     const shellCasings = [];
     const muzzleFlashes = [];
@@ -2173,6 +2175,8 @@
         weaponTierPulseUntil: 0, lastWeaponTier: 1, combatFeed: '', combatFeedUntil: 0
       };
       crowdCache = null;
+      crowdLayoutCache = null;
+      crowdLayoutCacheKey = '';
       bankCoins = 0;
       setStored('coins', '0');
       syncHud();
@@ -2557,6 +2561,7 @@
         if (obj.hp > 0 && obj.lane != null && laneObjectBuckets[obj.lane]) laneObjectBuckets[obj.lane].push(obj);
       }
       const collisionStride = state.bullets.length > (mobileSafeMode ? 18 : 36) ? 2 : 1;
+      const skipHeavyEffects = state.squad >= 40 && state.squad <= 110;
       for (let bulletIndex = 0; bulletIndex < state.bullets.length; bulletIndex += collisionStride) {
         const bullet = state.bullets[bulletIndex];
         if (!bullet) continue;
@@ -2568,10 +2573,12 @@
             obj.hp -= bullet.damage || 1;
             markObjectHit(obj, bullet);
             addScreenShake(bullet.style === 'minigun' ? 6 : bullet.style === 'plasma' ? 7 : bullet.style === 'laser' ? 5 : 3.5, bullet.style === 'plasma' ? 0.1 : bullet.style === 'minigun' ? 0.08 : 0.05);
-            state.particles.push({ x: obj.x, y: obj.y, life: bullet.style === 'minigun' ? 0.22 : 0.18, color: bullet.glow ? bullet.color || '#fde68a' : '#f8fafc', ring: bullet.ring || '#ffffff', size: (bullet.radius || 5) * (bullet.style === 'minigun' ? 2.9 : 2.35) * (bullet.impactScale || 1), burst: bullet.style === 'arc' || bullet.style === 'plasma' || bullet.style === 'minigun' });
-            if (bullet.style === 'minigun' || bullet.style === 'plasma' || bullet.style === 'laser') pushDecal(obj.x + rand(-8, 8), obj.y + rand(6, 16), bullet.ring || '#fff7ae', bullet.style === 'minigun' ? 10 : 8, 0.42, bullet.style === 'minigun' ? 2 : 1);
+            if (!skipHeavyEffects || bullet.style === 'plasma' || bullet.style === 'laser' || bullet.style === 'minigun' || obj.type === 'boss' || obj.type === 'robotboss' || obj.type === 'wall') {
+              state.particles.push({ x: obj.x, y: obj.y, life: bullet.style === 'minigun' ? 0.22 : 0.18, color: bullet.glow ? bullet.color || '#fde68a' : '#f8fafc', ring: bullet.ring || '#ffffff', size: (bullet.radius || 5) * (bullet.style === 'minigun' ? 2.9 : 2.35) * (bullet.impactScale || 1), burst: bullet.style === 'arc' || bullet.style === 'plasma' || bullet.style === 'minigun' });
+            }
+            if (!skipHeavyEffects && (bullet.style === 'minigun' || bullet.style === 'plasma' || bullet.style === 'laser')) pushDecal(obj.x + rand(-8, 8), obj.y + rand(6, 16), bullet.ring || '#fff7ae', bullet.style === 'minigun' ? 10 : 8, 0.42, bullet.style === 'minigun' ? 2 : 1);
             if (bullet.splash) applySplashDamage(obj.x, obj.y, bullet.splash, (bullet.damage || 1) * 0.55, bullet.ring, bullet.color);
-            if (bullet.chain) applyChainDamage(obj, bullet.chain, bullet.damage || 1, bullet.ring, bullet.color);
+            if (bullet.chain && (!skipHeavyEffects || obj.type === 'boss' || obj.type === 'robotboss')) applyChainDamage(obj, bullet.chain, bullet.damage || 1, bullet.ring, bullet.color);
             bullet.hits = (bullet.hits || 0) + 1;
             if (obj.hp <= 0) handleDestroyed(obj);
             if (bullet.hits > (bullet.pierce || 0)) {
@@ -3768,10 +3775,35 @@
       const maxScaleBase = dotArmyMode ? 0.05 : ultraArmyMode ? 0.16 : armyMode ? 0.34 : 0.92;
       const minScale = Math.max(dotArmyMode ? 0.01 : 0.018, minScaleBase * halfScale);
       const maxScale = Math.max(minScale + (dotArmyMode ? 0.006 : 0.02), maxScaleBase * halfScale);
-      const visibleSoldiers = [];
       const marchPhase = compactArmyMode ? renderNow * 0.0025 : renderNow * 0.004;
       const maxVisible = massCrowd ? (ultraArmyMode ? 28 : armyMode ? 34 : 32) : perfCrowd ? (ultraArmyMode ? 40 : armyMode ? 44 : 40) : mobileSafeMode ? (ultraArmyMode ? 96 : armyMode ? 84 : 72) : (ultraArmyMode ? 140 : armyMode ? 120 : 96);
+      const visibleCount = Math.min(total, maxVisible);
       const step = total > maxVisible ? total / maxVisible : 1;
+      const layoutKey = `${canvas.width}x${canvas.height}:${total}:${maxVisible}:${sizeTier}:${mobileSafeMode ? 1 : 0}`;
+      let visibleSoldiers;
+
+      if (crowdLayoutCacheKey !== layoutKey || !crowdLayoutCache) {
+        visibleSoldiers = new Array(visibleCount);
+        let drawIndex = 0;
+        for (let n = 1; drawIndex < visibleCount && n <= total + 0.0001; n += step) {
+          const i = Math.floor(n - 1);
+          const t = total === 1 ? 0 : i / Math.max(total - 1, 1);
+          const ringBias = Math.sqrt(t);
+          const angle = i * 2.399963229728653;
+          const radiusX = ringBias * crowdRadiusX;
+          const radiusY = ringBias * crowdRadiusY;
+          const x = centerX + Math.cos(angle) * radiusX;
+          const y = Math.min(baseY, baseY - Math.sin(angle) * radiusY);
+          const depth = (baseY - y) / Math.max(crowdRadiusY, 1);
+          const scale = Math.max(minScale, Math.min(maxScale, maxScale - depth * (armyMode ? 0.14 : 0.2)));
+          visibleSoldiers[drawIndex] = { x, y, depth, scale, index: drawIndex };
+          drawIndex += 1;
+        }
+        crowdLayoutCache = visibleSoldiers;
+        crowdLayoutCacheKey = layoutKey;
+      } else {
+        visibleSoldiers = crowdLayoutCache;
+      }
 
       const crowdGlow = ctx.createRadialGradient(centerX, 592, 30, centerX, 592, crowdRadiusX + 35);
       crowdGlow.addColorStop(0, armyMode ? 'rgba(96,165,250,0.26)' : 'rgba(96,165,250,0.18)');
@@ -3795,24 +3827,17 @@
         ctx.fill();
       }
 
-      let drawIndex = 0;
-      for (let n = 1; n <= total; n += step) {
-        const i = Math.floor(n - 1);
-        const t = total === 1 ? 0 : i / Math.max(total - 1, 1);
-        const ringBias = Math.sqrt(t);
-        const angle = i * 2.399963229728653 + Math.sin(i * 0.35 + marchPhase) * (compactArmyMode ? 0.02 : 0.05);
-        const radiusX = ringBias * crowdRadiusX;
-        const radiusY = ringBias * crowdRadiusY;
-        let x = centerX + Math.cos(angle) * radiusX;
-        let y = baseY - Math.sin(angle) * radiusY;
-        y = Math.min(baseY, y);
-        const depth = (baseY - y) / Math.max(crowdRadiusY, 1);
-        const scale = Math.max(minScale, Math.min(maxScale, maxScale - depth * (armyMode ? 0.14 : 0.2)));
-        visibleSoldiers.push({ x, y, depth, scale, index: drawIndex++ });
+      const driftAmplitudeX = compactArmyMode ? 0.9 : 1.8;
+      const driftAmplitudeY = compactArmyMode ? 0.4 : 0.8;
+      for (let i = 0; i < visibleSoldiers.length; i++) {
+        const soldier = visibleSoldiers[i];
+        const tint = soldier.index % 4 === 0 ? '#60a5fa' : soldier.index % 4 === 1 ? '#93c5fd' : soldier.index % 4 === 2 ? '#3b82f6' : '#2563eb';
+        const drift = Math.sin((soldier.index * 0.35) + marchPhase);
+        const driftX = drift * driftAmplitudeX;
+        const driftY = armyMode ? Math.cos((soldier.index * 0.21) + marchPhase) * driftAmplitudeY : 0;
+        if (dotArmyMode) drawTinySoldier(soldier.x + driftX, soldier.y + driftY, tint, soldier.scale, soldier.index, true);
+        else drawPerson(soldier.x + driftX, soldier.y + driftY, tint, soldier.scale, soldier.index);
       }
-
-      if (visibleSoldiers.length > 1) visibleSoldiers.sort((a, b) => a.y - b.y);
-
       const bannerGradient = ctx.createLinearGradient(0, 0, 220, 0);
       bannerGradient.addColorStop(0, 'rgba(15,23,42,.96)');
       bannerGradient.addColorStop(1, 'rgba(30,64,175,.78)');
@@ -3825,11 +3850,6 @@
       ctx.textAlign = 'left';
       ctx.fillText(`Army ${state.squad}`, 32, 141);
 
-      for (const soldier of visibleSoldiers) {
-        const tint = soldier.index % 4 === 0 ? '#60a5fa' : soldier.index % 4 === 1 ? '#93c5fd' : soldier.index % 4 === 2 ? '#3b82f6' : '#2563eb';
-        if (dotArmyMode) drawTinySoldier(soldier.x, soldier.y, tint, soldier.scale, soldier.index, true);
-        else drawPerson(soldier.x, soldier.y, tint, soldier.scale, soldier.index);
-      }
       if (massCrowd) {
         ctx.fillStyle = 'rgba(255,255,255,0.06)';
         ctx.beginPath();

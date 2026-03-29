@@ -1818,6 +1818,8 @@
     let heatHazeCache = null;
     let heatHazeCacheKey = '';
     let frameLaneThreats = null;
+    let muzzleFlashSpriteCache = new Map();
+    let particleBloomSpriteCache = new Map();
 
     function drawRoad() {
       ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -2202,38 +2204,53 @@
       ctx.globalAlpha = 1;
     }
 
+    function getMuzzleFlashSprite(size, color) {
+      const key = `${Math.round(size)}:${color}`;
+      if (muzzleFlashSpriteCache.has(key)) return muzzleFlashSpriteCache.get(key);
+      const offscreen = document.createElement('canvas');
+      const dim = Math.max(32, Math.ceil(size * 3));
+      offscreen.width = dim;
+      offscreen.height = dim;
+      const octx = offscreen.getContext('2d');
+      const cx = dim / 2;
+      const cy = dim / 2;
+      const bloom = octx.createRadialGradient(cx, cy, 1, cx, cy, size * 1.35);
+      bloom.addColorStop(0, 'rgba(255,255,255,0.34)');
+      bloom.addColorStop(0.45, color);
+      bloom.addColorStop(1, 'rgba(255,255,255,0)');
+      octx.fillStyle = bloom;
+      octx.beginPath();
+      octx.arc(cx, cy, size * 1.1, 0, Math.PI * 2);
+      octx.fill();
+      octx.fillStyle = color;
+      octx.beginPath();
+      octx.moveTo(cx, cy);
+      octx.lineTo(cx + size * 1.15, cy - size * 0.42);
+      octx.lineTo(cx + size * 1.45, cy);
+      octx.lineTo(cx + size * 1.15, cy + size * 0.42);
+      octx.closePath();
+      octx.fill();
+      octx.fillStyle = 'rgba(255,255,255,0.75)';
+      octx.beginPath();
+      octx.moveTo(cx, cy);
+      octx.lineTo(cx + size * 0.74, cy - size * 0.18);
+      octx.lineTo(cx + size * 0.94, cy);
+      octx.lineTo(cx + size * 0.74, cy + size * 0.18);
+      octx.closePath();
+      octx.fill();
+      muzzleFlashSpriteCache.set(key, offscreen);
+      return offscreen;
+    }
+
     function drawMuzzleFlashes() {
       if (lowPowerMobileMode && state.squad > 55) return;
       for (const flash of muzzleFlashes) {
         const a = Math.max(0, flash.life / flash.maxLife);
+        const pulse = 1 + Math.sin(renderNow * 0.03 + flash.seed) * 0.12;
+        const sprite = getMuzzleFlashSprite(flash.size * pulse, flash.color);
         ctx.save();
         ctx.globalAlpha = a;
-        ctx.translate(flash.x, flash.y);
-        const pulse = 1 + Math.sin(renderNow * 0.03 + flash.seed) * 0.12;
-        const bloom = ctx.createRadialGradient(0, 0, 1, 0, 0, flash.size * 1.35);
-        bloom.addColorStop(0, 'rgba(255,255,255,0.34)');
-        bloom.addColorStop(0.45, flash.color);
-        bloom.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = bloom;
-        ctx.beginPath();
-        ctx.arc(0, 0, flash.size * 1.1, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = flash.color;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(8 * pulse, -flash.size * 0.42);
-        ctx.lineTo(flash.size * 1.15, 0);
-        ctx.lineTo(8 * pulse, flash.size * 0.42);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = 'rgba(255,255,255,0.75)';
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(flash.size * 0.55, -flash.size * 0.18);
-        ctx.lineTo(flash.size * 0.74, 0);
-        ctx.lineTo(flash.size * 0.55, flash.size * 0.18);
-        ctx.closePath();
-        ctx.fill();
+        ctx.drawImage(sprite, flash.x - sprite.width / 2, flash.y - sprite.height / 2);
         ctx.restore();
       }
       ctx.globalAlpha = 1;
@@ -3125,6 +3142,29 @@
       ctx.fill();
     }
 
+    function getParticleBloomSprite(size, color) {
+      const key = `${Math.round(size)}:${color}`;
+      if (particleBloomSpriteCache.has(key)) return particleBloomSpriteCache.get(key);
+      const radius = Math.max(2, Math.ceil(size));
+      const dim = Math.max(16, radius * 4);
+      const offscreen = document.createElement('canvas');
+      offscreen.width = dim;
+      offscreen.height = dim;
+      const octx = offscreen.getContext('2d');
+      const cx = dim / 2;
+      const cy = dim / 2;
+      const bloom = octx.createRadialGradient(cx, cy, 0.5, cx, cy, radius);
+      bloom.addColorStop(0, 'rgba(255,255,255,0.22)');
+      bloom.addColorStop(0.4, color);
+      bloom.addColorStop(1, 'rgba(255,255,255,0)');
+      octx.fillStyle = bloom;
+      octx.beginPath();
+      octx.arc(cx, cy, radius, 0, Math.PI * 2);
+      octx.fill();
+      particleBloomSpriteCache.set(key, offscreen);
+      return offscreen;
+    }
+
     function drawParticles() {
       const perfTier = squadPerfTier();
       const particleStride = ((perfTier >= 2 || mobileSafeMode || (lowPowerMobileMode && state.squad > 45)) && state.particles.length > (perfTier >= 2 ? 10 : 20))
@@ -3134,19 +3174,17 @@
         const particle = state.particles[i];
         const alpha = Math.max(0, particle.life / 0.18);
         const size = particle.size || 8;
+        const renderSize = size * particle.life / 0.18;
         ctx.globalAlpha = alpha;
         if (perfTier <= 1) {
-          const bloom = ctx.createRadialGradient(particle.x, particle.y, 0.5, particle.x, particle.y, Math.max(2, size * particle.life / 0.18));
-          bloom.addColorStop(0, 'rgba(255,255,255,0.22)');
-          bloom.addColorStop(0.4, particle.color);
-          bloom.addColorStop(1, 'rgba(255,255,255,0)');
-          ctx.fillStyle = bloom;
+          const sprite = getParticleBloomSprite(renderSize, particle.color);
+          ctx.drawImage(sprite, particle.x - sprite.width / 2, particle.y - sprite.height / 2);
         } else {
           ctx.fillStyle = particle.color;
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, renderSize, 0, Math.PI * 2);
+          ctx.fill();
         }
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, size * particle.life / 0.18, 0, Math.PI * 2);
-        ctx.fill();
         if (particle.ring) {
           ctx.strokeStyle = particle.ring;
           ctx.lineWidth = 2;

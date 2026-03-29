@@ -111,6 +111,63 @@
     }
     .battle-side-btn .big { font-size: 22px; line-height: 1; }
     .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+    .mission-hud {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 14;
+      width: min(280px, calc(100% - 32px));
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(15,23,42,0.94), rgba(15,23,42,0.86));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 18px 36px rgba(0,0,0,0.28);
+      pointer-events: none;
+    }
+    .mission-hud-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+    .mission-hud-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #f8fafc;
+      line-height: 1.2;
+    }
+    .mission-progress-shell {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+      margin-top: 10px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .mission-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #22c55e, #facc15);
+      transition: width .18s ease;
+    }
+    .mission-hud-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: #cbd5e1;
+    }
+    .mission-hud.next-goal {
+      border-color: rgba(250,204,21,0.22);
+      box-shadow: 0 18px 42px rgba(250,204,21,0.12);
+    }
     .overlay.hero-mode {
       position: fixed;
       z-index: 30;
@@ -416,6 +473,12 @@
     <section class="content">
       <div class="canvas-wrap">
         <canvas id="game" width="800" height="680"></canvas>
+        <div class="mission-hud" id="missionHud">
+          <div class="mission-hud-label"><span>Mission</span><span id="missionRewardTag">+10 coins</span></div>
+          <div class="mission-hud-title" id="missionTitle">Break 12 walls</div>
+          <div class="mission-progress-shell"><div class="mission-progress-fill" id="missionProgressFill"></div></div>
+          <div class="mission-hud-foot"><span id="missionProgressText">0 / 12</span><span id="missionNextText">Keep running</span></div>
+        </div>
         <div class="overlay" id="overlay"></div>
       </div>
       <div class="canvas-hud-row">
@@ -516,6 +579,12 @@
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('overlay');
+    const missionHud = document.getElementById('missionHud');
+    const missionRewardTag = document.getElementById('missionRewardTag');
+    const missionTitle = document.getElementById('missionTitle');
+    const missionProgressFill = document.getElementById('missionProgressFill');
+    const missionProgressText = document.getElementById('missionProgressText');
+    const missionNextText = document.getElementById('missionNextText');
     const squadStat = document.getElementById('squadStat');
     const gunStat = document.getElementById('gunStat');
     const weaponNameStat = document.getElementById('weaponNameStat');
@@ -1158,7 +1227,19 @@
       });
     }
 
-    function syncMissionHud() {}
+    function syncMissionHud() {
+      if (!missionHud) return;
+      const mission = activeMission();
+      const clamped = Math.max(0, Math.min(mission.target, missionProgress));
+      const pct = Math.max(0, Math.min(100, (clamped / mission.target) * 100));
+      missionTitle.textContent = mission.label;
+      missionRewardTag.textContent = '+10 coins';
+      missionProgressFill.style.width = `${pct}%`;
+      missionProgressText.textContent = `${clamped} / ${mission.target}`;
+      const remain = Math.max(0, mission.target - clamped);
+      missionNextText.textContent = remain === 0 ? 'Reward ready' : `${remain} to go`;
+      missionHud.classList.toggle('next-goal', remain <= Math.max(2, Math.ceil(mission.target * 0.2)));
+    }
 
     function grantCoins(amount) {
       state.coins += amount;
@@ -1388,6 +1469,7 @@
         if (dist <= radius) {
           const falloff = Math.max(0.35, 1 - dist / Math.max(radius, 1));
           obj.hp -= damage * falloff;
+          markObjectHit(obj, { style: 'plasma', x: cx });
           state.particles.push({ x: obj.x, y: obj.y, life: 0.16, color: color || '#fff', ring: ring || '#fff', size: 10 + radius * 0.12 });
           if (obj.hp <= 0) handleDestroyed(obj);
         }
@@ -1462,6 +1544,16 @@
     function addScreenShake(amount = 8, flash = 0.08) {
       screenShake = Math.max(screenShake, amount);
       hitFlash = Math.max(hitFlash, flash);
+    }
+
+    function markObjectHit(obj, bullet) {
+      if (!obj) return;
+      const now = performance.now();
+      obj.hitUntil = now + (obj.type === 'boss' ? 180 : obj.type === 'wall' ? 120 : 150);
+      obj.hitFlash = Math.min(1.25, (obj.hitFlash || 0) + (bullet?.style === 'plasma' ? 0.55 : 0.34));
+      const pushBase = obj.type === 'boss' ? 5 : obj.type === 'wall' ? 3 : obj.type === 'runner' ? 7 : 5;
+      obj.hitOffsetX = (obj.hitOffsetX || 0) + ((bullet?.x || obj.x) < obj.x ? 1 : -1) * pushBase;
+      obj.hitOffsetY = (obj.hitOffsetY || 0) + (obj.type === 'wall' ? 0.5 : 1.4);
     }
 
     function squadPerfTier() {
@@ -1632,7 +1724,12 @@
         }
       }
       state.bullets.length = bulletWrite;
-      for (const obj of state.objects) obj.y += state.speed * (obj.speedFactor || 1) * dt;
+      for (const obj of state.objects) {
+        obj.y += state.speed * (obj.speedFactor || 1) * dt;
+        obj.hitOffsetX = (obj.hitOffsetX || 0) * Math.max(0, 1 - dt * 18);
+        obj.hitOffsetY = (obj.hitOffsetY || 0) * Math.max(0, 1 - dt * 16);
+        obj.hitFlash = (obj.hitFlash || 0) * Math.max(0, 1 - dt * 10);
+      }
       laneObjectBuckets[0].length = 0;
       laneObjectBuckets[1].length = 0;
       laneObjectBuckets[2].length = 0;
@@ -1650,6 +1747,7 @@
           if (obj.hp <= 0) continue;
           if (Math.abs(bullet.x - obj.x) < obj.size * 0.55 && Math.abs(bullet.y - obj.y) < obj.size * 0.55) {
             obj.hp -= bullet.damage || 1;
+            markObjectHit(obj, bullet);
             addScreenShake(bullet.style === 'minigun' ? 4 : bullet.style === 'plasma' ? 6 : 3, bullet.style === 'plasma' ? 0.08 : 0.04);
             state.particles.push({ x: obj.x, y: obj.y, life: 0.18, color: bullet.glow ? bullet.color || '#fde68a' : '#f8fafc', ring: bullet.ring || '#ffffff', size: (bullet.radius || 5) * 2.2, burst: bullet.style === 'arc' || bullet.style === 'plasma' });
             if (bullet.splash) applySplashDamage(obj.x, obj.y, bullet.splash, (bullet.damage || 1) * 0.55, bullet.ring, bullet.color);
@@ -1777,6 +1875,40 @@
       else if (obj.type === 'wall') { updateMission('walls', 1); playTone(180, 0.16, 'square', 1.6); pushDecal(obj.x, obj.y + 26, '#78350f', 22, 2.8, 2); }
     }
 
+    function buildRunSummary() {
+      const distance = Math.floor(state.distance);
+      const coinsEarned = state.coins;
+      const nextMission = activeMission();
+      const nextMissionRemain = Math.max(0, nextMission.target - missionProgress);
+      const distanceGoal = Math.max(180, Math.ceil((Math.max(best, distance) + 1) / 180) * 180);
+      const distanceGap = Math.max(0, distanceGoal - distance);
+      const recommended = state.firepower <= state.wave ? 'Boost firepower before the next boss lane.' : state.squad <= 10 ? 'Buy more squad members for safer wall hits.' : state.revives === 0 ? 'Grab a revive so one mistake does not end the run.' : 'You are close, keep chaining survivor rescues.';
+      return `
+        <div class="message hero-card">
+          <h2>Run Summary</h2>
+          <p><strong>${distance}</strong> distance, <strong>${coinsEarned}</strong> coins banked, wave <strong>${state.wave}</strong>.</p>
+          <div class="settings-grid" style="margin-top:14px;">
+            <div class="settings-card">
+              <h4>Rewards</h4>
+              <p>Run bank: <strong>${coinsEarned} coins</strong></p>
+              <p>Best distance: <strong>${best}</strong></p>
+              <p class="mini-note">Mission progress saved for the next run.</p>
+            </div>
+            <div class="settings-card">
+              <h4>Next Goal</h4>
+              <p><strong>${nextMission.label}</strong></p>
+              <p>${nextMissionRemain} more for another 10-coin reward.</p>
+              <p class="mini-note">Distance target: ${distanceGap === 0 ? 'new personal pace unlocked' : `${distanceGap} more to hit ${distanceGoal}`}</p>
+            </div>
+          </div>
+          <p class="mini-note">${recommended}</p>
+          <div class="overlay-actions two-up">
+            <button onclick="window.restartZombieRun()">Play Again</button>
+            <button class="secondary" onclick="window.openMoneyPanel()">Spend Coins</button>
+          </div>
+        </div>`;
+    }
+
     function maybeReviveOrEnd() {
       if (state.revives > 0 && !state.usedRevive) {
         state.revives -= 1;
@@ -1798,14 +1930,8 @@
       state.gameOver = true;
       state.running = false;
       bankCoins = state.coins; saveMeta();
-      overlay.innerHTML = `
-        <div class="message">
-          <h2>Run Over</h2>
-          <p>Distance: <strong>${Math.floor(state.distance)}</strong> | Coins: <strong>${state.coins}</strong></p>
-          <p>Upgrade firepower, grow your squad, and save your revive for a brutal wall hit.</p>
-          <button onclick="window.mockRewardedReviveOffer()">Mock Rewarded Revive Offer</button>
-          <button onclick="window.restartZombieRun()">Play Again</button>
-        </div>`;
+      overlay.classList.add('hero-mode');
+      overlay.innerHTML = buildRunSummary();
       syncHud();
     }
 
@@ -2887,6 +3013,11 @@
     function drawObjects() {
       const perfTier = squadPerfTier();
       for (const obj of state.objects) {
+        const hitPulse = Math.max(0, obj.hitFlash || 0);
+        const hitJoltX = obj.hitOffsetX || 0;
+        const hitJoltY = obj.hitOffsetY || 0;
+        ctx.save();
+        ctx.translate(hitJoltX, hitJoltY);
         if (obj.type === 'zombie') {
           drawObjectGroundShadow(obj, 15, 5.5);
           drawZombie(obj.x, obj.y, 1.04, 1, 'zombie');
@@ -3050,6 +3181,15 @@
           ctx.beginPath(); ctx.ellipse(obj.x - 5, obj.y - 6, 6, 3.5, -0.35, 0, Math.PI * 2); ctx.fill();
           ctx.fillStyle = '#78350f'; ctx.font='bold 18px system-ui'; ctx.textAlign='center'; ctx.fillText('$',obj.x,obj.y+6);
         }
+        if (hitPulse > 0.04 && perfTier <= 1 && obj.type !== 'coin') {
+          ctx.globalAlpha = Math.min(0.24, hitPulse * 0.3);
+          ctx.fillStyle = obj.type === 'wall' ? '#fff1f2' : '#ffffff';
+          ctx.beginPath();
+          ctx.arc(obj.x, obj.y, (obj.size || 26) * (obj.type === 'boss' ? 1.05 : 0.8), 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+        ctx.restore();
       }
     }
 
@@ -3306,6 +3446,16 @@
         const pulse = 0.72 + Math.sin(renderNow * 0.01 + threat.lane * 1.8) * 0.2;
         const alpha = Math.min(0.7, threat.danger * (perfTier >= 2 ? 0.42 : 0.58)) * pulse;
         const color = threat.obj.type === 'boss' ? `rgba(239,68,68,${alpha})` : threat.obj.type === 'wall' ? `rgba(251,146,60,${alpha})` : `rgba(248,113,113,${alpha})`;
+        const glowColor = threat.obj.type === 'boss'
+          ? `rgba(239,68,68,${Math.min(alpha * 0.26, 0.18)})`
+          : threat.obj.type === 'wall'
+            ? `rgba(251,146,60,${Math.min(alpha * 0.24, 0.16)})`
+            : `rgba(248,113,113,${Math.min(alpha * 0.22, 0.14)})`;
+        const laneGlow = ctx.createLinearGradient(threat.x, 180, threat.x, 610);
+        laneGlow.addColorStop(0, glowColor);
+        laneGlow.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = laneGlow;
+        ctx.fillRect(threat.x - 34, 170, 68, 420);
         ctx.fillStyle = color;
         ctx.beginPath();
         ctx.moveTo(threat.x, 542);
@@ -3395,8 +3545,12 @@
         ctx.fill();
       }
       const urgentThreat = laneThreats.reduce((best, threat) => threat.danger > best.danger ? threat : best, laneThreats[0]);
+      const wallThreat = laneThreats.find(threat => threat.obj?.type === 'wall' && threat.danger > 0.48);
       let statusText = controlsMode === 'buttons' ? 'Use lane buttons for quick shots' : 'Tap any lane to fire';
-      if (urgentThreat?.obj && urgentThreat.danger > 0.58) {
+      if (wallThreat) {
+        const wallLane = wallThreat.lane === 0 ? 'LEFT' : wallThreat.lane === 1 ? 'CENTER' : 'RIGHT';
+        statusText = `BREAK ${wallLane} WALL`;
+      } else if (urgentThreat?.obj && urgentThreat.danger > 0.58) {
         const laneName = urgentThreat.lane === 0 ? 'LEFT' : urgentThreat.lane === 1 ? 'CENTER' : 'RIGHT';
         statusText = `${laneName} ${urgentThreat.obj.type === 'wall' ? 'WALL' : urgentThreat.obj.type.toUpperCase()} CLOSE`;
       } else if (state.minigunCharge >= 100) {

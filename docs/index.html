@@ -1815,6 +1815,9 @@
     let sceneOverlayCacheKey = '';
     let hudOverlayCache = null;
     let hudOverlayCacheKey = '';
+    let heatHazeCache = null;
+    let heatHazeCacheKey = '';
+    let frameLaneThreats = null;
 
     function drawRoad() {
       ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -2162,14 +2165,24 @@
 
     function drawHeatHaze() {
       if (lowPowerMobileMode && state.squad > 45) return;
-      for (let i = 0; i < 3; i++) {
-        const laneX = 170 + i * 240;
-        const haze = ctx.createLinearGradient(laneX, 250, laneX, 640);
+      const cacheKey = `${canvas.height}:heat-haze`;
+      if (!heatHazeCache || heatHazeCacheKey !== cacheKey) {
+        const offscreen = document.createElement('canvas');
+        offscreen.width = 84;
+        offscreen.height = 390;
+        const octx = offscreen.getContext('2d');
+        const haze = octx.createLinearGradient(42, 0, 42, 390);
         haze.addColorStop(0, 'rgba(255,255,255,0)');
         haze.addColorStop(0.45, 'rgba(255,255,255,0.025)');
         haze.addColorStop(1, 'rgba(248,113,113,0.04)');
-        ctx.fillStyle = haze;
-        ctx.fillRect(laneX - 42 + Math.sin(renderNow * 0.0018 + i) * 4, 250, 84, 390);
+        octx.fillStyle = haze;
+        octx.fillRect(0, 0, 84, 390);
+        heatHazeCache = offscreen;
+        heatHazeCacheKey = cacheKey;
+      }
+      for (let i = 0; i < 3; i++) {
+        const laneX = 170 + i * 240;
+        ctx.drawImage(heatHazeCache, laneX - 42 + Math.sin(renderNow * 0.0018 + i) * 4, 250);
       }
     }
 
@@ -3239,9 +3252,8 @@
       return threats;
     }
 
-    function updateLaneButtonThreats() {
+    function updateLaneButtonThreats(threats = frameLaneThreats || getLaneThreats()) {
       const laneButtons = [laneLeftBtn, laneCenterBtn, laneRightBtn];
-      const threats = getLaneThreats();
       laneButtons.forEach((btn, index) => {
         if (!btn) return;
         const danger = threats[index]?.danger || 0;
@@ -3249,8 +3261,7 @@
       });
     }
 
-    function drawLaneWarnings() {
-      const threats = getLaneThreats();
+    function drawLaneWarnings(threats = frameLaneThreats || getLaneThreats()) {
       const perfTier = squadPerfTier();
       for (const threat of threats) {
         if (!threat.obj || threat.danger < 0.18) continue;
@@ -3273,7 +3284,7 @@
       }
     }
 
-    function drawHint() {
+    function drawHint(laneThreats = frameLaneThreats || getLaneThreats()) {
       const cacheKey = `${canvas.width}x${canvas.height}:hud-base`;
       if (!hudOverlayCache || hudOverlayCacheKey !== cacheKey) {
         const offscreen = document.createElement('canvas');
@@ -3337,8 +3348,7 @@
         ctx.fillText(remain > 0.9 ? 'BOSS WAVE INCOMING' : 'BOSS ENTERING NOW', canvas.width / 2, 86);
       }
 
-      const laneThreats = getLaneThreats();
-      updateLaneButtonThreats();
+      updateLaneButtonThreats(laneThreats);
       if (!lowPowerMobileMode || state.squad < 90) {
         ctx.fillStyle = 'rgba(125,211,252,0.05)';
         ctx.beginPath();
@@ -3374,13 +3384,14 @@
 
     function render() {
       renderNow = performance.now();
+      frameLaneThreats = getLaneThreats();
       ctx.save();
       if (screenShake > 0.1) {
         const dx = (Math.random() - 0.5) * screenShake;
         const dy = (Math.random() - 0.5) * screenShake;
         ctx.translate(dx, dy);
       }
-      drawRoad(); drawHeatHaze(); drawSquad(); drawObjects(); drawLaneWarnings(); drawMuzzleFlashes(); drawBullets(); drawShellCasings(); drawParticles(); drawDepthFog(); drawHint();
+      drawRoad(); drawHeatHaze(); drawSquad(); drawObjects(); drawLaneWarnings(frameLaneThreats); drawMuzzleFlashes(); drawBullets(); drawShellCasings(); drawParticles(); drawDepthFog(); drawHint(frameLaneThreats);
       if (missionPopup) drawMissionPopup();
       ctx.restore();
       if (hitFlash > 0.01) {

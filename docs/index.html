@@ -818,6 +818,16 @@
       localStorage.removeItem(storageKey(name));
     }
     function normalizeEmail(email = '') { return String(email).trim().toLowerCase(); }
+    async function hashSecret(secret = '') {
+      const data = new TextEncoder().encode(String(secret));
+      const digest = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function isLegacyPlainSecret(stored = '') {
+      return !!stored && !/^[a-f0-9]{64}$/i.test(stored);
+    }
+
 
     async function supabaseFetchProfile(email) {
       if (!supabaseClient) return null;
@@ -931,7 +941,7 @@
     let revivePrice = Number(getStored('revive-price', 15) || 15);
     let currentAccountId = localStorage.getItem(CURRENT_ACCOUNT_KEY) || '';
     let currentAccountEmail = localStorage.getItem(storageKey('account-email')) || '';
-    let currentAccountPassword = localStorage.getItem(storageKey('account-password')) || '';
+    let currentAccountPasswordHashHash = localStorage.getItem(storageKey('account-password-hash')) || '';
     let cloudLastSavedAt = Number(localStorage.getItem(storageKey('cloud-last-saved-at')) || 0);
     let cloudSyncState = localStorage.getItem(storageKey('cloud-sync-state')) || 'idle';
     let cloudSyncMessage = '';
@@ -961,6 +971,39 @@
       { icon: '🔫', title: 'Power spark', detail: 'Start with +1 firepower.', xp: 80, grant: { startFirepower: 1 } },
       { icon: '🌟', title: 'Hero crate', detail: 'Coins, avatar coins, and hype all at once.', xp: 90, grant: { coins: 180, avatarCoins: 2 } }
     ];
+    function derivedAchievements() {
+      const unlockedAvatarCount = Array.isArray(unlockedAvatars) ? unlockedAvatars.length : 1;
+      return [
+        { title: 'First Blood', unlocked: totalRuns >= 1, detail: 'Play your first run.' },
+        { title: 'Coin Stash', unlocked: bankCoins >= 500, detail: 'Hold 500 coins.' },
+        { title: 'Long Haul', unlocked: best >= 5000, detail: 'Reach 5,000 distance.' },
+        { title: 'Mayhem Engine', unlocked: best >= 10000, detail: 'Reach 10,000 distance.' },
+        { title: 'Collector', unlocked: unlockedAvatarCount >= 5, detail: 'Unlock 5 avatars.' },
+        { title: 'Seasoned', unlocked: passLevel >= 5, detail: 'Reach Premium Pass level 5.' }
+      ];
+    }
+
+    function dailyRewardKey() {
+      return storageKey(`daily-reward-${currentAccountEmail || 'guest'}`);
+    }
+
+    function canClaimDailyReward() {
+      const today = new Date().toISOString().slice(0, 10);
+      return localStorage.getItem(dailyRewardKey()) !== today;
+    }
+
+    function claimDailyReward() {
+      const today = new Date().toISOString().slice(0, 10);
+      if (!canClaimDailyReward()) return false;
+      localStorage.setItem(dailyRewardKey(), today);
+      state.coins += 150;
+      bankCoins = state.coins;
+      addPassXp(18, 'Daily reward claimed');
+      void saveMeta();
+      syncHud();
+      return true;
+    }
+
     function capturePlayerProfile() {
       return {
         best,
@@ -1047,7 +1090,7 @@
     async function loadCurrentAccountProfile() {
       if (!currentAccountEmail) {
         currentAccountId = '';
-        currentAccountPassword = '';
+        currentAccountPasswordHash = '';
         localStorage.removeItem(CURRENT_ACCOUNT_KEY);
         removeStored('account-email');
         removeStored('account-password');
@@ -1061,7 +1104,7 @@
       const account = await supabaseFetchProfile(currentAccountEmail);
       if (!account) {
         currentAccountId = '';
-        currentAccountPassword = '';
+        currentAccountPasswordHash = '';
         localStorage.removeItem(CURRENT_ACCOUNT_KEY);
         removeStored('account-email');
         removeStored('account-password');
@@ -1074,13 +1117,13 @@
     }
 
     async function saveAccountProfile() {
-      if (!currentAccountEmail || !currentAccountPassword) { persistGuestProfile(); return; }
+      if (!currentAccountEmail || !currentAccountPasswordHash) { persistGuestProfile(); return; }
       if (!supabaseClient) { persistGuestProfile(); return; }
       setCloudSyncState('syncing', 'Saving cloud profile...');
-      await supabaseSaveProfile(currentAccountEmail, currentAccountPassword, capturePlayerProfile());
+      await supabaseSaveProfile(currentAccountEmail, currentAccountPasswordHash, capturePlayerProfile());
       localStorage.setItem(CURRENT_ACCOUNT_KEY, currentAccountId || currentAccountEmail);
       setStored('account-email', currentAccountEmail);
-      setStored('account-password', currentAccountPassword);
+      setStored('account-password', currentAccountPasswordHash);
       setCloudSyncState('synced', `Saved cloud profile, ${formatSyncTime(Date.now())}`);
     }
 
@@ -1112,8 +1155,13 @@
               <div class="settings-card">
                 <h4>Account Actions</h4>
                 <button id="syncAccountBtn">Sync Now</button>
+                <button id="claimDailyRewardBtn" ${canClaimDailyReward() ? '' : 'disabled'}>${canClaimDailyReward() ? 'Claim Daily Reward' : 'Daily Reward Claimed'}</button>
                 <p class="mini-note">Manual sync is useful after a long session or before switching devices.</p>
                 <button id="signOutAccountBtn" class="secondary">Sign Out</button>
+              </div>
+              <div class="settings-card">
+                <h4>Achievements</h4>
+                <div class="panel-list">${derivedAchievements().map(item => `<div>${item.unlocked ? '✅' : '⬜'} <strong>${item.title}</strong> — ${item.detail}</div>`).join('')}</div>
               </div>
             </div>
           ` : `
@@ -1131,7 +1179,9 @@
                 <input id="accountSignInEmail" type="email" placeholder="Email" style="width:100%;margin-bottom:10px;">
                 <input id="accountSignInPassword" type="password" placeholder="Password" style="width:100%;margin-bottom:10px;">
                 <button id="signInAccountBtn" class="secondary">Sign In</button>
+                <button id="resetPasswordBtn" class="warn" style="margin-top:10px;">Reset Password</button>
                 <p class="mini-note">Signing in loads the existing cloud save for that email on this browser.</p>
+                <p class="mini-note">Reset password updates the saved account secret for this email inside the current prototype account system.</p>
               </div>
             </div>
           `}
@@ -1152,7 +1202,7 @@
           if (!confirm('Sign out of this cloud account on this browser?')) return;
           currentAccountId = '';
           currentAccountEmail = '';
-          currentAccountPassword = '';
+          currentAccountPasswordHash = '';
           localStorage.removeItem(CURRENT_ACCOUNT_KEY);
           removeStored('account-email');
           removeStored('account-password');
@@ -1171,11 +1221,12 @@
         try {
           const existing = await supabaseFetchProfile(email);
           if (existing) return alert('That account already exists. Sign in instead.');
+          const passwordHash = await hashSecret(password);
           const profile = importGuest ? capturePlayerProfile() : { best: 0, bankCoins: 0, avatarCoins: 0, selectedAvatar: 'default', unlockedAvatars: ['default'], missionIndex: 0, missionProgress: 0, passLevel: 1, passXp: 0, totalRuns: 0, youtubeVisitClaimed: false, youtubeSubscribeClaimed: false, starterPackClaimed: false, gunPrice: 10, squadPrice: 8, revivePrice: 15 };
-          await supabaseSaveProfile(email, password, profile);
+          await supabaseSaveProfile(email, passwordHash, profile);
           currentAccountId = email;
           currentAccountEmail = email;
-          currentAccountPassword = password;
+          currentAccountPasswordHash = password;
           setStored('account-email', email);
           setStored('account-password', password);
           localStorage.setItem(CURRENT_ACCOUNT_KEY, email);
@@ -1192,14 +1243,17 @@
         const password = String(document.getElementById('accountSignInPassword')?.value || '');
         try {
           const account = await supabaseFetchProfile(email);
-          if (!account || account.password_hash !== password) return alert('Incorrect email or password.');
+          const passwordHash = await hashSecret(password);
+          const storedSecret = account?.password_hash || '';
+          const secretMatches = account && (storedSecret === passwordHash || (isLegacyPlainSecret(storedSecret) && storedSecret === password));
+          if (!secretMatches) return alert('Incorrect email or password.');
           if (bankCoins > 0 || best > 0 || passLevel > 1) {
             const ok = confirm('Signing in will load the cloud profile for this account on this browser. Your guest progress will remain local unless you create a new account with import enabled. Continue?');
             if (!ok) return;
           }
           currentAccountId = account.id || email;
           currentAccountEmail = email;
-          currentAccountPassword = password;
+          currentAccountPasswordHash = password;
           setStored('account-email', email);
           setStored('account-password', password);
           localStorage.setItem(CURRENT_ACCOUNT_KEY, currentAccountId);

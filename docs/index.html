@@ -530,6 +530,8 @@
       .controls { border-left: 0; border-top: 1px solid rgba(148,163,184,.12); }
       canvas { height: 560px; }
       .shop-hero { grid-template-columns: 1fr; }
+      .home-hero-grid,
+      .safehouse-grid { grid-template-columns: 1fr; }
       .touch-row { display: flex; }
       .canvas-hud-row { display: none; }
     }
@@ -538,7 +540,9 @@
       .stat .value { font-size: 22px; }
       .overlay-actions.two-up { grid-template-columns: 1fr; }
       .controls { padding: 12px; }
-      .settings-grid { grid-template-columns: 1fr; }
+      .settings-grid,
+      .home-hero-grid,
+      .safehouse-grid { grid-template-columns: 1fr; }
       button { min-height: 46px; }
       .touch-row {
         gap: 6px;
@@ -774,6 +778,9 @@
     let rewardQueue = [];
     let rewardPopup = null;
     let crowdCache = null;
+    let tutorialSeen = localStorage.getItem('zombie-squad-run-tutorial-seen') === 'yes';
+    let onboardingActive = localStorage.getItem('zombie-squad-run-onboarding-active') === 'yes';
+    let tutorialProgress = JSON.parse(localStorage.getItem('zombie-squad-run-tutorial-progress') || '{"laneShots":0,"wallsBroken":0,"shopOpened":false}');
     const impactDecals = [];
     const shellCasings = [];
     const muzzleFlashes = [];
@@ -818,6 +825,9 @@
       localStorage.setItem('zombie-squad-run-gun-price', String(gunPrice));
       localStorage.setItem('zombie-squad-run-squad-price', String(squadPrice));
       localStorage.setItem('zombie-squad-run-revive-price', String(revivePrice));
+      localStorage.setItem('zombie-squad-run-tutorial-seen', tutorialSeen ? 'yes' : 'no');
+      localStorage.setItem('zombie-squad-run-onboarding-active', onboardingActive ? 'yes' : 'no');
+      localStorage.setItem('zombie-squad-run-tutorial-progress', JSON.stringify(tutorialProgress));
     }
 
     function activeMission() { return MISSIONS[missionIndex % MISSIONS.length]; }
@@ -838,6 +848,50 @@
       if (grant.startFirepower) bits.push(`+${grant.startFirepower} starting firepower`);
       return bits.join(', ');
     }
+    function homeStatusSummary() {
+      const mission = activeMission();
+      const missionLeft = Math.max(0, mission.target - missionProgress);
+      const passNeed = Math.max(0, passXpForLevel(passLevel) - passXp);
+      const avatarName = AVATARS.find(a => a.id === selectedAvatar)?.name || 'Default Trooper';
+      const tutorialReady = !tutorialSeen && totalRuns === 0;
+      return {
+        mission,
+        missionLeft,
+        passNeed,
+        avatarName,
+        tutorialReady,
+        paceLabel: best >= 900 ? 'Hero pace' : best >= 540 ? 'Squad captain pace' : best >= 180 ? 'Road scout pace' : 'Fresh recruit pace'
+      };
+    }
+    function currentRewardStashText(grant = {}) {
+      const bits = [];
+      if (grant.coins) bits.push(`${grant.coins} coins to spend`);
+      if (grant.avatarCoins) bits.push(`${grant.avatarCoins} avatar coins for looks`);
+      if (grant.runRevives) bits.push(`${grant.runRevives} extra safety heart next run`);
+      if (grant.startSquad) bits.push(`${grant.startSquad} bonus squad on spawn`);
+      if (grant.startFirepower) bits.push(`${grant.startFirepower} extra firepower at launch`);
+      return bits.join(' • ') || 'Safehouse stash updated';
+    }
+    function tutorialStepInfo() {
+      if (!onboardingActive) return null;
+      if (tutorialProgress.laneShots < 3) return { title: 'Training Tip', body: 'Tap left, center, or right to shoot that lane. Try all three lanes.', progress: `${tutorialProgress.laneShots} / 3 lane taps`, icon: '🎯' };
+      if (tutorialProgress.wallsBroken < 1) return { title: 'Training Tip', body: 'Walls hit your squad if they survive. Focus the wall lane until it breaks.', progress: `${tutorialProgress.wallsBroken} / 1 wall smashed`, icon: '🧱' };
+      if (!tutorialProgress.shopOpened) return { title: 'Training Tip', body: 'Open Money or the shop buttons between pushes. Coins make the next run easier.', progress: 'Open any shop panel once', icon: '🪙' };
+      return { title: 'Training Complete', body: 'Nice. You know the loop now: shoot lanes, save your squad, spend smart, then chase your next prize.', progress: 'Tap to keep running', icon: '🌟', done: true };
+    }
+    function markTutorialProgress(key, amount = 1) {
+      if (!onboardingActive) return;
+      if (key === 'laneShots') tutorialProgress.laneShots = Math.min(3, tutorialProgress.laneShots + amount);
+      if (key === 'wallsBroken') tutorialProgress.wallsBroken = Math.min(1, tutorialProgress.wallsBroken + amount);
+      if (key === 'shopOpened') tutorialProgress.shopOpened = true;
+      const step = tutorialStepInfo();
+      if (step?.done) {
+        tutorialSeen = true;
+        onboardingActive = false;
+        setCombatFeed('Training complete', 1700);
+      }
+      saveMeta();
+    }
     function queueRewardPopup(payload) {
       rewardQueue.push(payload);
       if (!rewardPopup && !missionPopup) showNextRewardPopup();
@@ -851,7 +905,11 @@
         reward: next.reward,
         icon: next.icon || '🎉',
         button: next.button || 'Awesome',
-        rect: null
+        kicker: next.kicker || 'Safehouse delivery',
+        stash: next.stash || 'Stash updated for your next run.',
+        accent: next.accent || '#facc15',
+        rect: null,
+        bornAt: performance.now()
       };
       overlay.innerHTML = '';
       state.paused = true;
@@ -882,7 +940,10 @@
           label: reward.title,
           reward: rewardSummary(reward.grant) || reward.detail,
           icon: reward.icon,
-          button: 'Collect'
+          button: 'Collect',
+          kicker: `Level ${passLevel} clear`,
+          stash: currentRewardStashText(reward.grant),
+          accent: reward.grant.avatarCoins ? '#c084fc' : reward.grant.runRevives ? '#fb7185' : reward.grant.startFirepower ? '#38bdf8' : reward.grant.startSquad ? '#22c55e' : '#facc15'
         });
         passLevel += 1;
       }
@@ -1151,6 +1212,7 @@
     ];
 
     function moneyPanelMarkup() {
+      const home = homeStatusSummary();
       return `
         <div class="message settings-page">
           <h2>Squad Shop</h2>
@@ -1164,7 +1226,7 @@
             <div class="settings-card" style="background:linear-gradient(135deg, rgba(59,130,246,.18), rgba(15,23,42,.96));">
               <h4>🔫 Current Loadout</h4>
               <p><strong>${weaponProfile(state.firepower).name}</strong> at firepower level ${state.firepower}.</p>
-              <p class="mini-note">Next infected husk or upgrade will push you harder.</p>
+              <p class="mini-note">Avatar on deck: <strong>${home.avatarName}</strong>.</p>
             </div>
           </div>
           <div class="shop-grid">
@@ -1197,6 +1259,7 @@
 
     function openMoneyPanel() {
       state.paused = true;
+      markTutorialProgress('shopOpened');
       overlay.innerHTML = moneyPanelMarkup();
     }
 
@@ -1502,14 +1565,37 @@
     function showTitleScreen() {
       state.paused = true;
       pauseBtn.textContent = 'Resume';
+      const home = homeStatusSummary();
       overlay.classList.add('hero-mode');
       overlay.innerHTML = `
-        <div class="message hero-card">
+        <div class="message settings-page">
           <h1>Zombie Squad Run</h1>
-          <p>Run with your squad, shoot the right lane, smash walls before impact, and spend coins to upgrade your survival chances.</p>
-          <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best} &nbsp; <strong>Pass Lv.</strong> ${passLevel}</p>
-          <p class="mini-note">Next pass reward: <strong>${currentPassReward().title}</strong>, ${rewardSummary(currentPassReward().grant) || currentPassReward().detail}.</p>
-          <p class="mini-note">Build: Beta V1.0, includes "In the Hall of the Mountain King" background music.</p>
+          <p>Your squad is back at the safehouse. Patch up, spend coins, and get ready for the next road push.</p>
+          <div class="home-hero">
+            <div class="home-hero-grid">
+              <div class="safehouse-banner">
+                <span class="pill" style="background:rgba(59,130,246,.18);color:#bfdbfe;">🏠 Safehouse Ready</span>
+                <h3>${home.paceLabel}</h3>
+                <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best} &nbsp; <strong>Pass Lv.</strong> ${passLevel}</p>
+                <div class="safehouse-grid">
+                  <div class="safehouse-stat"><span class="label">Avatar</span><strong>${home.avatarName}</strong></div>
+                  <div class="safehouse-stat"><span class="label">Next Prize</span><strong>${currentPassReward().title}</strong></div>
+                  <div class="safehouse-stat"><span class="label">Mission</span><strong>${home.missionLeft === 0 ? 'Ready to clear' : `${home.missionLeft} left`}</strong></div>
+                  <div class="safehouse-stat"><span class="label">Pass XP</span><strong>${home.passNeed} to go</strong></div>
+                </div>
+              </div>
+              <div class="settings-card" style="background:linear-gradient(180deg, rgba(15,23,42,.92), rgba(30,41,59,.98));">
+                <h4>Next Run Plan</h4>
+                <ul class="coach-list">
+                  <li><span class="coach-badge">1</span><div><strong>Shoot the danger lane</strong><span>Tap the lane with the closest wall or zombie first.</span></div></li>
+                  <li><span class="coach-badge">2</span><div><strong>Spend after a tough run</strong><span>More firepower and revives make walls much safer.</span></div></li>
+                  <li><span class="coach-badge">3</span><div><strong>Stack rewards</strong><span>Missions and long runs fill the Premium Pass fastest.</span></div></li>
+                </ul>
+                <p class="mini-note">Build: Beta V1.0, includes "In the Hall of the Mountain King" background music.</p>
+              </div>
+            </div>
+            ${home.tutorialReady ? `<div class="settings-card" style="background:linear-gradient(135deg, rgba(34,197,94,.14), rgba(15,23,42,.96));border-color:rgba(34,197,94,.24);"><h4>🌟 Quick Start Training</h4><p>New here? Start with a tiny guide that teaches lanes, walls, and where to spend coins.</p><div class="overlay-actions two-up"><button onclick="window.startOnboardingRun()">Start Training Run</button><button class="secondary" onclick="window.skipOnboarding()">Skip Guide</button></div></div>` : ''}
+          </div>
           <div class="overlay-actions two-up">
             <button onclick="window.startZombieRun()">Start Run</button>
             <button class="secondary" onclick="window.openSettingsPanel()">Settings</button>
@@ -2153,10 +2239,11 @@
         pushDecal(obj.x, obj.y + 12, '#7f1d1d', 16, 3, 4);
       }
       else if (obj.type === 'coin') { addCoins(obj.reward); playTone(1100, 0.08, 'triangle', 1.3); }
-      else if (obj.type === 'wall') { updateMission('walls', 1); playTone(180, 0.16, 'square', 1.6); pushDecal(obj.x, obj.y + 26, '#78350f', 22, 2.8, 2); }
+      else if (obj.type === 'wall') { updateMission('walls', 1); markTutorialProgress('wallsBroken'); playTone(180, 0.16, 'square', 1.6); pushDecal(obj.x, obj.y + 26, '#78350f', 22, 2.8, 2); }
     }
 
     function buildRunSummary() {
+      const home = homeStatusSummary();
       const distance = Math.floor(state.distance);
       const coinsEarned = state.coins;
       const nextMission = activeMission();
@@ -2170,6 +2257,12 @@
           <h2>Run Summary</h2>
           <p><strong>${distance}</strong> distance, <strong>${coinsEarned}</strong> coins banked, wave <strong>${state.wave}</strong>.</p>
           <div class="settings-grid" style="margin-top:14px;">
+            <div class="settings-card" style="background:linear-gradient(135deg, rgba(59,130,246,.18), rgba(15,23,42,.98));">
+              <h4>Safehouse Snapshot</h4>
+              <p><strong>${home.avatarName}</strong> is equipped and waiting.</p>
+              <p>Banked upgrades carry into the next road push.</p>
+              <p class="mini-note">Home mood: ${home.paceLabel}.</p>
+            </div>
             <div class="settings-card">
               <h4>Rewards</h4>
               <p>Run bank: <strong>${coinsEarned} coins</strong></p>
@@ -3748,26 +3841,48 @@
       glow.addColorStop(1, 'rgba(250,204,21,0)');
       ctx.fillStyle = glow;
       ctx.fillRect(cardX - 40, cardY - 40, cardW + 80, cardH + 80);
-      ctx.fillStyle = 'rgba(15,23,42,0.97)';
+      const elapsed = performance.now() - (rewardPopup.bornAt || performance.now());
+      const shimmer = 0.55 + Math.sin(elapsed * 0.012) * 0.16;
+      const accent = rewardPopup.accent || '#facc15';
+      const frameGlow = ctx.createRadialGradient(cardX + cardW / 2, cardY + 64, 18, cardX + cardW / 2, cardY + 64, 240);
+      frameGlow.addColorStop(0, `${accent}55`);
+      frameGlow.addColorStop(0.58, 'rgba(255,255,255,0.05)');
+      frameGlow.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = frameGlow;
+      ctx.fillRect(cardX - 44, cardY - 50, cardW + 88, cardH + 96);
+      const panel = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH);
+      panel.addColorStop(0, 'rgba(15,23,42,0.98)');
+      panel.addColorStop(0.68, 'rgba(30,41,59,0.98)');
+      panel.addColorStop(1, 'rgba(30,64,175,0.88)');
+      ctx.fillStyle = panel;
       ctx.beginPath();
       ctx.roundRect(cardX, cardY, cardW, cardH, 26);
       ctx.fill();
+      ctx.fillStyle = `rgba(255,255,255,${0.05 + Math.max(0, shimmer) * 0.07})`;
+      ctx.fillRect(cardX + 18, cardY + 16, cardW - 36, 10);
       ctx.strokeStyle = 'rgba(250,204,21,0.42)';
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
+      ctx.font = '700 12px system-ui';
+      ctx.fillStyle = '#93c5fd';
+      ctx.fillText(rewardPopup.kicker || 'Safehouse delivery', cardX + cardW / 2, cardY + 30);
       ctx.font = '54px system-ui';
-      ctx.fillText(rewardPopup.icon || '🎉', cardX + cardW / 2, cardY + 54);
+      ctx.fillStyle = '#fff7ed';
+      ctx.fillText(rewardPopup.icon || '🎉', cardX + cardW / 2, cardY + 62);
       ctx.font = '900 26px system-ui';
       ctx.fillStyle = '#f8fafc';
-      ctx.fillText(rewardPopup.title, cardX + cardW / 2, cardY + 102);
+      ctx.fillText(rewardPopup.title, cardX + cardW / 2, cardY + 106);
       ctx.font = '800 20px system-ui';
       ctx.fillStyle = '#fde68a';
-      ctx.fillText(rewardPopup.label, cardX + cardW / 2, cardY + 136);
+      ctx.fillText(rewardPopup.label, cardX + cardW / 2, cardY + 138);
       ctx.font = '15px system-ui';
       ctx.fillStyle = '#cbd5e1';
       ctx.fillText(rewardPopup.reward, cardX + cardW / 2, cardY + 168);
+      ctx.font = '700 13px system-ui';
+      ctx.fillStyle = '#bfdbfe';
+      ctx.fillText(rewardPopup.stash || 'Stash updated for your next run.', cardX + cardW / 2, cardY + 192);
       const buttonGrad = ctx.createLinearGradient(buttonX, buttonY, buttonX, buttonY + buttonH);
       buttonGrad.addColorStop(0, '#fde047');
       buttonGrad.addColorStop(1, '#f59e0b');
@@ -3927,6 +4042,7 @@
       const wallThreat = laneThreats.find(threat => threat.obj?.type === 'wall' && threat.danger > 0.48);
       let statusText = controlsMode === 'buttons' ? 'Use lane buttons for quick shots' : 'Tap any lane to fire';
       if (state.combatFeed && state.combatFeedUntil > renderNow) statusText = state.combatFeed;
+      const tutorialStep = tutorialStepInfo();
       if (wallThreat) {
         const wallLane = wallThreat.lane === 0 ? 'LEFT' : wallThreat.lane === 1 ? 'CENTER' : 'RIGHT';
         statusText = `BREAK ${wallLane} WALL`;
@@ -3982,6 +4098,43 @@
         ctx.fillStyle = `rgba(239,68,68,${Math.min(0.12, hitFlash * 0.7)})`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
+      if (tutorialStep && !overlay.innerHTML && !state.gameOver) {
+        const panelW = Math.min(320, canvas.width - 28);
+        const panelH = tutorialStep.done ? 92 : 104;
+        const panelX = canvas.width - panelW - 16;
+        const panelY = canvas.height - panelH - 18;
+        ctx.save();
+        ctx.fillStyle = 'rgba(2,6,23,0.82)';
+        ctx.beginPath();
+        ctx.roundRect(panelX, panelY, panelW, panelH, 18);
+        ctx.fill();
+        ctx.strokeStyle = tutorialStep.done ? 'rgba(250,204,21,0.4)' : 'rgba(56,189,248,0.32)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = tutorialStep.done ? '#fde68a' : '#93c5fd';
+        ctx.font = '700 12px system-ui';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(`${tutorialStep.icon} ${tutorialStep.title}`, panelX + 16, panelY + 24);
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = '700 14px system-ui';
+        const words = tutorialStep.body.split(' ');
+        let line = '';
+        let y = panelY + 46;
+        for (const word of words) {
+          const test = `${line}${word} `;
+          if (ctx.measureText(test).width > panelW - 32 && line) {
+            ctx.fillText(line.trim(), panelX + 16, y);
+            line = `${word} `;
+            y += 18;
+          } else line = test;
+        }
+        if (line) ctx.fillText(line.trim(), panelX + 16, y);
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = '12px system-ui';
+        ctx.fillText(tutorialStep.progress, panelX + 16, panelY + panelH - 14);
+        ctx.restore();
+      }
       if (state.rewardPulseUntil > renderNow) {
         const rewardAlpha = Math.max(0, (state.rewardPulseUntil - renderNow) / 1600);
         const rewardGlow = ctx.createRadialGradient(canvas.width / 2, canvas.height * 0.82, 18, canvas.width / 2, canvas.height * 0.82, canvas.width * 0.44);
@@ -4028,6 +4181,7 @@
           return;
         }
       }
+      markTutorialProgress('laneShots');
       fireAtLane(laneFromX(x));
     });
     window.addEventListener('keydown', e => {
@@ -4175,6 +4329,20 @@
           <button onclick="window.openMoneyPanel()">Back To Shop</button>
         </div>`;
       syncHud();
+    };
+    window.startOnboardingRun = function() {
+      tutorialSeen = true;
+      onboardingActive = true;
+      tutorialProgress = { laneShots: 0, wallsBroken: 0, shopOpened: false };
+      saveMeta();
+      window.startZombieRun();
+      setCombatFeed('Training run started', 1700);
+    };
+    window.skipOnboarding = function() {
+      tutorialSeen = true;
+      onboardingActive = false;
+      saveMeta();
+      showTitleScreen();
     };
     window.closeOverlayAndResume = function() {
       overlay.classList.remove('hero-mode');

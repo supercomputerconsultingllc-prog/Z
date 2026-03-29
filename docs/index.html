@@ -1727,8 +1727,8 @@
           </div>
           <div class="shop-grid">
             <div class="shop-card featured">
-              <h4><span>💳 Coinbase Coin Packs</span><span class="shop-badge">Manual Claim</span></h4>
-              <p>Scan your Coinbase wallet QR code, complete payment, then return and tap the matching pack to mark it paid on this device.</p>
+              <h4><span>💳 BTC Coin Packs</span><span class="shop-badge">Manual Claim</span></h4>
+              <p>Send BTC using the Coinbase receive flow on the <strong>Base network</strong>, then return and tap the matching pack to mark it paid on this device.</p>
               <div class="goal-stack" style="margin-top:10px;">
                 ${COIN_PACKS.map(pack => `
                   <div class="goal-card">
@@ -1740,7 +1740,7 @@
                     </div>
                   </div>`).join('')}
               </div>
-              <p class="mini-note">This first pass is a manual crypto-payment flow. It does not verify Coinbase payment automatically yet.</p>
+              <p class="mini-note">This first pass is a manual crypto-payment flow. It does not verify Coinbase payment automatically yet. Only send Bitcoin to this address on the <strong>Base network</strong>.</p>
             </div>
             <div class="shop-card">
               <h4><span>🔥 Featured Starter Pack</span><span class="shop-badge">100 Coins</span></h4>
@@ -1764,7 +1764,7 @@
               </div>
             </div>
           </div>
-          <p class="mini-note">Current wallet address: <code>${COINBASE_WALLET_ADDRESS}</code>. You can still override the destination with localStorage key <code>zombie-mayhem-coinbase-wallet-url</code> if you swap to a different Coinbase payment link later.</p>
+          <p class="mini-note">Current BTC receive address: <code>${COINBASE_WALLET_ADDRESS}</code>. Network: <strong>Base</strong>. You can still override the destination with localStorage key <code>zombie-mayhem-coinbase-wallet-url</code> if you swap to a different Coinbase payment link later.</p>
           <button class="secondary" onclick="window.closeOverlayAndResume()">Close</button>
         </div>`;
     }
@@ -4870,8 +4870,8 @@
       overlay.innerHTML = `
         <div class="message settings-page">
           <h2>Coin Purchase Started</h2>
-          <p>Complete the Coinbase wallet payment for <strong>${pack.coins.toLocaleString()} coins</strong> at <strong>${pack.price}</strong>, then come back here.</p>
-          <p class="mini-note">This prototype store does not auto-confirm blockchain payment yet. Use the button below after payment is complete.</p>
+          <p>Complete the BTC payment on the <strong>Base network</strong> for <strong>${pack.coins.toLocaleString()} coins</strong> at <strong>${pack.price}</strong>, then come back here.</p>
+          <p class="mini-note">This prototype store does not auto-confirm blockchain payment yet. Use the button below after payment is complete. Only send Bitcoin on the Base network to avoid loss.</p>
           <div class="overlay-actions two-up">
             ${opened ? '' : `<button class="warn" onclick="window.location.href='${COINBASE_WALLET_URL}'">Open Wallet</button>`}
             <button onclick="window.claimCoinPack('${pack.id}')">I Paid, Add ${pack.coins.toLocaleString()} Coins</button>

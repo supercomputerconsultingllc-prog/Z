@@ -1119,22 +1119,14 @@
     function applyControlsMode() {
       const touchRow = document.querySelector('.touch-row');
       const desktopWebMode = window.matchMedia('(pointer:fine)').matches;
-      const mobileLayout = window.innerWidth <= 920;
       touchRow.style.display = controlsMode === 'buttons' ? 'flex' : '';
       touchRow.style.opacity = controlsMode === 'buttons' ? '1' : '';
       if (minigunBtn) minigunBtn.style.display = desktopWebMode ? 'none' : '';
       if (floatingMinigunBtn) floatingMinigunBtn.style.display = '';
-      if (mobileLayout) {
-        missionHud?.classList.add('docked');
-        seasonHud?.classList.add('docked');
-        if (canvasHudRow && missionHud && missionHud.parentElement !== canvasHudRow) canvasHudRow.prepend(missionHud);
-        if (canvasHudRow && seasonHud && seasonHud.parentElement !== canvasHudRow) canvasHudRow.prepend(seasonHud);
-      } else {
-        missionHud?.classList.remove('docked');
-        seasonHud?.classList.remove('docked');
-        if (canvasWrap && missionHud && missionHud.parentElement !== canvasWrap) canvasWrap.appendChild(missionHud);
-        if (canvasWrap && seasonHud && seasonHud.parentElement !== canvasWrap) canvasWrap.appendChild(seasonHud);
-      }
+      missionHud?.classList.add('docked');
+      seasonHud?.classList.add('docked');
+      if (canvasHudRow && missionHud && missionHud.parentElement !== canvasHudRow) canvasHudRow.prepend(missionHud);
+      if (canvasHudRow && seasonHud && seasonHud.parentElement !== canvasHudRow) canvasHudRow.prepend(seasonHud);
     }
 
     function controlSummary() {

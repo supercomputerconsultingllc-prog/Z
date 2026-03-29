@@ -1876,11 +1876,12 @@
     function markObjectHit(obj, bullet) {
       if (!obj) return;
       const now = performance.now();
-      obj.hitUntil = now + (obj.type === 'boss' ? 180 : obj.type === 'wall' ? 120 : 150);
-      obj.hitFlash = Math.min(1.25, (obj.hitFlash || 0) + (bullet?.style === 'plasma' ? 0.55 : 0.34));
-      const pushBase = obj.type === 'boss' ? 5 : obj.type === 'wall' ? 3 : obj.type === 'runner' ? 7 : 5;
-      obj.hitOffsetX = (obj.hitOffsetX || 0) + ((bullet?.x || obj.x) < obj.x ? 1 : -1) * pushBase;
-      obj.hitOffsetY = (obj.hitOffsetY || 0) + (obj.type === 'wall' ? 0.5 : 1.4);
+      const heavyHit = bullet?.style === 'minigun' || bullet?.style === 'plasma' || bullet?.style === 'laser';
+      obj.hitUntil = now + (obj.type === 'boss' ? 220 : obj.type === 'wall' ? 140 : 170);
+      obj.hitFlash = Math.min(1.45, (obj.hitFlash || 0) + (heavyHit ? 0.62 : bullet?.style === 'plasma' ? 0.55 : 0.38));
+      const pushBase = obj.type === 'boss' ? 7 : obj.type === 'wall' ? 4 : obj.type === 'runner' ? 8 : 6;
+      obj.hitOffsetX = (obj.hitOffsetX || 0) + ((bullet?.x || obj.x) < obj.x ? 1 : -1) * (heavyHit ? pushBase * 1.35 : pushBase);
+      obj.hitOffsetY = (obj.hitOffsetY || 0) + (obj.type === 'wall' ? 0.7 : heavyHit ? 2.1 : 1.6);
     }
 
     function squadPerfTier() {
@@ -1971,15 +1972,17 @@
       }
       const nowMs = performance.now();
       state.minigunCharge = 0;
-      state.minigunWindupUntil = nowMs + 260;
-      state.minigunActiveUntil = nowMs + 3200;
-      state.overdriveUntil = nowMs + 3600;
-      state.overdriveFlashUntil = nowMs + 1150;
+      state.minigunWindupUntil = nowMs + 340;
+      state.minigunActiveUntil = nowMs + 3600;
+      state.overdriveUntil = nowMs + 4050;
+      state.overdriveFlashUntil = nowMs + 1350;
       state.lastMinigunBurst = nowMs - 120;
-      setCombatFeed('MINIGUN OVERDRIVE', 1900);
-      playTone(140, 0.22, 'sawtooth', 2);
-      playTone(220, 0.12, 'square', 1.25);
-      addScreenShake(16, 0.14);
+      setCombatFeed('MINIGUN OVERDRIVE', 2200);
+      playTone(120, 0.18, 'sawtooth', 1.8);
+      setTimeout(() => playTone(170, 0.16, 'sawtooth', 1.7), 70);
+      setTimeout(() => playTone(250, 0.12, 'square', 1.35), 160);
+      addScreenShake(20, 0.17);
+      state.particles.push({ x: LANES[1], y: 596, life: 0.3, color: '#fed7aa', ring: '#ea580c', burst: true, size: 34 });
 
       for (const obj of state.objects) {
         if (obj.type === 'zombie' || obj.type === 'wall') {
@@ -2018,7 +2021,8 @@
             fireAtLane(lane, 4, 290, { silent: true, noVibrate: true, muzzleScale: 0.86 });
           }
           state.lastMinigunBurst = nowMs;
-          playTone(150 + rand(0, 40), 0.05, 'sawtooth', 0.55);
+          playTone(150 + rand(0, 40), 0.06, 'sawtooth', 0.72);
+          if (Math.random() < 0.35) addScreenShake(2.4, 0.025);
         }
       }
       const roundCoins = Math.floor(state.distance / 180) * 2;
@@ -2082,8 +2086,9 @@
           if (Math.abs(bullet.x - obj.x) < obj.size * 0.55 && Math.abs(bullet.y - obj.y) < obj.size * 0.55) {
             obj.hp -= bullet.damage || 1;
             markObjectHit(obj, bullet);
-            addScreenShake(bullet.style === 'minigun' ? 4 : bullet.style === 'plasma' ? 6 : 3, bullet.style === 'plasma' ? 0.08 : 0.04);
-            state.particles.push({ x: obj.x, y: obj.y, life: 0.18, color: bullet.glow ? bullet.color || '#fde68a' : '#f8fafc', ring: bullet.ring || '#ffffff', size: (bullet.radius || 5) * 2.2 * (bullet.impactScale || 1), burst: bullet.style === 'arc' || bullet.style === 'plasma' || bullet.style === 'minigun' });
+            addScreenShake(bullet.style === 'minigun' ? 6 : bullet.style === 'plasma' ? 7 : bullet.style === 'laser' ? 5 : 3.5, bullet.style === 'plasma' ? 0.1 : bullet.style === 'minigun' ? 0.08 : 0.05);
+            state.particles.push({ x: obj.x, y: obj.y, life: bullet.style === 'minigun' ? 0.22 : 0.18, color: bullet.glow ? bullet.color || '#fde68a' : '#f8fafc', ring: bullet.ring || '#ffffff', size: (bullet.radius || 5) * (bullet.style === 'minigun' ? 2.9 : 2.35) * (bullet.impactScale || 1), burst: bullet.style === 'arc' || bullet.style === 'plasma' || bullet.style === 'minigun' });
+            if (bullet.style === 'minigun' || bullet.style === 'plasma' || bullet.style === 'laser') pushDecal(obj.x + rand(-8, 8), obj.y + rand(6, 16), bullet.ring || '#fff7ae', bullet.style === 'minigun' ? 10 : 8, 0.42, bullet.style === 'minigun' ? 2 : 1);
             if (bullet.splash) applySplashDamage(obj.x, obj.y, bullet.splash, (bullet.damage || 1) * 0.55, bullet.ring, bullet.color);
             if (bullet.chain) applyChainDamage(obj, bullet.chain, bullet.damage || 1, bullet.ring, bullet.color);
             bullet.hits = (bullet.hits || 0) + 1;

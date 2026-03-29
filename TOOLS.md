@@ -45,6 +45,7 @@ Skills are shared. Your setup is yours. Keeping them apart means you can update 
 - When refactoring JavaScript threshold logic, declare derived mode flags before any expression that uses them. A later `const` like `dotArmyMode` cannot be referenced earlier in the same block without triggering a runtime error.
 - For milestone game builds, create both a workspace snapshot folder under `backups/<name>/` and a matching git tag (for example `zombie-squad-run-v1.1`) before pushing. That gives a fast file restore path and a clean git restore path.
 - For GitHub CLI device login, treat the one-time code as short-lived. After `gh auth login` shows the code, open `https://github.com/login/device` immediately and complete approval before trying other commands, or the code may expire and mislead the next troubleshooting step.
+- For hot JavaScript update/render loops, avoid `filter(...)/sort(...)` and other temporary-array patterns in the per-frame path when an in-place write-index loop or single-pass scan will do. This reduces allocation churn and late-run lag without changing visuals.
 
 ---
 

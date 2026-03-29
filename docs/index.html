@@ -875,7 +875,7 @@
       };
       overlay.innerHTML = '';
       state.paused = true;
-      refreshMusicState();
+      stopMusicLoop(false);
     }
     function grantPassReward(reward) {
       const grant = reward?.grant || {};
@@ -1228,13 +1228,13 @@
 
     function openMoneyPanel() {
       state.paused = true;
-      refreshMusicState();
+      stopMusicLoop(false);
       overlay.innerHTML = moneyPanelMarkup();
     }
 
     function openEnhancementPanel() {
       state.paused = true;
-      refreshMusicState();
+      stopMusicLoop(false);
       overlay.innerHTML = `
         <div class="message">
           <h2>Character Enhancement</h2>
@@ -1257,7 +1257,7 @@
 
     function openAvatarPanel() {
       state.paused = true;
-      refreshMusicState();
+      stopMusicLoop(false);
       const avatars = AVATARS;
       overlay.innerHTML = `
         <div class="message settings-page">
@@ -1337,6 +1337,7 @@
 
     function openSettingsPanel() {
       state.paused = true;
+      stopMusicLoop(false);
       overlay.innerHTML = `
         <div class="message settings-page">
           <h2>Settings</h2>
@@ -1528,7 +1529,7 @@
         };
         overlay.innerHTML = '';
         state.paused = true;
-        refreshMusicState();
+        stopMusicLoop(false);
       }
       saveMeta();
       syncMissionHud();
@@ -1536,7 +1537,7 @@
 
     function showTitleScreen() {
       state.paused = true;
-      refreshMusicState();
+      stopMusicLoop(false);
       pauseBtn.textContent = 'Resume';
       overlay.classList.add('hero-mode');
       overlay.innerHTML = `
@@ -1555,7 +1556,7 @@
 
     function showPauseOverlay() {
       state.paused = true;
-      refreshMusicState();
+      stopMusicLoop(false);
       pauseBtn.textContent = 'Resume';
       overlay.classList.add('hero-mode');
       overlay.innerHTML = `
@@ -4101,12 +4102,12 @@
     floatingSettingsBtn.addEventListener('click', openSettingsPanel);
     youtubeBtn.addEventListener('click', () => {
       state.paused = true;
-      refreshMusicState();
+      stopMusicLoop(false);
       window.openYoutubeReward();
     });
     battleYoutubeBtn.addEventListener('click', () => {
       state.paused = true;
-      refreshMusicState();
+      stopMusicLoop(false);
       window.openYoutubeReward();
     });
     laneLeftBtn.addEventListener('click', () => fireAtLane(0));

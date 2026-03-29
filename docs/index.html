@@ -99,6 +99,13 @@
     }
     .battle-side-btn .big { font-size: 28px; line-height: 1; }
     .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+    .overlay.hero-mode {
+      position: fixed;
+      z-index: 30;
+      background: rgba(2, 6, 23, 0.34);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
     .message {
       background: rgba(15, 23, 42, 0.9);
       border: 1px solid rgba(255,255,255,0.08);
@@ -107,6 +114,18 @@
       text-align: center;
       max-width: 520px;
       pointer-events: auto;
+    }
+    .message.hero-card {
+      width: min(440px, calc(100vw - 28px));
+      box-shadow: 0 28px 80px rgba(0,0,0,.42), inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .overlay-actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .overlay-actions.two-up {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     .message.settings-page {
       width: min(720px, calc(100% - 24px));
@@ -356,6 +375,7 @@
     @media (max-width: 560px) {
       .topbar { grid-template-columns: repeat(2, 1fr); }
       .stat .value { font-size: 22px; }
+      .overlay-actions.two-up { grid-template-columns: 1fr; }
       .controls { padding: 12px; }
       .settings-grid { grid-template-columns: 1fr; }
       button { min-height: 46px; }
@@ -1139,17 +1159,39 @@
 
     function showTitleScreen() {
       state.paused = true;
+      pauseBtn.textContent = 'Resume';
+      overlay.classList.add('hero-mode');
       overlay.innerHTML = `
-        <div class="message">
+        <div class="message hero-card">
           <h1>Zombie Squad Run</h1>
           <p>Run with your squad, shoot the right lane, smash walls before impact, and spend coins to upgrade your survival chances.</p>
           <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best}</p>
           <p class="mini-note">Build: Beta V1.0</p>
-          <button onclick="window.startZombieRun()">Start Run</button>
+          <div class="overlay-actions two-up">
+            <button onclick="window.startZombieRun()">Start Run</button>
+            <button class="secondary" onclick="window.openSettingsPanel()">Settings</button>
+          </div>
+        </div>`;
+    }
+
+    function showPauseOverlay() {
+      state.paused = true;
+      pauseBtn.textContent = 'Resume';
+      overlay.classList.add('hero-mode');
+      overlay.innerHTML = `
+        <div class="message hero-card">
+          <h2>Paused</h2>
+          <p>Take a breather, then jump back in when you're ready.</p>
+          <div class="overlay-actions two-up">
+            <button onclick="window.closeOverlayAndResume()">Unpause</button>
+            <button class="secondary" onclick="window.restartZombieRun()">Restart Run</button>
+          </div>
+          <button class="secondary" onclick="window.showTitleScreen()">Title Screen</button>
         </div>`;
     }
 
     function applyScenePreset(scene) {
+      overlay.classList.remove('hero-mode');
       overlay.innerHTML = '';
       state.running = true;
       state.gameOver = false;
@@ -3254,8 +3296,7 @@
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
       if (state.paused && !state.gameOver && !overlay.innerHTML && !missionPopup) {
-        ctx.fillStyle='rgba(0,0,0,.45)'; ctx.fillRect(0,0,canvas.width,canvas.height);
-        ctx.fillStyle='#fff'; ctx.font='bold 42px system-ui'; ctx.textAlign='center'; ctx.fillText('Paused',canvas.width/2,canvas.height/2);
+        showPauseOverlay();
       }
     }
 
@@ -3282,19 +3323,21 @@
       if (e.key === '1') fireAtLane(0);
       if (e.key === '2') fireAtLane(1);
       if (e.key === '3') fireAtLane(2);
-      if (e.key.toLowerCase() === 'p' && state?.running && !overlay.innerHTML) {
-        state.paused = !state.paused;
-        pauseBtn.textContent = state.paused ? 'Resume' : 'Pause';
+      if (e.key.toLowerCase() === 'p' && state?.running) {
+        if (state.paused) window.closeOverlayAndResume();
+        else showPauseOverlay();
       }
       if (e.key.toLowerCase() === 'r' && state?.running) window.restartZombieRun();
       if (e.key.toLowerCase() === 'm') activateMinigun();
     });
     restartBtn.addEventListener('click', () => window.restartZombieRun());
-    pauseBtn.addEventListener('click', () => { state.paused=!state.paused; pauseBtn.textContent=state.paused?'Resume':'Pause'; });
+    pauseBtn.addEventListener('click', () => {
+      if (state.paused) window.closeOverlayAndResume();
+      else showPauseOverlay();
+    });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden && state?.running && !state?.gameOver) {
-        state.paused = true;
-        pauseBtn.textContent = 'Resume';
+        showPauseOverlay();
       }
     });
     [minigunBtn, floatingMinigunBtn].forEach(btn => {
@@ -3418,8 +3461,23 @@
         </div>`;
       syncHud();
     };
-    window.closeOverlayAndResume = function() { overlay.innerHTML=''; missionPopup = null; state.paused=false; };
-    window.startZombieRun = function() { overlay.innerHTML=''; state.paused=false; state.running=true; state.gameOver=false; refreshMusicState(); };
+    window.closeOverlayAndResume = function() {
+      overlay.classList.remove('hero-mode');
+      overlay.innerHTML='';
+      missionPopup = null;
+      state.paused=false;
+      pauseBtn.textContent='Pause';
+      refreshMusicState();
+    };
+    window.startZombieRun = function() {
+      overlay.classList.remove('hero-mode');
+      overlay.innerHTML='';
+      state.paused=false;
+      state.running=true;
+      state.gameOver=false;
+      pauseBtn.textContent='Pause';
+      refreshMusicState();
+    };
     window.mockRewardedReviveOffer = function() {
       state.coins += 5;
       bankCoins = state.coins;
@@ -3435,6 +3493,7 @@
       refreshMusicState();
       saveMeta();
     });
+    window.showTitleScreen = showTitleScreen;
     titleBtn.addEventListener('click', () => { showTitleScreen(); refreshMusicState(); });
 
     applyDisplaySettings();

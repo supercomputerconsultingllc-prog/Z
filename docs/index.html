@@ -3374,6 +3374,14 @@
       ctx.beginPath();
       ctx.ellipse(centerX, 594 + (armyMode ? Math.sin(marchPhase) * 3 : 0), crowdRadiusX + 10, crowdRadiusY + 14, 0, 0, Math.PI * 2);
       ctx.fill();
+      const crowdEdgeLight = ctx.createLinearGradient(centerX - crowdRadiusX, 540, centerX + crowdRadiusX, 635);
+      crowdEdgeLight.addColorStop(0, 'rgba(255,255,255,0.03)');
+      crowdEdgeLight.addColorStop(0.48, 'rgba(191,219,254,0.14)');
+      crowdEdgeLight.addColorStop(1, 'rgba(255,255,255,0.02)');
+      ctx.fillStyle = crowdEdgeLight;
+      ctx.beginPath();
+      ctx.ellipse(centerX, 602, crowdRadiusX * 0.96, crowdRadiusY * 0.74, 0, 0, Math.PI * 2);
+      ctx.fill();
       if (perfCrowd) {
         ctx.fillStyle = 'rgba(37,99,235,0.22)';
         ctx.beginPath();
@@ -3508,6 +3516,11 @@
         } else if (obj.type === 'crate') {
           drawObjectGroundShadow(obj, 16, 5.4, 0.28);
           drawTreasureBox(obj.x, obj.y, 1);
+          const lootAura = ctx.createRadialGradient(obj.x, obj.y - 4, 2, obj.x, obj.y, 34);
+          lootAura.addColorStop(0, 'rgba(250,204,21,0.2)');
+          lootAura.addColorStop(1, 'rgba(250,204,21,0)');
+          ctx.fillStyle = lootAura;
+          ctx.beginPath(); ctx.arc(obj.x, obj.y, 34, 0, Math.PI * 2); ctx.fill();
           ctx.fillStyle='#fef3c7'; ctx.font='bold 14px system-ui'; ctx.textAlign='center'; ctx.fillText('LOOT',obj.x,obj.y-30);
         } else if (obj.type === 'wall') {
           drawObjectGroundShadow(obj, 34, 8, 0.32);
@@ -3580,6 +3593,13 @@
             ctx.stroke();
           }
 
+          const wallSheen = ctx.createLinearGradient(obj.x - 52, obj.y - 44, obj.x + 52, obj.y + 24);
+          wallSheen.addColorStop(0, 'rgba(255,255,255,0.12)');
+          wallSheen.addColorStop(0.42, 'rgba(255,255,255,0.03)');
+          wallSheen.addColorStop(1, 'rgba(0,0,0,0.08)');
+          ctx.fillStyle = wallSheen;
+          ctx.fillRect(obj.x - 50, obj.y - 28, 100, 52);
+
           const chipCount = Math.min(12, Math.max(2, (maxHp - currentHp + 1) * 2));
           ctx.fillStyle = '#fecaca';
           for (let i = 0; i < chipCount; i++) {
@@ -3605,6 +3625,15 @@
           ctx.beginPath(); ctx.arc(obj.x,obj.y,13,0,Math.PI*2); ctx.strokeStyle='rgba(120,53,15,0.45)'; ctx.lineWidth=1.6; ctx.stroke();
           ctx.fillStyle = 'rgba(255,255,255,0.22)';
           ctx.beginPath(); ctx.ellipse(obj.x - 5, obj.y - 6, 6, 3.5, -0.35, 0, Math.PI * 2); ctx.fill();
+          const coinSpark = 0.72 + Math.sin(renderNow * 0.01 + obj.x * 0.02) * 0.16;
+          ctx.strokeStyle = `rgba(255,255,255,${0.28 * coinSpark})`;
+          ctx.lineWidth = 1.1;
+          ctx.beginPath();
+          ctx.moveTo(obj.x - 7, obj.y - 12);
+          ctx.lineTo(obj.x - 2, obj.y - 17);
+          ctx.moveTo(obj.x + 5, obj.y - 7);
+          ctx.lineTo(obj.x + 11, obj.y - 12);
+          ctx.stroke();
           ctx.fillStyle = '#78350f'; ctx.font='bold 18px system-ui'; ctx.textAlign='center'; ctx.fillText('$',obj.x,obj.y+6);
         }
         if (hitPulse > 0.04 && perfTier <= 1 && obj.type !== 'coin') {

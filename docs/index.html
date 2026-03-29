@@ -60,13 +60,30 @@
     canvas { width: 100%; height: 680px; display: block; touch-action: manipulation; cursor: crosshair; }
     .canvas-hud-row {
       display: flex;
-      justify-content: flex-end;
-      gap: 8px;
+      justify-content: space-between;
+      gap: 10px;
       padding: 8px 10px 10px;
       background: linear-gradient(180deg, rgba(15,23,42,0.96), rgba(2,6,23,0.92));
       border-top: 1px solid rgba(148,163,184,.12);
       flex-wrap: wrap;
       align-items: stretch;
+    }
+    .battle-dock {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex: 1 1 220px;
+      min-width: 220px;
+    }
+    .progress-dock {
+      display: flex;
+      align-items: stretch;
+      justify-content: flex-start;
+      gap: 8px;
+      flex: 999 1 520px;
+      min-width: 280px;
+      flex-wrap: wrap;
     }
     .battle-side-ui {
       position: static;
@@ -180,6 +197,7 @@
       margin: 0;
       box-shadow: 0 12px 24px rgba(0,0,0,0.22);
       pointer-events: none;
+      opacity: 0.96;
     }
     .season-hud {
       position: absolute;
@@ -551,6 +569,10 @@
       .shop-hero { grid-template-columns: 1fr; }
       .touch-row { display: flex; }
       .canvas-hud-row { display: flex; gap: 8px; }
+      .battle-dock,
+      .progress-dock { width: 100%; }
+      .progress-dock { order: 2; }
+      .battle-dock { order: 1; }
       .mission-hud.docked,
       .season-hud.docked {
         width: 100%;
@@ -615,7 +637,9 @@
         <div class="overlay" id="overlay"></div>
       </div>
       <div class="canvas-hud-row">
-        <div class="battle-side-ui">
+        <div class="progress-dock"></div>
+        <div class="battle-dock">
+          <div class="battle-side-ui">
           <button class="battle-side-btn" id="floatingMinigunBtn" aria-label="Activate minigun" type="button">
             <span class="big">🔥</span>
             <span>Minigun</span>
@@ -626,6 +650,7 @@
             <span>Settings</span>
             <span style="font-size:10px;opacity:.82;">Audio + view</span>
           </button>
+          </div>
         </div>
       </div>
 
@@ -716,6 +741,7 @@
     const canvasWrap = document.querySelector('.canvas-wrap');
     const canvasHudRow = document.querySelector('.canvas-hud-row');
     const controlsPanel = document.querySelector('.controls');
+    const progressDock = document.querySelector('.progress-dock');
     const missionHud = document.getElementById('missionHud');
     const missionRewardTag = document.getElementById('missionRewardTag');
     const missionTitle = document.getElementById('missionTitle');
@@ -1164,8 +1190,8 @@
         if (controlsPanel && missionHud && missionHud.parentElement !== controlsPanel) controlsPanel.prepend(missionHud);
         if (controlsPanel && seasonHud && seasonHud.parentElement !== controlsPanel) controlsPanel.prepend(seasonHud);
       } else {
-        if (canvasHudRow && missionHud && missionHud.parentElement !== canvasHudRow) canvasHudRow.prepend(missionHud);
-        if (canvasHudRow && seasonHud && seasonHud.parentElement !== canvasHudRow) canvasHudRow.prepend(seasonHud);
+        if (progressDock && missionHud && missionHud.parentElement !== progressDock) progressDock.appendChild(missionHud);
+        if (progressDock && seasonHud && seasonHud.parentElement !== progressDock) progressDock.appendChild(seasonHud);
       }
     }
 

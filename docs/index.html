@@ -1671,6 +1671,13 @@
     }
 
     const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@ColtRT-e5n2h';
+    const COINBASE_WALLET_URL = getStored('coinbase-wallet-url', '') || '';
+    const COIN_PACKS = [
+      { id: 'pack100', coins: 100, price: '$2.99' },
+      { id: 'pack500', coins: 500, price: '$5.99' },
+      { id: 'pack1000', coins: 1000, price: '$9.99' },
+      { id: 'pack10000', coins: 10000, price: '$19.99' }
+    ];
     const AVATARS = [
       { id: 'default', name: 'Default Trooper', cost: 0, rarity: 'Common', theme: 'Military', note: 'Classic blue squad look.', colors: ['#bfdbfe', '#60a5fa', '#1d4ed8'] },
       { id: 'ranger', name: 'Ranger Helmet', cost: 2, rarity: 'Common', theme: 'Military', note: 'Forest green field gear.', colors: ['#bbf7d0', '#4ade80', '#166534'] },
@@ -1700,6 +1707,7 @@
     ];
 
     function moneyPanelMarkup() {
+      const walletReady = !!COINBASE_WALLET_URL;
       return `
         <div class="message settings-page">
           <h2>Squad Shop</h2>
@@ -1718,6 +1726,22 @@
           </div>
           <div class="shop-grid">
             <div class="shop-card featured">
+              <h4><span>💳 Coinbase Coin Packs</span><span class="shop-badge">Manual Claim</span></h4>
+              <p>Scan your Coinbase wallet QR code, complete payment, then return and tap the matching pack to mark it paid on this device.</p>
+              <div class="goal-stack" style="margin-top:10px;">
+                ${COIN_PACKS.map(pack => `
+                  <div class="goal-card">
+                    <h4>${pack.coins.toLocaleString()} Coins</h4>
+                    <p>${pack.price}</p>
+                    <div class="cta-row" style="margin-top:10px;">
+                      <button class="warn" onclick="window.openCoinPurchase('${pack.id}')">${walletReady ? `Open Wallet for ${pack.price}` : 'Wallet QR Pending'}</button>
+                      <button class="secondary" onclick="window.claimCoinPack('${pack.id}')">Mark Paid + Add ${pack.coins.toLocaleString()}</button>
+                    </div>
+                  </div>`).join('')}
+              </div>
+              <p class="mini-note">This first pass is a manual crypto-payment flow. It does not verify Coinbase payment automatically yet.</p>
+            </div>
+            <div class="shop-card">
               <h4><span>🔥 Featured Starter Pack</span><span class="shop-badge">100 Coins</span></h4>
               <p>Instantly add 100 coins and a little momentum before the next wave.</p>
               <div class="cta-row">
@@ -1739,7 +1763,7 @@
               </div>
             </div>
           </div>
-          <p class="mini-note">Channel rewards are one-time bonuses. Subscribe still uses honor-system claiming until real verification exists.</p>
+          <p class="mini-note">Add your Coinbase QR destination by setting a browser localStorage value for <code>zombie-mayhem-coinbase-wallet-url</code>, or I can wire a fixed wallet link directly into the game once you have it.</p>
           <button class="secondary" onclick="window.closeOverlayAndResume()">Close</button>
         </div>`;
     }
@@ -4822,6 +4846,46 @@
           <h2>Subscription Reward Claimed</h2>
           <p>1000 coins were added for subscribing to <strong>@ColtRT-e5n2h</strong>.</p>
           <p class="mini-note">This is currently an honor-system reward until a real verification flow exists.</p>
+          <button onclick="window.openMoneyPanel()">Back To Shop</button>
+        </div>`;
+      syncHud();
+    };
+    window.openCoinPurchase = function(packId) {
+      const pack = COIN_PACKS.find(item => item.id === packId);
+      if (!pack) return;
+      if (!COINBASE_WALLET_URL) {
+        overlay.innerHTML = `
+          <div class="message">
+            <h2>Coinbase Wallet Link Needed</h2>
+            <p>The coin pack UI is ready, but the Coinbase wallet QR/link is not set yet.</p>
+            <p class="mini-note">Once you have the wallet URL, I can wire it directly into the game, or you can store it in localStorage under <code>zombie-mayhem-coinbase-wallet-url</code>.</p>
+            <button onclick="window.openMoneyPanel()">Back To Shop</button>
+          </div>`;
+        return;
+      }
+      const opened = window.open(COINBASE_WALLET_URL, '_blank', 'noopener,noreferrer');
+      overlay.innerHTML = `
+        <div class="message settings-page">
+          <h2>Coin Purchase Started</h2>
+          <p>Complete the Coinbase wallet payment for <strong>${pack.coins.toLocaleString()} coins</strong> at <strong>${pack.price}</strong>, then come back here.</p>
+          <p class="mini-note">This prototype store does not auto-confirm blockchain payment yet. Use the button below after payment is complete.</p>
+          <div class="overlay-actions two-up">
+            ${opened ? '' : `<button class="warn" onclick="window.location.href='${COINBASE_WALLET_URL}'">Open Wallet</button>`}
+            <button onclick="window.claimCoinPack('${pack.id}')">I Paid, Add ${pack.coins.toLocaleString()} Coins</button>
+            <button class="secondary" onclick="window.openMoneyPanel()">Back To Shop</button>
+          </div>
+        </div>`;
+    };
+    window.claimCoinPack = function(packId) {
+      const pack = COIN_PACKS.find(item => item.id === packId);
+      if (!pack) return;
+      addCoins(pack.coins);
+      void saveMeta();
+      overlay.innerHTML = `
+        <div class="message">
+          <h2>Coins Added</h2>
+          <p><strong>${pack.coins.toLocaleString()} coins</strong> were added to this account/device profile.</p>
+          <p class="mini-note">This is currently a manual claim flow until Coinbase payment verification is wired into the backend.</p>
           <button onclick="window.openMoneyPanel()">Back To Shop</button>
         </div>`;
       syncHud();

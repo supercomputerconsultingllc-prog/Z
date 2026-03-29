@@ -168,6 +168,84 @@
       border-color: rgba(250,204,21,0.22);
       box-shadow: 0 18px 42px rgba(250,204,21,0.12);
     }
+    .season-hud {
+      position: absolute;
+      top: 146px;
+      left: 16px;
+      z-index: 14;
+      width: min(280px, calc(100% - 32px));
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(30,41,59,0.94), rgba(15,23,42,0.88));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 18px 36px rgba(0,0,0,0.28);
+      pointer-events: none;
+    }
+    .season-hud.hot {
+      border-color: rgba(250,204,21,0.32);
+      box-shadow: 0 18px 42px rgba(250,204,21,0.16);
+    }
+    .season-hud-label,
+    .season-hud-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .season-hud-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+    .season-hud-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #f8fafc;
+      line-height: 1.2;
+    }
+    .season-hud-sub {
+      margin-top: 4px;
+      font-size: 12px;
+      color: #93c5fd;
+    }
+    .season-progress-shell {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+      margin-top: 10px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .season-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #f59e0b, #facc15, #22c55e);
+      transition: width .18s ease;
+    }
+    .season-hud-foot {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #cbd5e1;
+    }
+    .goal-stack {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .goal-card {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .goal-card h4 {
+      margin: 0 0 6px;
+    }
+    .goal-card p {
+      margin: 0;
+    }
     .overlay.hero-mode {
       position: fixed;
       z-index: 30;
@@ -408,30 +486,38 @@
       margin-top: 0;
       flex: 1 1 180px;
     }
-    .touch-row { display: none; gap: 10px; padding: 0 16px 16px; background: rgba(255,255,255,0.03); flex-wrap: wrap; }
-    .touch-btn { flex: 1 1 120px; min-height: 56px; font-size: 16px; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease; }
+    .touch-row { display: none; gap: 8px; padding: 10px 12px 12px; background: rgba(255,255,255,0.03); border-top: 1px solid rgba(148,163,184,.12); flex-wrap: wrap; align-items: end; }
+    .touch-btn { flex: 1 1 96px; min-height: 48px; font-size: 14px; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease; }
     .touch-btn.danger {
       box-shadow: 0 0 0 2px rgba(248,113,113,0.34), 0 0 24px rgba(239,68,68,0.18);
       border-color: rgba(248,113,113,0.7);
       transform: translateY(-1px);
     }
     .touch-btn.special {
-      flex: 1 1 140px;
+      flex: 0 1 128px;
       background: linear-gradient(180deg, rgba(239,68,68,.96), rgba(127,29,29,.98));
       color: white;
       position: relative;
       overflow: hidden;
+      margin-left: auto;
     }
     .touch-btn.utility {
-      flex: 1 1 120px;
+      flex: 0 1 112px;
       background: linear-gradient(180deg, rgba(71,85,105,.96), rgba(30,41,59,.98));
       color: #e2e8f0;
     }
     .touch-btn .tiny-status {
       display: block;
-      margin-top: 4px;
-      font-size: 11px;
+      margin-top: 3px;
+      font-size: 10px;
       opacity: 0.82;
+    }
+    .touch-row .secondary.touch-btn {
+      flex: 1 1 calc(33.333% - 6px);
+      min-width: 0;
+      min-height: 44px;
+      font-size: 13px;
+      padding: 8px 6px;
     }
     @media (pointer:fine) {
       #minigunBtn {
@@ -454,6 +540,20 @@
       .controls { padding: 12px; }
       .settings-grid { grid-template-columns: 1fr; }
       button { min-height: 46px; }
+      .touch-row {
+        gap: 6px;
+        padding: 8px 10px 10px;
+      }
+      .touch-row .secondary.touch-btn {
+        font-size: 12px;
+        min-height: 42px;
+      }
+      .touch-btn.special,
+      .touch-btn.utility {
+        flex-basis: calc(50% - 3px);
+        min-height: 46px;
+        font-size: 12px;
+      }
     }
   </style>
 </head>
@@ -478,6 +578,13 @@
           <div class="mission-hud-title" id="missionTitle">Break 12 walls</div>
           <div class="mission-progress-shell"><div class="mission-progress-fill" id="missionProgressFill"></div></div>
           <div class="mission-hud-foot"><span id="missionProgressText">0 / 12</span><span id="missionNextText">Keep running</span></div>
+        </div>
+        <div class="season-hud" id="seasonHud">
+          <div class="season-hud-label"><span>Premium Pass</span><span id="seasonLevelTag">Lv. 1</span></div>
+          <div class="season-hud-title" id="seasonRewardTitle">100 coin crate</div>
+          <div class="season-hud-sub" id="seasonRewardText">Finish goals to unlock your next prize.</div>
+          <div class="season-progress-shell"><div class="season-progress-fill" id="seasonProgressFill"></div></div>
+          <div class="season-hud-foot"><span id="seasonProgressText">0 / 40 XP</span><span id="seasonNextText">Mission XP ready</span></div>
         </div>
         <div class="overlay" id="overlay"></div>
       </div>
@@ -586,6 +693,13 @@
     const missionProgressFill = document.getElementById('missionProgressFill');
     const missionProgressText = document.getElementById('missionProgressText');
     const missionNextText = document.getElementById('missionNextText');
+    const seasonHud = document.getElementById('seasonHud');
+    const seasonLevelTag = document.getElementById('seasonLevelTag');
+    const seasonRewardTitle = document.getElementById('seasonRewardTitle');
+    const seasonRewardText = document.getElementById('seasonRewardText');
+    const seasonProgressFill = document.getElementById('seasonProgressFill');
+    const seasonProgressText = document.getElementById('seasonProgressText');
+    const seasonNextText = document.getElementById('seasonNextText');
     const squadStat = document.getElementById('squadStat');
     const gunStat = document.getElementById('gunStat');
     const weaponNameStat = document.getElementById('weaponNameStat');
@@ -641,6 +755,9 @@
     let controlsMode = localStorage.getItem('zombie-squad-run-controls') || 'tap';
     let missionIndex = Number(localStorage.getItem('zombie-squad-run-mission-index') || 0);
     let missionProgress = Number(localStorage.getItem('zombie-squad-run-mission-progress') || 0);
+    let passLevel = Number(localStorage.getItem('zombie-squad-run-pass-level') || 1);
+    let passXp = Number(localStorage.getItem('zombie-squad-run-pass-xp') || 0);
+    let totalRuns = Number(localStorage.getItem('zombie-squad-run-total-runs') || 0);
     let youtubeVisitClaimed = localStorage.getItem('zombie-squad-run-youtube-visit') === 'claimed';
     let youtubeSubscribeClaimed = localStorage.getItem('zombie-squad-run-youtube-subscribe') === 'claimed';
     let starterPackClaimed = localStorage.getItem('zombie-squad-run-starter-pack') === 'claimed';
@@ -653,6 +770,8 @@
     let hitFlash = 0;
     let bossWave = false;
     let missionPopup = null;
+    let rewardQueue = [];
+    let rewardPopup = null;
     let crowdCache = null;
     const impactDecals = [];
     const shellCasings = [];
@@ -661,6 +780,14 @@
       { label: 'Break 12 walls', target: 12, event: 'walls' },
       { label: 'Recruit 32 survivors', target: 32, event: 'survivors' },
       { label: 'Collect 80 coins', target: 80, event: 'coins' }
+    ];
+    const PASS_REWARDS = [
+      { icon: '🪙', title: '100 coin crate', detail: 'Big coin drop for your next push.', xp: 40, grant: { coins: 100 } },
+      { icon: '🎨', title: '2 avatar coins', detail: 'Save up for rare looks faster.', xp: 50, grant: { avatarCoins: 2 } },
+      { icon: '❤️', title: 'Bonus revive', detail: 'Start a run with one extra safety heart.', xp: 60, grant: { runRevives: 1 } },
+      { icon: '👥', title: 'Squad drop', detail: 'Begin with 2 extra squad members.', xp: 70, grant: { startSquad: 2 } },
+      { icon: '🔫', title: 'Power spark', detail: 'Start with +1 firepower.', xp: 80, grant: { startFirepower: 1 } },
+      { icon: '🌟', title: 'Hero crate', detail: 'Coins, avatar coins, and hype all at once.', xp: 90, grant: { coins: 180, avatarCoins: 2 } }
     ];
     bestStat.textContent = best;
     soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
@@ -681,6 +808,9 @@
       localStorage.setItem('zombie-squad-run-controls', controlsMode);
       localStorage.setItem('zombie-squad-run-mission-index', String(missionIndex));
       localStorage.setItem('zombie-squad-run-mission-progress', String(missionProgress));
+      localStorage.setItem('zombie-squad-run-pass-level', String(passLevel));
+      localStorage.setItem('zombie-squad-run-pass-xp', String(passXp));
+      localStorage.setItem('zombie-squad-run-total-runs', String(totalRuns));
       localStorage.setItem('zombie-squad-run-youtube-visit', youtubeVisitClaimed ? 'claimed' : 'open');
       localStorage.setItem('zombie-squad-run-youtube-subscribe', youtubeSubscribeClaimed ? 'claimed' : 'open');
       localStorage.setItem('zombie-squad-run-starter-pack', starterPackClaimed ? 'claimed' : 'open');
@@ -690,6 +820,74 @@
     }
 
     function activeMission() { return MISSIONS[missionIndex % MISSIONS.length]; }
+    function currentPassReward() { return PASS_REWARDS[(Math.max(1, passLevel) - 1) % PASS_REWARDS.length]; }
+    function passXpForLevel(level = passLevel) {
+      const reward = PASS_REWARDS[(Math.max(1, level) - 1) % PASS_REWARDS.length];
+      return reward.xp + Math.max(0, level - 1) * 4;
+    }
+    function nextDistanceGoal(distance = Math.floor(state?.distance || 0)) {
+      return Math.max(180, Math.ceil((Math.max(best, distance) + 1) / 180) * 180);
+    }
+    function rewardSummary(grant = {}) {
+      const bits = [];
+      if (grant.coins) bits.push(`+${grant.coins} coins`);
+      if (grant.avatarCoins) bits.push(`+${grant.avatarCoins} avatar coins`);
+      if (grant.runRevives) bits.push(`+${grant.runRevives} starting revive`);
+      if (grant.startSquad) bits.push(`+${grant.startSquad} starting squad`);
+      if (grant.startFirepower) bits.push(`+${grant.startFirepower} starting firepower`);
+      return bits.join(', ');
+    }
+    function queueRewardPopup(payload) {
+      rewardQueue.push(payload);
+      if (!rewardPopup && !missionPopup) showNextRewardPopup();
+    }
+    function showNextRewardPopup() {
+      if (rewardPopup || missionPopup || !rewardQueue.length) return;
+      const next = rewardQueue.shift();
+      rewardPopup = {
+        title: next.title,
+        label: next.label,
+        reward: next.reward,
+        icon: next.icon || '🎉',
+        button: next.button || 'Awesome',
+        rect: null
+      };
+      overlay.innerHTML = '';
+      state.paused = true;
+    }
+    function grantPassReward(reward) {
+      const grant = reward?.grant || {};
+      if (grant.coins) {
+        state.coins += grant.coins;
+        bankCoins = state.coins;
+      }
+      if (grant.avatarCoins) avatarCoins += grant.avatarCoins;
+      if (grant.runRevives) state.revives += grant.runRevives;
+      if (grant.startSquad) state.squad += grant.startSquad;
+      if (grant.startFirepower) state.firepower += grant.startFirepower;
+      saveMeta();
+      syncHud();
+    }
+    function addPassXp(amount, reason = 'Keep the streak alive') {
+      if (!amount) return;
+      passXp += amount;
+      while (passXp >= passXpForLevel(passLevel)) {
+        const threshold = passXpForLevel(passLevel);
+        passXp -= threshold;
+        const reward = currentPassReward();
+        grantPassReward(reward);
+        queueRewardPopup({
+          title: 'Premium Pass Unlocked',
+          label: reward.title,
+          reward: rewardSummary(reward.grant) || reward.detail,
+          icon: reward.icon,
+          button: 'Collect'
+        });
+        passLevel += 1;
+      }
+      saveMeta();
+      syncSeasonHud(reason);
+    }
 
     function ensureAudio() {
       if (audioCtx) return audioCtx;
@@ -952,7 +1150,7 @@
       return `
         <div class="message settings-page">
           <h2>Squad Shop</h2>
-          <p>Top up coins, claim channel rewards, and juice the next run.</p>
+          <p>Top up coins, claim channel rewards, and juice the next run. Your premium pass next prize is <strong>${currentPassReward().title}</strong>.</p>
           <div class="settings-grid">
             <div class="settings-card" style="background:linear-gradient(135deg, rgba(245,158,11,.18), rgba(15,23,42,.96));">
               <h4>🪙 Coin Wallet</h4>
@@ -1005,6 +1203,16 @@
           <h2>Character Enhancement</h2>
           <p>Use this panel for powerups, costumes, and the gun log.</p>
           <ul class="panel-list">${gunLogItems().map(item => `<li>${item}</li>`).join('')}</ul>
+          <div class="goal-stack">
+            <div class="goal-card">
+              <h4>Next weapon feeling</h4>
+              <p>${weaponProfile(Math.min(12, state.firepower + 1)).feed} is waiting on your next power jump.</p>
+            </div>
+            <div class="goal-card">
+              <h4>Pass prize on deck</h4>
+              <p><strong>${currentPassReward().title}</strong>, ${rewardSummary(currentPassReward().grant) || currentPassReward().detail}.</p>
+            </div>
+          </div>
           <p class="mini-note">Next upgrade unlocks a wider shot spread and stronger wall damage.</p>
           <button onclick="window.closeOverlayAndResume()">Close</button>
         </div>`;
@@ -1234,12 +1442,28 @@
       const clamped = Math.max(0, Math.min(mission.target, missionProgress));
       const pct = Math.max(0, Math.min(100, (clamped / mission.target) * 100));
       missionTitle.textContent = mission.label;
-      missionRewardTag.textContent = '+10 coins';
+      missionRewardTag.textContent = '+10 coins + 12 XP';
       missionProgressFill.style.width = `${pct}%`;
       missionProgressText.textContent = `${clamped} / ${mission.target}`;
       const remain = Math.max(0, mission.target - clamped);
-      missionNextText.textContent = remain === 0 ? 'Reward ready' : `${remain} to go`;
+      missionNextText.textContent = remain === 0 ? 'Reward ready' : `${remain} to mission clear`;
       missionHud.classList.toggle('next-goal', remain <= Math.max(2, Math.ceil(mission.target * 0.2)));
+    }
+
+    function syncSeasonHud(reason = 'Keep the streak alive') {
+      if (!seasonHud) return;
+      const reward = currentPassReward();
+      const need = passXpForLevel(passLevel);
+      const clamped = Math.max(0, Math.min(need, passXp));
+      const pct = Math.max(0, Math.min(100, (clamped / need) * 100));
+      seasonLevelTag.textContent = `Lv. ${passLevel}`;
+      seasonRewardTitle.textContent = reward.title;
+      seasonRewardText.textContent = reward.detail;
+      seasonProgressFill.style.width = `${pct}%`;
+      seasonProgressText.textContent = `${clamped} / ${need} XP`;
+      const remain = Math.max(0, need - clamped);
+      seasonNextText.textContent = remain === 0 ? 'Prize ready' : `${remain} XP left, ${reason}`;
+      seasonHud.classList.toggle('hot', remain <= Math.max(10, Math.ceil(need * 0.2)));
     }
 
     function grantCoins(amount) {

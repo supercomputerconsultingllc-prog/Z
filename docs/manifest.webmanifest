@@ -1,6 +1,6 @@
 {
-  "name": "Zombie Squad Run",
-  "short_name": "ZombieSquad",
+  "name": "Zombie Mayhem",
+  "short_name": "Mayhem",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#0b1220",

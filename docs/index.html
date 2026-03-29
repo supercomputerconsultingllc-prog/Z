@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Zombie Squad Run</title>
+  <title>Zombie Mayhem</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#0b1220">
   <style>
@@ -705,6 +705,11 @@
               <span class="action-label">Settings</span>
               <span class="action-sub">Volume, brightness, and controls</span>
             </button>
+            <button class="action-btn enhance" id="accountBtn" aria-label="Open account">
+              <span class="action-icon">👤</span>
+              <span class="action-label">Account</span>
+              <span class="action-sub">Create an account and keep coins + progression</span>
+            </button>
             <button class="action-btn money" id="youtubeBtn" aria-label="Open channel bonus">
               <span class="action-icon">▶️</span>
               <span class="action-label">Channel Bonus</span>
@@ -780,6 +785,7 @@
     const enhanceBtn = document.getElementById('enhanceBtn');
     const avatarBtn = document.getElementById('avatarBtn');
     const settingsBtn = document.getElementById('settingsBtn');
+    const accountBtn = document.getElementById('accountBtn');
     const battleSettingsBtn = document.getElementById('battleSettingsBtn');
     const battleYoutubeBtn = document.getElementById('battleYoutubeBtn');
     const youtubeBtn = document.getElementById('youtubeBtn');
@@ -789,10 +795,40 @@
 
     const LANES = [180, 400, 620];
     const COLORS = { road:'#334155', line:'#64748b', zombie:'#22c55e', wall:'#7c2d12', crate:'#2563eb', bullet:'#fde047', coin:'#facc15' };
+    const APP_STORAGE_PREFIX = 'zombie-mayhem';
+    const LEGACY_STORAGE_PREFIX = 'zombie-squad-run';
+    const ACCOUNTS_KEY = `${APP_STORAGE_PREFIX}-accounts`;
+    const CURRENT_ACCOUNT_KEY = `${APP_STORAGE_PREFIX}-current-account`;
+
+    function storageKey(name) { return `${APP_STORAGE_PREFIX}-${name}`; }
+    function legacyKey(name) { return `${LEGACY_STORAGE_PREFIX}-${name}`; }
+    function getStored(name, fallback = null) {
+      const current = localStorage.getItem(storageKey(name));
+      if (current !== null) return current;
+      const legacy = localStorage.getItem(legacyKey(name));
+      return legacy !== null ? legacy : fallback;
+    }
+    function setStored(name, value) {
+      localStorage.setItem(storageKey(name), value);
+    }
+    function removeStored(name) {
+      localStorage.removeItem(storageKey(name));
+    }
+    function getAccountsStore() {
+      try { return JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '{}') || {}; }
+      catch (_) { return {}; }
+    }
+    function setAccountsStore(store) {
+      localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(store));
+    }
+    function normalizeEmail(email = '') { return String(email).trim().toLowerCase(); }
+    function accountIdForEmail(email = '') { return `acct:${normalizeEmail(email)}`; }
+    function encodeSecret(secret = '') { try { return btoa(secret); } catch (_) { return secret; } }
+    function decodeSecret(secret = '') { try { return atob(secret); } catch (_) { return secret; } }
 
     let state;
     let audioCtx = null;
-    let musicEnabled = localStorage.getItem('zombie-squad-run-music') !== 'off';
+    let musicEnabled = getStored('music', 'on') !== 'off';
     let musicTimer = null;
     let musicStep = 0;
     let musicBus = null;
@@ -801,27 +837,29 @@
     let renderNow = performance.now();
     let lastShotSoundAt = 0;
     const laneObjectBuckets = [[], [], []];
-    let best = Number(localStorage.getItem('zombie-squad-run-best') || 0);
+    let best = Number(getStored('best', 0) || 0);
     let bankCoins = 0;
-    let avatarCoins = Number(localStorage.getItem('zombie-squad-run-avatar-coins') || 0);
-    let selectedAvatar = localStorage.getItem('zombie-squad-run-selected-avatar') || 'default';
-    let unlockedAvatars = JSON.parse(localStorage.getItem('zombie-squad-run-unlocked-avatars') || '["default"]');
-    let soundOn = localStorage.getItem('zombie-squad-run-sound') !== 'off';
-    let volumeLevel = Number(localStorage.getItem('zombie-squad-run-volume') || 50);
-    let musicVolumeLevel = Number(localStorage.getItem('zombie-squad-run-music-volume') || 100);
-    let brightnessLevel = Number(localStorage.getItem('zombie-squad-run-brightness') || 100);
-    let controlsMode = localStorage.getItem('zombie-squad-run-controls') || 'tap';
-    let missionIndex = Number(localStorage.getItem('zombie-squad-run-mission-index') || 0);
-    let missionProgress = Number(localStorage.getItem('zombie-squad-run-mission-progress') || 0);
-    let passLevel = Number(localStorage.getItem('zombie-squad-run-pass-level') || 1);
-    let passXp = Number(localStorage.getItem('zombie-squad-run-pass-xp') || 0);
-    let totalRuns = Number(localStorage.getItem('zombie-squad-run-total-runs') || 0);
-    let youtubeVisitClaimed = localStorage.getItem('zombie-squad-run-youtube-visit') === 'claimed';
-    let youtubeSubscribeClaimed = localStorage.getItem('zombie-squad-run-youtube-subscribe') === 'claimed';
-    let starterPackClaimed = localStorage.getItem('zombie-squad-run-starter-pack') === 'claimed';
-    let gunPrice = Number(localStorage.getItem('zombie-squad-run-gun-price') || 10);
-    let squadPrice = Number(localStorage.getItem('zombie-squad-run-squad-price') || 8);
-    let revivePrice = Number(localStorage.getItem('zombie-squad-run-revive-price') || 15);
+    let avatarCoins = Number(getStored('avatar-coins', 0) || 0);
+    let selectedAvatar = getStored('selected-avatar', 'default') || 'default';
+    let unlockedAvatars = JSON.parse(getStored('unlocked-avatars', '["default"]') || '["default"]');
+    let soundOn = getStored('sound', 'on') !== 'off';
+    let volumeLevel = Number(getStored('volume', 50) || 50);
+    let musicVolumeLevel = Number(getStored('music-volume', 100) || 100);
+    let brightnessLevel = Number(getStored('brightness', 100) || 100);
+    let controlsMode = getStored('controls', 'tap') || 'tap';
+    let missionIndex = Number(getStored('mission-index', 0) || 0);
+    let missionProgress = Number(getStored('mission-progress', 0) || 0);
+    let passLevel = Number(getStored('pass-level', 1) || 1);
+    let passXp = Number(getStored('pass-xp', 0) || 0);
+    let totalRuns = Number(getStored('total-runs', 0) || 0);
+    let youtubeVisitClaimed = getStored('youtube-visit', 'open') === 'claimed';
+    let youtubeSubscribeClaimed = getStored('youtube-subscribe', 'open') === 'claimed';
+    let starterPackClaimed = getStored('starter-pack', 'open') === 'claimed';
+    let gunPrice = Number(getStored('gun-price', 10) || 10);
+    let squadPrice = Number(getStored('squad-price', 8) || 8);
+    let revivePrice = Number(getStored('revive-price', 15) || 15);
+    let currentAccountId = localStorage.getItem(CURRENT_ACCOUNT_KEY) || '';
+    let currentAccountEmail = '';
     const mobileSafeMode = window.innerWidth <= 920 || ('ontouchstart' in window);
     const lowPowerMobileMode = mobileSafeMode || window.devicePixelRatio > 2;
     let screenShake = 0;
@@ -848,34 +886,242 @@
       { icon: '🔫', title: 'Power spark', detail: 'Start with +1 firepower.', xp: 80, grant: { startFirepower: 1 } },
       { icon: '🌟', title: 'Hero crate', detail: 'Coins, avatar coins, and hype all at once.', xp: 90, grant: { coins: 180, avatarCoins: 2 } }
     ];
+    function capturePlayerProfile() {
+      return {
+        best,
+        bankCoins,
+        avatarCoins,
+        selectedAvatar,
+        unlockedAvatars: [...new Set(unlockedAvatars)],
+        missionIndex,
+        missionProgress,
+        passLevel,
+        passXp,
+        totalRuns,
+        youtubeVisitClaimed,
+        youtubeSubscribeClaimed,
+        starterPackClaimed,
+        gunPrice,
+        squadPrice,
+        revivePrice
+      };
+    }
+
+    function applyPlayerProfile(profile = {}) {
+      best = Number(profile.best || 0);
+      bankCoins = Number(profile.bankCoins || 0);
+      avatarCoins = Number(profile.avatarCoins || 0);
+      selectedAvatar = profile.selectedAvatar || 'default';
+      unlockedAvatars = Array.isArray(profile.unlockedAvatars) && profile.unlockedAvatars.length ? [...new Set(profile.unlockedAvatars)] : ['default'];
+      if (!unlockedAvatars.includes(selectedAvatar)) unlockedAvatars.push(selectedAvatar);
+      missionIndex = Number(profile.missionIndex || 0);
+      missionProgress = Number(profile.missionProgress || 0);
+      passLevel = Math.max(1, Number(profile.passLevel || 1));
+      passXp = Number(profile.passXp || 0);
+      totalRuns = Number(profile.totalRuns || 0);
+      youtubeVisitClaimed = !!profile.youtubeVisitClaimed;
+      youtubeSubscribeClaimed = !!profile.youtubeSubscribeClaimed;
+      starterPackClaimed = !!profile.starterPackClaimed;
+      gunPrice = Number(profile.gunPrice || 10);
+      squadPrice = Number(profile.squadPrice || 8);
+      revivePrice = Number(profile.revivePrice || 15);
+    }
+
+    function loadGuestProfile() {
+      applyPlayerProfile({
+        best: Number(getStored('best', 0) || 0),
+        bankCoins: Number(getStored('coins', 0) || 0),
+        avatarCoins: Number(getStored('avatar-coins', 0) || 0),
+        selectedAvatar: getStored('selected-avatar', 'default') || 'default',
+        unlockedAvatars: JSON.parse(getStored('unlocked-avatars', '["default"]') || '["default"]'),
+        missionIndex: Number(getStored('mission-index', 0) || 0),
+        missionProgress: Number(getStored('mission-progress', 0) || 0),
+        passLevel: Number(getStored('pass-level', 1) || 1),
+        passXp: Number(getStored('pass-xp', 0) || 0),
+        totalRuns: Number(getStored('total-runs', 0) || 0),
+        youtubeVisitClaimed: getStored('youtube-visit', 'open') === 'claimed',
+        youtubeSubscribeClaimed: getStored('youtube-subscribe', 'open') === 'claimed',
+        starterPackClaimed: getStored('starter-pack', 'open') === 'claimed',
+        gunPrice: Number(getStored('gun-price', 10) || 10),
+        squadPrice: Number(getStored('squad-price', 8) || 8),
+        revivePrice: Number(getStored('revive-price', 15) || 15)
+      });
+      currentAccountEmail = '';
+    }
+
+    function loadCurrentAccountProfile() {
+      const store = getAccountsStore();
+      const account = currentAccountId ? store[currentAccountId] : null;
+      if (!account) {
+        currentAccountId = '';
+        localStorage.removeItem(CURRENT_ACCOUNT_KEY);
+        loadGuestProfile();
+        return;
+      }
+      currentAccountEmail = account.email || '';
+      applyPlayerProfile(account.profile || {});
+    }
+
+    function persistGuestProfile() {
+      const profile = capturePlayerProfile();
+      setStored('best', String(profile.best));
+      setStored('coins', String(profile.bankCoins));
+      setStored('avatar-coins', String(profile.avatarCoins));
+      setStored('selected-avatar', profile.selectedAvatar);
+      setStored('unlocked-avatars', JSON.stringify(profile.unlockedAvatars));
+      setStored('mission-index', String(profile.missionIndex));
+      setStored('mission-progress', String(profile.missionProgress));
+      setStored('pass-level', String(profile.passLevel));
+      setStored('pass-xp', String(profile.passXp));
+      setStored('total-runs', String(profile.totalRuns));
+      setStored('youtube-visit', profile.youtubeVisitClaimed ? 'claimed' : 'open');
+      setStored('youtube-subscribe', profile.youtubeSubscribeClaimed ? 'claimed' : 'open');
+      setStored('starter-pack', profile.starterPackClaimed ? 'claimed' : 'open');
+      setStored('gun-price', String(profile.gunPrice));
+      setStored('squad-price', String(profile.squadPrice));
+      setStored('revive-price', String(profile.revivePrice));
+    }
+
+    function saveAccountProfile() {
+      if (!currentAccountId) { persistGuestProfile(); return; }
+      const store = getAccountsStore();
+      const account = store[currentAccountId];
+      if (!account) { persistGuestProfile(); return; }
+      account.profile = capturePlayerProfile();
+      account.updatedAt = Date.now();
+      store[currentAccountId] = account;
+      setAccountsStore(store);
+      localStorage.setItem(CURRENT_ACCOUNT_KEY, currentAccountId);
+    }
+
+    function accountStatusText() {
+      return currentAccountId ? `Signed in as ${currentAccountEmail}` : 'Guest mode, progress stays on this browser unless you create an account.';
+    }
+
+    function openAccountPanel() {
+      state.paused = true;
+      pauseGameMusic();
+      const signedIn = !!currentAccountId;
+      overlay.innerHTML = `
+        <div class="message settings-page">
+          <h2>Zombie Mayhem Account</h2>
+          <p>${accountStatusText()}</p>
+          ${signedIn ? `
+            <div class="settings-grid">
+              <div class="settings-card">
+                <h4>Saved Profile</h4>
+                <p><strong>Email:</strong> ${currentAccountEmail}</p>
+                <p><strong>Coins:</strong> ${bankCoins}</p>
+                <p><strong>Pass Level:</strong> ${passLevel}</p>
+                <p><strong>Best Distance:</strong> ${best}</p>
+              </div>
+              <div class="settings-card">
+                <h4>Account Actions</h4>
+                <button id="signOutAccountBtn" class="secondary">Sign Out</button>
+                <p class="mini-note">Signing out returns you to guest progress stored on this browser.</p>
+              </div>
+            </div>
+          ` : `
+            <div class="settings-grid">
+              <div class="settings-card">
+                <h4>Create Account</h4>
+                <input id="accountCreateEmail" type="email" placeholder="Email" style="width:100%;margin-bottom:10px;">
+                <input id="accountCreatePassword" type="password" placeholder="Password" style="width:100%;margin-bottom:10px;">
+                <label class="mini-note" style="display:block;margin-bottom:10px;"><input type="checkbox" id="importGuestProgress" checked> Import current guest coins and progression</label>
+                <button id="createAccountBtn">Create Account</button>
+              </div>
+              <div class="settings-card">
+                <h4>Sign In</h4>
+                <input id="accountSignInEmail" type="email" placeholder="Email" style="width:100%;margin-bottom:10px;">
+                <input id="accountSignInPassword" type="password" placeholder="Password" style="width:100%;margin-bottom:10px;">
+                <button id="signInAccountBtn" class="secondary">Sign In</button>
+              </div>
+            </div>
+          `}
+          <button class="secondary" onclick="window.closeOverlayAndResume()">Done</button>
+        </div>`;
+
+      if (signedIn) {
+        document.getElementById('signOutAccountBtn')?.addEventListener('click', () => {
+          saveMeta();
+          currentAccountId = '';
+          currentAccountEmail = '';
+          localStorage.removeItem(CURRENT_ACCOUNT_KEY);
+          loadGuestProfile();
+          syncHud();
+          openAccountPanel();
+        });
+        return;
+      }
+
+      document.getElementById('createAccountBtn')?.addEventListener('click', () => {
+        const email = normalizeEmail(document.getElementById('accountCreateEmail')?.value || '');
+        const password = String(document.getElementById('accountCreatePassword')?.value || '');
+        const importGuest = !!document.getElementById('importGuestProgress')?.checked;
+        if (!email || !password) {
+          alert('Enter an email and password.');
+          return;
+        }
+        const store = getAccountsStore();
+        const id = accountIdForEmail(email);
+        if (store[id]) {
+          alert('That account already exists. Sign in instead.');
+          return;
+        }
+        const guestProfile = capturePlayerProfile();
+        store[id] = {
+          email,
+          secret: encodeSecret(password),
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          profile: importGuest ? guestProfile : {
+            best: 0, bankCoins: 0, avatarCoins: 0, selectedAvatar: 'default', unlockedAvatars: ['default'], missionIndex: 0, missionProgress: 0, passLevel: 1, passXp: 0, totalRuns: 0, youtubeVisitClaimed: false, youtubeSubscribeClaimed: false, starterPackClaimed: false, gunPrice: 10, squadPrice: 8, revivePrice: 15
+          }
+        };
+        setAccountsStore(store);
+        currentAccountId = id;
+        currentAccountEmail = email;
+        localStorage.setItem(CURRENT_ACCOUNT_KEY, id);
+        loadCurrentAccountProfile();
+        saveMeta();
+        syncHud();
+        openAccountPanel();
+      });
+
+      document.getElementById('signInAccountBtn')?.addEventListener('click', () => {
+        const email = normalizeEmail(document.getElementById('accountSignInEmail')?.value || '');
+        const password = String(document.getElementById('accountSignInPassword')?.value || '');
+        const store = getAccountsStore();
+        const id = accountIdForEmail(email);
+        const account = store[id];
+        if (!account || decodeSecret(account.secret || '') !== password) {
+          alert('Incorrect email or password.');
+          return;
+        }
+        saveMeta();
+        currentAccountId = id;
+        currentAccountEmail = email;
+        localStorage.setItem(CURRENT_ACCOUNT_KEY, id);
+        loadCurrentAccountProfile();
+        syncHud();
+        openAccountPanel();
+      });
+    }
+
+    if (currentAccountId) loadCurrentAccountProfile(); else loadGuestProfile();
     bestStat.textContent = best;
     soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
 
     function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
     function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
     function saveMeta(){
-      localStorage.setItem('zombie-squad-run-best', String(best));
-      localStorage.setItem('zombie-squad-run-coins', String(bankCoins));
-      localStorage.setItem('zombie-squad-run-avatar-coins', String(avatarCoins));
-      localStorage.setItem('zombie-squad-run-selected-avatar', selectedAvatar);
-      localStorage.setItem('zombie-squad-run-unlocked-avatars', JSON.stringify(unlockedAvatars));
-      localStorage.setItem('zombie-squad-run-sound', soundOn ? 'on' : 'off');
-      localStorage.setItem('zombie-squad-run-music', musicEnabled ? 'on' : 'off');
-      localStorage.setItem('zombie-squad-run-volume', String(volumeLevel));
-      localStorage.setItem('zombie-squad-run-music-volume', String(musicVolumeLevel));
-      localStorage.setItem('zombie-squad-run-brightness', String(brightnessLevel));
-      localStorage.setItem('zombie-squad-run-controls', controlsMode);
-      localStorage.setItem('zombie-squad-run-mission-index', String(missionIndex));
-      localStorage.setItem('zombie-squad-run-mission-progress', String(missionProgress));
-      localStorage.setItem('zombie-squad-run-pass-level', String(passLevel));
-      localStorage.setItem('zombie-squad-run-pass-xp', String(passXp));
-      localStorage.setItem('zombie-squad-run-total-runs', String(totalRuns));
-      localStorage.setItem('zombie-squad-run-youtube-visit', youtubeVisitClaimed ? 'claimed' : 'open');
-      localStorage.setItem('zombie-squad-run-youtube-subscribe', youtubeSubscribeClaimed ? 'claimed' : 'open');
-      localStorage.setItem('zombie-squad-run-starter-pack', starterPackClaimed ? 'claimed' : 'open');
-      localStorage.setItem('zombie-squad-run-gun-price', String(gunPrice));
-      localStorage.setItem('zombie-squad-run-squad-price', String(squadPrice));
-      localStorage.setItem('zombie-squad-run-revive-price', String(revivePrice));
+      setStored('sound', soundOn ? 'on' : 'off');
+      setStored('music', musicEnabled ? 'on' : 'off');
+      setStored('volume', String(volumeLevel));
+      setStored('music-volume', String(musicVolumeLevel));
+      setStored('brightness', String(brightnessLevel));
+      setStored('controls', controlsMode);
+      saveAccountProfile();
     }
 
     function activeMission() { return MISSIONS[missionIndex % MISSIONS.length]; }
@@ -1455,6 +1701,11 @@
               </div>
               <p class="mini-note">Layered bass, lead, drums, and wave-based intensity.</p>
             </div>
+            <div class="settings-card">
+              <h4>Account</h4>
+              <p class="mini-note">${accountStatusText()}</p>
+              <button class="secondary" id="openAccountBtn" style="width:auto;margin-top:0;">Open Account</button>
+            </div>
           </div>
           <button onclick="window.closeOverlayAndResume()">Done</button>
         </div>`;
@@ -1472,6 +1723,7 @@
       const testAudioBtn = document.getElementById('testAudioBtn');
       const soundToggleBtn = document.getElementById('soundToggleBtn');
       const musicToggleBtn = document.getElementById('musicToggleBtn');
+      const openAccountBtn = document.getElementById('openAccountBtn');
 
       volumeRange.addEventListener('input', () => {
         volumeLevel = Number(volumeRange.value);
@@ -1517,6 +1769,8 @@
         refreshMusicState();
         saveMeta();
       });
+
+      openAccountBtn?.addEventListener('click', openAccountPanel);
 
       testAudioBtn.addEventListener('click', () => {
         pauseGameMusic();
@@ -1600,7 +1854,7 @@
       overlay.classList.add('hero-mode');
       overlay.innerHTML = `
         <div class="message hero-card">
-          <h1>Zombie Squad Run</h1>
+          <h1>Zombie Mayhem</h1>
           <p>Run with your squad, shoot the right lane, smash walls before impact, and spend coins to upgrade your survival chances.</p>
           <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best} &nbsp; <strong>Pass Lv.</strong> ${passLevel}</p>
           <p class="mini-note">Next pass reward: <strong>${currentPassReward().title}</strong>, ${rewardSummary(currentPassReward().grant) || currentPassReward().detail}.</p>
@@ -1751,7 +2005,7 @@
       };
       crowdCache = null;
       bankCoins = 0;
-      localStorage.setItem('zombie-squad-run-coins', '0');
+      setStored('coins', '0');
       syncHud();
       syncMissionHud();
       syncSeasonHud();
@@ -4014,7 +4268,7 @@
         octx.strokeStyle = 'rgba(148,163,184,.22)'; octx.lineWidth = 1.5; octx.strokeRect(86,8,canvas.width - 172,46);
         octx.shadowColor = 'rgba(96,165,250,0.18)';
         octx.shadowBlur = 10;
-        octx.fillStyle='#e5e7eb'; octx.font='bold 24px system-ui'; octx.textAlign='center'; octx.fillText('Zombie Squad Run',canvas.width / 2,39);
+        octx.fillStyle='#e5e7eb'; octx.font='bold 24px system-ui'; octx.textAlign='center'; octx.fillText('Zombie Mayhem',canvas.width / 2,39);
         octx.shadowBlur = 0;
         octx.fillStyle='rgba(251,191,36,0.9)'; octx.font='bold 11px system-ui'; octx.fillText('V1.2', canvas.width / 2, 53);
         octx.fillStyle='rgba(255,255,255,0.05)'; octx.fillRect(canvas.width / 2 - 48, 56, 96, 1.5);
@@ -4221,6 +4475,7 @@
     enhanceBtn.addEventListener('click', openEnhancementPanel);
     avatarBtn.addEventListener('click', openAvatarPanel);
     settingsBtn.addEventListener('click', openSettingsPanel);
+    accountBtn?.addEventListener('click', openAccountPanel);
     battleSettingsBtn.addEventListener('click', openSettingsPanel);
     floatingSettingsBtn.addEventListener('click', openSettingsPanel);
     youtubeBtn.addEventListener('click', () => {

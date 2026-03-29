@@ -40,37 +40,45 @@
     }
     .topbar {
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 12px;
-      padding: 16px;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 8px;
+      padding: 12px;
       background: rgba(255,255,255,0.03);
     }
     .stat {
       background: var(--panel);
-      border-radius: 16px;
-      padding: 12px;
+      border-radius: 14px;
+      padding: 10px 8px;
       text-align: center;
       box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+      min-width: 0;
     }
-    .stat .label { display: block; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
-    .stat .value { display: block; font-size: 24px; font-weight: 800; margin-top: 4px; }
+    .stat .label { display: block; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat .value { display: block; font-size: 21px; font-weight: 800; margin-top: 3px; line-height: 1.05; }
     .content { display: grid; grid-template-columns: 1fr 320px; }
     .canvas-wrap { position: relative; min-height: 680px; background: linear-gradient(180deg, #111827 0%, #0f172a 50%, #1e293b 100%); }
     canvas { width: 100%; height: 680px; display: block; touch-action: manipulation; cursor: crosshair; }
+    .canvas-hud-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 8px 10px 10px;
+      background: linear-gradient(180deg, rgba(15,23,42,0.96), rgba(2,6,23,0.92));
+      border-top: 1px solid rgba(148,163,184,.12);
+    }
     .battle-side-ui {
-      position: absolute;
-      right: max(14px, env(safe-area-inset-right));
-      bottom: max(14px, env(safe-area-inset-bottom));
+      position: static;
       display: flex;
       flex-direction: row;
-      gap: 10px;
+      gap: 8px;
       z-index: 12;
-      pointer-events: none;
+      pointer-events: auto;
+      margin-left: auto;
     }
     .battle-side-btn {
-      width: 86px;
-      min-height: 86px;
-      border-radius: 22px;
+      width: 72px;
+      min-height: 72px;
+      border-radius: 18px;
       border: 1px solid rgba(255,255,255,0.12);
       background: linear-gradient(180deg, rgba(239,68,68,.96), rgba(127,29,29,.98));
       color: white;
@@ -79,9 +87,9 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      padding: 10px;
-      font-size: 13px;
+      gap: 4px;
+      padding: 8px;
+      font-size: 11px;
       font-weight: 900;
       transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
       touch-action: manipulation;
@@ -101,7 +109,7 @@
     .battle-side-btn:active {
       transform: scale(.96);
     }
-    .battle-side-btn .big { font-size: 28px; line-height: 1; }
+    .battle-side-btn .big { font-size: 22px; line-height: 1; }
     .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
     .overlay.hero-mode {
       position: fixed;
@@ -380,7 +388,7 @@
       canvas { height: 560px; }
       .shop-hero { grid-template-columns: 1fr; }
       .touch-row { display: flex; }
-      .battle-side-ui { right: 12px; bottom: 12px; }
+      .canvas-hud-row { display: none; }
     }
     @media (max-width: 560px) {
       .topbar { grid-template-columns: repeat(2, 1fr); }
@@ -389,19 +397,6 @@
       .controls { padding: 12px; }
       .settings-grid { grid-template-columns: 1fr; }
       button { min-height: 46px; }
-      .battle-side-ui {
-        right: 10px;
-        bottom: 10px;
-        gap: 8px;
-      }
-      .battle-side-btn {
-        width: 78px;
-        min-height: 78px;
-        border-radius: 18px;
-        font-size: 12px;
-        padding: 8px;
-      }
-      .battle-side-btn .big { font-size: 24px; }
     }
   </style>
 </head>
@@ -421,19 +416,21 @@
     <section class="content">
       <div class="canvas-wrap">
         <canvas id="game" width="800" height="680"></canvas>
+        <div class="overlay" id="overlay"></div>
+      </div>
+      <div class="canvas-hud-row">
         <div class="battle-side-ui">
           <button class="battle-side-btn" id="floatingMinigunBtn" aria-label="Activate minigun" type="button">
             <span class="big">🔥</span>
             <span>Minigun</span>
-            <span class="battle-side-status" id="floatingMinigunStatus" style="font-size:11px;opacity:.86;">Tap when ready</span>
+            <span class="battle-side-status" id="floatingMinigunStatus" style="font-size:10px;opacity:.82;">Tap ready</span>
           </button>
           <button class="battle-side-btn" id="floatingSettingsBtn" aria-label="Open settings" type="button" style="background:linear-gradient(180deg, rgba(71,85,105,.96), rgba(30,41,59,.98));">
             <span class="big">⚙️</span>
             <span>Settings</span>
-            <span style="font-size:11px;opacity:.86;">Brightness + volume</span>
+            <span style="font-size:10px;opacity:.82;">Audio + view</span>
           </button>
         </div>
-        <div class="overlay" id="overlay"></div>
       </div>
 
       <aside class="controls">

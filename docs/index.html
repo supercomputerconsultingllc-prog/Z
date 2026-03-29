@@ -546,15 +546,26 @@
       .controls { border-left: 0; border-top: 1px solid rgba(148,163,184,.12); }
       canvas { height: 560px; }
       .shop-hero { grid-template-columns: 1fr; }
-      .touch-row { display: flex; }
-      .canvas-hud-row { display: flex; gap: 8px; }
+      .canvas-hud-row {
+        display: flex;
+        gap: 8px;
+        padding: 8px 12px 8px;
+      }
+      .battle-side-ui {
+        width: 100%;
+        justify-content: flex-end;
+        order: 1;
+      }
+      .touch-row {
+        display: flex;
+        order: 2;
+      }
       .mission-hud.docked,
       .season-hud.docked {
         width: 100%;
         max-width: none;
         margin-bottom: 10px;
       }
-      .battle-side-ui { width: 100%; justify-content: flex-end; }
     }
     @media (max-width: 560px) {
       .topbar { grid-template-columns: repeat(2, 1fr); }

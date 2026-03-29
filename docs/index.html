@@ -535,6 +535,8 @@
     let musicEnabled = localStorage.getItem('zombie-squad-run-music') !== 'off';
     let musicTimer = null;
     let musicStep = 0;
+    let musicNextBarAt = 0;
+    let musicBarDurationMs = 3040;
     let renderNow = performance.now();
     let lastShotSoundAt = 0;
     const laneObjectBuckets = [[], [], []];
@@ -772,21 +774,23 @@
       return 0.75 + waveBoost + minigunBoost;
     }
 
-    function scheduleMusicBar() {
-      if (!musicEnabled || !soundOn) return;
+    function scheduleMusicBar(startAt = null) {
+      if (!musicEnabled || !soundOn) return false;
       const ctxAudio = ensureAudio();
-      if (!ctxAudio) return;
+      if (!ctxAudio) return false;
       if (ctxAudio.state === 'suspended') ctxAudio.resume();
+      const stepDur = 0.19;
+      const barSteps = 16;
       const now = ctxAudio.currentTime + 0.02;
+      const barStart = Math.max(now, startAt ?? now);
       const intensity = musicIntensity();
       const root = state ? 156 + Math.min(10, state.wave * 0.4) : 156;
-      const stepDur = 0.19;
       const mountainKingPhrase = [0, 2, 3, 5, 6, 3, 6, 5, 2, 5, 3, 2, 0, 2, 3, -2];
       const bassOffsets = [0, 0, -5, -5, -6, -6, -5, -5, -7, -7, -5, -5, -8, -8, -7, -7];
       const accents = [1, 0.18, 0.22, 0.26, 0.62, 0.18, 0.52, 0.34, 0.2, 0.5, 0.28, 0.2, 0.14, 0.18, 0.24, 0.65];
 
-      for (let i = 0; i < 16; i++) {
-        const stepTime = now + i * stepDur;
+      for (let i = 0; i < barSteps; i++) {
+        const stepTime = barStart + i * stepDur;
         const note = mountainKingPhrase[(musicStep + i) % mountainKingPhrase.length];
         const bass = bassOffsets[(musicStep + i) % bassOffsets.length];
         const accent = accents[(musicStep + i) % accents.length];
@@ -798,21 +802,41 @@
         if (i % 4 === 0) playKick(stepTime, (1.1 + accent * 0.35) * intensity);
         if (i % 2 === 1) playNoiseHit(stepTime, 0.035, (0.12 + accent * 0.12) * intensity);
       }
-      musicStep = (musicStep + 16) % mountainKingPhrase.length;
+      musicStep = (musicStep + barSteps) % mountainKingPhrase.length;
+      musicBarDurationMs = stepDur * barSteps * 1000;
+      musicNextBarAt = performance.now() + Math.max(40, (barStart - ctxAudio.currentTime) * 1000) + musicBarDurationMs;
+      return true;
+    }
+
+    function queueNextMusicBar() {
+      if (!musicEnabled || !soundOn || document.hidden || state?.paused || state?.gameOver) {
+        musicTimer = null;
+        return;
+      }
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) {
+        musicTimer = null;
+        return;
+      }
+      const aheadTime = 0.08;
+      const targetStart = Math.max(ctxAudio.currentTime + aheadTime, (musicNextBarAt || performance.now()) / 1000);
+      scheduleMusicBar(targetStart);
+      const delay = Math.max(180, musicNextBarAt - performance.now() - 140);
+      musicTimer = setTimeout(queueNextMusicBar, delay);
     }
 
     function startMusicLoop() {
       if (musicTimer || !musicEnabled) return;
       musicStep = 0;
-      scheduleMusicBar();
-      musicTimer = setInterval(() => {
-        if (!document.hidden && !state?.paused && !state?.gameOver) scheduleMusicBar();
-      }, 3040);
+      musicNextBarAt = 0;
+      if (!scheduleMusicBar()) return;
+      const delay = Math.max(180, musicNextBarAt - performance.now() - 140);
+      musicTimer = setTimeout(queueNextMusicBar, delay);
     }
 
     function stopMusicLoop() {
       if (!musicTimer) return;
-      clearInterval(musicTimer);
+      clearTimeout(musicTimer);
       musicTimer = null;
     }
 
@@ -1166,7 +1190,7 @@
           <h1>Zombie Squad Run</h1>
           <p>Run with your squad, shoot the right lane, smash walls before impact, and spend coins to upgrade your survival chances.</p>
           <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best}</p>
-          <p class="mini-note">Build: Beta V1.0</p>
+          <p class="mini-note">Build: Beta V1.0, includes the "In the Hall of the Mountain King" synth loop.</p>
           <div class="overlay-actions two-up">
             <button onclick="window.startZombieRun()">Start Run</button>
             <button class="secondary" onclick="window.openSettingsPanel()">Settings</button>
@@ -1532,7 +1556,12 @@
           if (obj.hp <= 0) handleDestroyed(obj);
         }
       }
-      state.objects = state.objects.filter(o => o.hp > 0 && o.y < 740);
+      let objectWrite = 0;
+      for (let i = 0; i < state.objects.length; i++) {
+        const obj = state.objects[i];
+        if (obj.hp > 0 && obj.y < 740) state.objects[objectWrite++] = obj;
+      }
+      state.objects.length = objectWrite;
 
       for (let lane = 0; lane < LANES.length; lane++) {
         fireAtLane(lane, 4, 260, { silent: true, noVibrate: true, muzzleScale: 1.1 });
@@ -1645,18 +1674,33 @@
         particleWrite = particleCap;
       }
       state.particles.length = particleWrite;
-      for (const decal of impactDecals) decal.life -= dt;
-      while (impactDecals.length && impactDecals[0].life <= 0) impactDecals.shift();
-      for (const shell of shellCasings) {
+      let decalWrite = 0;
+      for (let i = 0; i < impactDecals.length; i++) {
+        const decal = impactDecals[i];
+        decal.life -= dt;
+        if (decal.life > 0) impactDecals[decalWrite++] = decal;
+      }
+      impactDecals.length = decalWrite;
+
+      let shellWrite = 0;
+      for (let i = 0; i < shellCasings.length; i++) {
+        const shell = shellCasings[i];
         shell.life -= dt;
         shell.x += shell.vx * dt;
         shell.y += shell.vy * dt;
         shell.vy += 180 * dt;
         shell.rot += shell.spin * dt;
+        if (shell.life > 0) shellCasings[shellWrite++] = shell;
       }
-      while (shellCasings.length && shellCasings[0].life <= 0) shellCasings.shift();
-      for (const flash of muzzleFlashes) flash.life -= dt;
-      while (muzzleFlashes.length && muzzleFlashes[0].life <= 0) muzzleFlashes.shift();
+      shellCasings.length = shellWrite;
+
+      let flashWrite = 0;
+      for (let i = 0; i < muzzleFlashes.length; i++) {
+        const flash = muzzleFlashes[i];
+        flash.life -= dt;
+        if (flash.life > 0) muzzleFlashes[flashWrite++] = flash;
+      }
+      muzzleFlashes.length = flashWrite;
       for (const obj of state.objects) {
         if (obj.y >= 570) {
           if (obj.type === 'wall' && obj.hp > 0) state.squad -= obj.hp;

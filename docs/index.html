@@ -742,6 +742,7 @@
     const canvasHudRow = document.querySelector('.canvas-hud-row');
     const controlsPanel = document.querySelector('.controls');
     const progressDock = document.querySelector('.progress-dock');
+    const touchRow = document.querySelector('.touch-row');
     const missionHud = document.getElementById('missionHud');
     const missionRewardTag = document.getElementById('missionRewardTag');
     const missionTitle = document.getElementById('missionTitle');
@@ -1177,7 +1178,6 @@
     }
 
     function applyControlsMode() {
-      const touchRow = document.querySelector('.touch-row');
       const desktopWebMode = window.matchMedia('(pointer:fine)').matches;
       const mobileLayout = window.innerWidth <= 920;
       touchRow.style.display = controlsMode === 'buttons' ? 'flex' : '';
@@ -2630,21 +2630,33 @@
       impactDecals.push({ x, y, color, size, life, maxLife: life, rot: Math.random() * Math.PI * 2, spray });
       const perfTier = squadPerfTier();
       const maxDecals = perfTier >= 3 ? 14 : perfTier >= 2 ? 20 : perfTier >= 1 ? 28 : mobileSafeMode ? 28 : 54;
-      if (impactDecals.length > maxDecals) impactDecals.splice(0, impactDecals.length - maxDecals);
+      if (impactDecals.length > maxDecals) {
+        const overflow = impactDecals.length - maxDecals;
+        impactDecals.copyWithin(0, overflow);
+        impactDecals.length = maxDecals;
+      }
     }
 
     function pushShell(x, y, tint = '#fbbf24') {
       shellCasings.push({ x, y, vx: 50 + Math.random() * 55, vy: -60 - Math.random() * 40, rot: Math.random() * Math.PI, spin: 4 + Math.random() * 3, life: 0.7, tint });
       const perfTier = squadPerfTier();
       const maxShells = perfTier >= 2 ? 0 : perfTier >= 1 ? 4 : mobileSafeMode ? 6 : 20;
-      if (shellCasings.length > maxShells) shellCasings.splice(0, shellCasings.length - maxShells);
+      if (shellCasings.length > maxShells) {
+        const overflow = shellCasings.length - maxShells;
+        shellCasings.copyWithin(0, overflow);
+        shellCasings.length = maxShells;
+      }
     }
 
     function pushMuzzleFlash(x, y, color = '#fde68a', life = 0.08, size = 16) {
       muzzleFlashes.push({ x, y, color, life, maxLife: life, size, seed: Math.random() * 10 });
       const perfTier = squadPerfTier();
       const maxFlashes = perfTier >= 2 ? 0 : perfTier >= 1 ? 4 : mobileSafeMode ? 5 : 16;
-      if (muzzleFlashes.length > maxFlashes) muzzleFlashes.splice(0, muzzleFlashes.length - maxFlashes);
+      if (muzzleFlashes.length > maxFlashes) {
+        const overflow = muzzleFlashes.length - maxFlashes;
+        muzzleFlashes.copyWithin(0, overflow);
+        muzzleFlashes.length = maxFlashes;
+      }
     }
 
     function drawRoadDecals() {
@@ -3299,7 +3311,6 @@
       octx.beginPath();
       octx.ellipse(centerX, 612, crowdRadiusX * 0.9, crowdRadiusY * 0.74, 0, 0, Math.PI * 2);
       octx.fill();
-      visibleSoldiers.sort((a, b) => a.y - b.y);
       for (const soldier of visibleSoldiers) {
         const tint = soldier.index % 4 === 0 ? '#60a5fa' : soldier.index % 4 === 1 ? '#93c5fd' : soldier.index % 4 === 2 ? '#3b82f6' : '#2563eb';
         const compactScale = Math.max(0.06, soldier.scale * 0.86);
@@ -3386,6 +3397,8 @@
         visibleSoldiers.push({ x, y, depth, scale, index: drawIndex++ });
       }
 
+      visibleSoldiers.sort((a, b) => a.y - b.y);
+
       const bannerGradient = ctx.createLinearGradient(0, 0, 220, 0);
       bannerGradient.addColorStop(0, 'rgba(15,23,42,.96)');
       bannerGradient.addColorStop(1, 'rgba(30,64,175,.78)');
@@ -3414,7 +3427,6 @@
           }
         }
       } else {
-        visibleSoldiers.sort((a, b) => a.y - b.y);
         for (const soldier of visibleSoldiers) {
           const tint = soldier.index % 4 === 0 ? '#60a5fa' : soldier.index % 4 === 1 ? '#93c5fd' : soldier.index % 4 === 2 ? '#3b82f6' : '#2563eb';
           if (dotArmyMode) drawTinySoldier(soldier.x, soldier.y, tint, soldier.scale, soldier.index, true);

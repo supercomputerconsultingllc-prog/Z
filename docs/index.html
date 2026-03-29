@@ -568,7 +568,8 @@
     let selectedAvatar = localStorage.getItem('zombie-squad-run-selected-avatar') || 'default';
     let unlockedAvatars = JSON.parse(localStorage.getItem('zombie-squad-run-unlocked-avatars') || '["default"]');
     let soundOn = localStorage.getItem('zombie-squad-run-sound') !== 'off';
-    let volumeLevel = Number(localStorage.getItem('zombie-squad-run-volume') || 140);
+    let volumeLevel = Number(localStorage.getItem('zombie-squad-run-volume') || 50);
+    let musicVolumeLevel = Number(localStorage.getItem('zombie-squad-run-music-volume') || 100);
     let brightnessLevel = Number(localStorage.getItem('zombie-squad-run-brightness') || 100);
     let controlsMode = localStorage.getItem('zombie-squad-run-controls') || 'tap';
     let missionIndex = Number(localStorage.getItem('zombie-squad-run-mission-index') || 0);
@@ -608,6 +609,7 @@
       localStorage.setItem('zombie-squad-run-sound', soundOn ? 'on' : 'off');
       localStorage.setItem('zombie-squad-run-music', musicEnabled ? 'on' : 'off');
       localStorage.setItem('zombie-squad-run-volume', String(volumeLevel));
+      localStorage.setItem('zombie-squad-run-music-volume', String(musicVolumeLevel));
       localStorage.setItem('zombie-squad-run-brightness', String(brightnessLevel));
       localStorage.setItem('zombie-squad-run-controls', controlsMode);
       localStorage.setItem('zombie-squad-run-mission-index', String(missionIndex));
@@ -638,7 +640,7 @@
       audio.dataset.fallbackSrc = './assets/audio/mountain-king.mp3';
       audio.loop = true;
       audio.preload = 'auto';
-      audio.volume = Math.max(0, Math.min(1, (volumeLevel / 100) * 0.35));
+      audio.volume = Math.max(0, Math.min(1, musicVolumeLevel / 100));
       audio.load();
       musicBus = audio;
       return musicBus;
@@ -646,15 +648,29 @@
 
     function stopMusicAudio(resetTime = false) {
       if (!musicBus) return;
-      musicBus.pause();
-      if (resetTime) {
-        try { musicBus.currentTime = 0; } catch (_) {}
-      }
+      const music = musicBus;
+      const fadeMs = 140;
+      const startVolume = music.volume;
+      const start = performance.now();
+      const tick = () => {
+        const progress = Math.min(1, (performance.now() - start) / fadeMs);
+        music.volume = startVolume * (1 - progress);
+        if (progress < 1) {
+          requestAnimationFrame(tick);
+          return;
+        }
+        music.pause();
+        if (resetTime) {
+          try { music.currentTime = 0; } catch (_) {}
+        }
+        updateMusicVolume();
+      };
+      tick();
     }
 
     function updateMusicVolume() {
       if (!musicBus) return;
-      musicBus.volume = Math.max(0, Math.min(1, (volumeLevel / 100) * 0.35));
+      musicBus.volume = Math.max(0, Math.min(1, musicVolumeLevel / 100));
     }
 
     function playTone(freq, duration = 0.08, type = 'square', gainBoost = 1) {
@@ -667,7 +683,7 @@
       const now = ctxAudio.currentTime;
       osc.type = type;
       osc.frequency.setValueAtTime(freq, now);
-      gain.gain.setValueAtTime((volumeLevel / 100) * 0.08 * gainBoost, now);
+      gain.gain.setValueAtTime((volumeLevel / 100) * 0.06 * gainBoost, now);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
       osc.connect(gain);
       gain.connect(ctxAudio.destination);
@@ -691,7 +707,7 @@
       bodyOsc.type = power >= 8 ? 'sawtooth' : 'triangle';
       bodyOsc.frequency.setValueAtTime(210 + power * 12, now);
       bodyOsc.frequency.exponentialRampToValueAtTime(88 + power * 5, now + 0.085);
-      bodyGain.gain.setValueAtTime((volumeLevel / 100) * 0.03 * Math.min(1.55, 0.95 + power * 0.045), now);
+      bodyGain.gain.setValueAtTime((volumeLevel / 100) * 0.015 * Math.min(1.45, 0.92 + power * 0.04), now);
       bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
       bodyOsc.connect(bodyGain);
       bodyGain.connect(ctxAudio.destination);
@@ -702,7 +718,7 @@
       const crackGain = ctxAudio.createGain();
       crackOsc.type = 'square';
       crackOsc.frequency.setValueAtTime(900 + power * 34, now);
-      crackGain.gain.setValueAtTime((volumeLevel / 100) * 0.013, now);
+      crackGain.gain.setValueAtTime((volumeLevel / 100) * 0.0065, now);
       crackGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
       crackOsc.connect(crackGain);
       crackGain.connect(ctxAudio.destination);
@@ -714,7 +730,7 @@
       tailOsc.type = power >= 6 ? 'triangle' : 'sine';
       tailOsc.frequency.setValueAtTime(420 + power * 14, now + 0.01);
       tailOsc.frequency.exponentialRampToValueAtTime(180 + power * 6, now + 0.07);
-      tailGain.gain.setValueAtTime((volumeLevel / 100) * 0.01 * Math.min(1.35, 0.9 + power * 0.03), now + 0.008);
+      tailGain.gain.setValueAtTime((volumeLevel / 100) * 0.005 * Math.min(1.25, 0.88 + power * 0.025), now + 0.008);
       tailGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.075);
       tailOsc.connect(tailGain);
       tailGain.connect(ctxAudio.destination);
@@ -763,18 +779,31 @@
       if (!musicEnabled || !soundOn) return;
       const music = ensureMusicAudio();
       if (!music) return;
-      updateMusicVolume();
+      const targetVolume = Math.max(0, Math.min(1, musicVolumeLevel / 100));
+      music.volume = 0;
       const tryPlay = () => {
         const playPromise = music.play();
+        const fadeIn = () => {
+          const fadeMs = 220;
+          const start = performance.now();
+          const tick = () => {
+            const progress = Math.min(1, (performance.now() - start) / fadeMs);
+            music.volume = targetVolume * progress;
+            if (progress < 1) requestAnimationFrame(tick);
+          };
+          tick();
+        };
         if (playPromise && typeof playPromise.catch === 'function') {
-          playPromise.catch(() => {
+          playPromise.then(fadeIn).catch(() => {
             if (music.dataset.fallbackSrc && music.src.indexOf('mountain-king.mp3') === -1) {
               music.src = music.dataset.fallbackSrc;
               music.load();
               const retryPromise = music.play();
-              if (retryPromise && typeof retryPromise.catch === 'function') retryPromise.catch(() => {});
+              if (retryPromise && typeof retryPromise.then === 'function') retryPromise.then(fadeIn).catch(() => {});
             }
           });
+        } else {
+          fadeIn();
         }
       };
       if (music.readyState >= 2) tryPlay();
@@ -1003,14 +1032,22 @@
             <div class="settings-card">
               <h4>Volume</h4>
               <div class="panel-row">
-                <span>Master Audio</span>
-                <input id="volumeRange" type="range" min="0" max="200" value="${volumeLevel}">
+                <span>Shooting + SFX</span>
+                <input id="volumeRange" type="range" min="0" max="100" value="${volumeLevel}">
                 <strong id="volumeValue">${volumeLevel}%</strong>
               </div>
               <div class="volume-bar-shell">
-                <div class="volume-bar-fill" id="volumeBarFill" style="width:${Math.min(volumeLevel, 200) / 2}%"></div>
+                <div class="volume-bar-fill" id="volumeBarFill" style="width:${Math.min(volumeLevel, 100)}%"></div>
               </div>
-              <p class="mini-note">This now controls real game sound. It can go above 100% for extra punch.</p>
+              <div class="panel-row" style="margin-top:14px;">
+                <span>Background Music</span>
+                <input id="musicVolumeRange" type="range" min="0" max="100" value="${musicVolumeLevel}">
+                <strong id="musicVolumeValue">${musicVolumeLevel}%</strong>
+              </div>
+              <div class="volume-bar-shell">
+                <div class="volume-bar-fill" id="musicVolumeBarFill" style="width:${Math.min(musicVolumeLevel, 100)}%"></div>
+              </div>
+              <p class="mini-note">Music is full volume by default, shooting is set to half volume by default.</p>
               <button id="testAudioBtn" class="warn" style="width:auto;">Test Volume</button>
             </div>
             <div class="settings-card">
@@ -1053,6 +1090,9 @@
       const volumeRange = document.getElementById('volumeRange');
       const volumeValue = document.getElementById('volumeValue');
       const volumeBarFill = document.getElementById('volumeBarFill');
+      const musicVolumeRange = document.getElementById('musicVolumeRange');
+      const musicVolumeValue = document.getElementById('musicVolumeValue');
+      const musicVolumeBarFill = document.getElementById('musicVolumeBarFill');
       const brightnessRange = document.getElementById('brightnessRange');
       const brightnessValue = document.getElementById('brightnessValue');
       const controlsModeBtn = document.getElementById('controlsModeBtn');
@@ -1064,7 +1104,14 @@
       volumeRange.addEventListener('input', () => {
         volumeLevel = Number(volumeRange.value);
         volumeValue.textContent = `${volumeLevel}%`;
-        volumeBarFill.style.width = `${Math.min(volumeLevel, 200) / 2}%`;
+        volumeBarFill.style.width = `${Math.min(volumeLevel, 100)}%`;
+        saveMeta();
+      });
+
+      musicVolumeRange.addEventListener('input', () => {
+        musicVolumeLevel = Number(musicVolumeRange.value);
+        musicVolumeValue.textContent = `${musicVolumeLevel}%`;
+        musicVolumeBarFill.style.width = `${Math.min(musicVolumeLevel, 100)}%`;
         updateMusicVolume();
         saveMeta();
       });
@@ -2967,67 +3014,78 @@
 
     function drawBullets() {
       const perfTier = squadPerfTier();
-      const bulletStride = (perfTier >= 2 || (mobileSafeMode && state.bullets.length > 90)) ? (perfTier >= 3 ? 3 : 2) : 1;
+      const heavyLoad = perfTier >= 2 || (mobileSafeMode && state.bullets.length > 90);
+      const bulletStride = heavyLoad ? (perfTier >= 3 ? 3 : 2) : 1;
+      ctx.lineWidth = 1.4;
       for (let i = 0; i < state.bullets.length; i += bulletStride) {
         const bullet = state.bullets[i];
         ctx.save();
-        ctx.shadowColor = bullet.trail || bullet.color || '#facc15';
-        ctx.shadowBlur = perfTier >= 2 ? (bullet.glow ? 10 : 6) : bullet.glow ? 22 : 12;
+        if (!heavyLoad) {
+          ctx.shadowColor = bullet.trail || bullet.color || '#facc15';
+          ctx.shadowBlur = bullet.glow ? 22 : 12;
+        } else {
+          ctx.shadowBlur = 0;
+        }
         ctx.fillStyle = bullet.color || COLORS.bullet;
         ctx.strokeStyle = bullet.core || '#fff';
-        ctx.lineWidth = 1.4;
 
         if (bullet.style === 'laser') {
           ctx.fillRect(bullet.x - 2, bullet.y - 14, 4, 18);
-          ctx.strokeRect(bullet.x - 1, bullet.y - 10, 2, 10);
+          if (!heavyLoad) ctx.strokeRect(bullet.x - 1, bullet.y - 10, 2, 10);
         } else if (bullet.style === 'plasma') {
           ctx.beginPath();
           ctx.arc(bullet.x, bullet.y, bullet.radius || 6, 0, Math.PI * 2);
           ctx.fill();
-          ctx.beginPath();
-          ctx.arc(bullet.x, bullet.y, (bullet.radius || 6) * 0.55, 0, Math.PI * 2);
-          ctx.stroke();
+          if (!heavyLoad) {
+            ctx.beginPath();
+            ctx.arc(bullet.x, bullet.y, (bullet.radius || 6) * 0.55, 0, Math.PI * 2);
+            ctx.stroke();
+          }
         } else if (bullet.style === 'pulse') {
           ctx.beginPath();
           ctx.ellipse(bullet.x, bullet.y, (bullet.radius || 5.5) + 2, bullet.radius || 5.5, 0, 0, Math.PI * 2);
           ctx.fill();
-          ctx.beginPath();
-          ctx.arc(bullet.x, bullet.y, (bullet.radius || 5.5) + 4, 0, Math.PI * 2);
-          ctx.globalAlpha = 0.22;
-          ctx.stroke();
-          ctx.globalAlpha = 1;
+          if (!heavyLoad) {
+            ctx.beginPath();
+            ctx.arc(bullet.x, bullet.y, (bullet.radius || 5.5) + 4, 0, Math.PI * 2);
+            ctx.globalAlpha = 0.22;
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+          }
         } else if (bullet.style === 'scatter') {
           ctx.save();
           ctx.translate(bullet.x, bullet.y);
           ctx.rotate((bullet.drift || 0) * 0.01);
           ctx.fillRect(-3, -10, 6, 16);
-          ctx.strokeRect(-1.4, -7, 2.8, 8);
+          if (!heavyLoad) ctx.strokeRect(-1.4, -7, 2.8, 8);
           ctx.restore();
         } else if (bullet.style === 'arc') {
           ctx.beginPath();
           ctx.moveTo(bullet.x - 5, bullet.y + 6);
           ctx.quadraticCurveTo(bullet.x + 8, bullet.y, bullet.x - 1, bullet.y - 12);
           ctx.stroke();
-          ctx.beginPath();
-          ctx.arc(bullet.x, bullet.y, (bullet.radius || 6) * 0.65, 0, Math.PI * 2);
-          ctx.fill();
+          if (!heavyLoad) {
+            ctx.beginPath();
+            ctx.arc(bullet.x, bullet.y, (bullet.radius || 6) * 0.65, 0, Math.PI * 2);
+            ctx.fill();
+          }
         } else if (bullet.style === 'minigun') {
           ctx.fillRect(bullet.x - 2.5, bullet.y - 12, 5, 14);
-          ctx.strokeRect(bullet.x - 1.2, bullet.y - 8, 2.4, 8);
+          if (!heavyLoad) ctx.strokeRect(bullet.x - 1.2, bullet.y - 8, 2.4, 8);
         } else {
           ctx.beginPath();
           ctx.arc(bullet.x, bullet.y, bullet.radius || 5, 0, Math.PI * 2);
           ctx.fill();
         }
 
-        if (perfTier <= 1) {
+        if (!heavyLoad && perfTier <= 1) {
           ctx.globalAlpha = 0.55;
           ctx.fillStyle = bullet.trail || '#fde68a';
           ctx.fillRect(bullet.x - 1.5, bullet.y + 4, 3, 12);
           ctx.globalAlpha = 0.2;
           ctx.fillRect(bullet.x - 4, bullet.y + 2, 8, 18);
         } else if (perfTier === 2) {
-          ctx.globalAlpha = 0.28;
+          ctx.globalAlpha = 0.22;
           ctx.fillStyle = bullet.trail || '#fde68a';
           ctx.fillRect(bullet.x - 1, bullet.y + 5, 2, 8);
         }

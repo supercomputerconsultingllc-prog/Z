@@ -1727,20 +1727,19 @@
           </div>
           <div class="shop-grid">
             <div class="shop-card featured">
-              <h4><span>💳 BTC Coin Packs</span><span class="shop-badge">Manual Claim</span></h4>
-              <p>Send BTC using the Coinbase receive flow on the <strong>Base network</strong>, then return and tap the matching pack to mark it paid on this device.</p>
+              <h4><span>💳 BTC Coin Packs</span><span class="shop-badge">Checkout Link</span></h4>
+              <p>Open checkout for a coin pack. After verified payment, coins should be added to the signed-in game account automatically, not claimed manually in the browser.</p>
               <div class="goal-stack" style="margin-top:10px;">
                 ${COIN_PACKS.map(pack => `
                   <div class="goal-card">
                     <h4>${pack.coins.toLocaleString()} Coins</h4>
                     <p>${pack.price}</p>
                     <div class="cta-row" style="margin-top:10px;">
-                      <button class="warn" onclick="window.openCoinPurchase('${pack.id}')">${walletReady ? `Open Wallet for ${pack.price}` : 'Wallet QR Pending'}</button>
-                      <button class="secondary" onclick="window.claimCoinPack('${pack.id}')">Mark Paid + Add ${pack.coins.toLocaleString()}</button>
+                      <button class="warn" onclick="window.openCoinPurchase('${pack.id}')">${walletReady ? `Open Checkout for ${pack.price}` : 'Checkout Link Pending'}</button>
                     </div>
                   </div>`).join('')}
               </div>
-              <p class="mini-note">This first pass is a manual crypto-payment flow. It does not verify Coinbase payment automatically yet. Only send Bitcoin to this address on the <strong>Base network</strong>.</p>
+              <p class="mini-note">Manual coin grants for paid packs have been removed. Payment must be verified server-side before coins are added automatically to the player profile.</p>
             </div>
             <div class="shop-card">
               <h4><span>🔥 Featured Starter Pack</span><span class="shop-badge">100 Coins</span></h4>
@@ -1764,7 +1763,7 @@
               </div>
             </div>
           </div>
-          <p class="mini-note">Current BTC receive address: <code>${COINBASE_WALLET_ADDRESS}</code>. Network: <strong>Base</strong>. You can still override the destination with localStorage key <code>zombie-mayhem-coinbase-wallet-url</code> if you swap to a different Coinbase payment link later.</p>
+          <p class="mini-note">Current BTC/Base reference address: <code>${COINBASE_WALLET_ADDRESS}</code>. Replace the placeholder destination with a real hosted checkout link before going live. You can override the destination with localStorage key <code>zombie-mayhem-coinbase-wallet-url</code> while testing.</p>
           <button class="secondary" onclick="window.closeOverlayAndResume()">Close</button>
         </div>`;
     }
@@ -4859,9 +4858,9 @@
       if (!COINBASE_WALLET_URL) {
         overlay.innerHTML = `
           <div class="message">
-            <h2>Coinbase Wallet Link Needed</h2>
-            <p>The coin pack UI is ready, but the Coinbase wallet QR/link is not set yet.</p>
-            <p class="mini-note">Once you have the wallet URL, I can wire it directly into the game, or you can store it in localStorage under <code>zombie-mayhem-coinbase-wallet-url</code>.</p>
+            <h2>Checkout Link Needed</h2>
+            <p>The store UI is ready, but the real hosted checkout link is not configured yet.</p>
+            <p class="mini-note">Do not go live with a raw manual-payment link. Replace it with a provider checkout URL that can be verified server-side.</p>
             <button onclick="window.openMoneyPanel()">Back To Shop</button>
           </div>`;
         return;
@@ -4869,29 +4868,14 @@
       const opened = window.open(COINBASE_WALLET_URL, '_blank', 'noopener,noreferrer');
       overlay.innerHTML = `
         <div class="message settings-page">
-          <h2>Coin Purchase Started</h2>
-          <p>Complete the BTC payment on the <strong>Base network</strong> for <strong>${pack.coins.toLocaleString()} coins</strong> at <strong>${pack.price}</strong>, then come back here.</p>
-          <p class="mini-note">This prototype store does not auto-confirm blockchain payment yet. Use the button below after payment is complete. Only send Bitcoin on the Base network to avoid loss.</p>
+          <h2>Checkout Opened</h2>
+          <p>Complete checkout for <strong>${pack.coins.toLocaleString()} coins</strong> at <strong>${pack.price}</strong>.</p>
+          <p class="mini-note">Coins should be added automatically to the signed-in game account only after verified payment confirmation through the backend.</p>
           <div class="overlay-actions two-up">
-            ${opened ? '' : `<button class="warn" onclick="window.location.href='${COINBASE_WALLET_URL}'">Open Wallet</button>`}
-            <button onclick="window.claimCoinPack('${pack.id}')">I Paid, Add ${pack.coins.toLocaleString()} Coins</button>
+            ${opened ? '' : `<button class="warn" onclick="window.location.href='${COINBASE_WALLET_URL}'">Open Checkout</button>`}
             <button class="secondary" onclick="window.openMoneyPanel()">Back To Shop</button>
           </div>
         </div>`;
-    };
-    window.claimCoinPack = function(packId) {
-      const pack = COIN_PACKS.find(item => item.id === packId);
-      if (!pack) return;
-      addCoins(pack.coins);
-      void saveMeta();
-      overlay.innerHTML = `
-        <div class="message">
-          <h2>Coins Added</h2>
-          <p><strong>${pack.coins.toLocaleString()} coins</strong> were added to this account/device profile.</p>
-          <p class="mini-note">This is currently a manual claim flow until Coinbase payment verification is wired into the backend.</p>
-          <button onclick="window.openMoneyPanel()">Back To Shop</button>
-        </div>`;
-      syncHud();
     };
     window.closeOverlayAndResume = function() {
       overlay.classList.remove('hero-mode');

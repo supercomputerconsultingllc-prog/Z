@@ -65,8 +65,6 @@
       padding: 8px 10px 10px;
       background: linear-gradient(180deg, rgba(15,23,42,0.96), rgba(2,6,23,0.92));
       border-top: 1px solid rgba(148,163,184,.12);
-      flex-wrap: wrap;
-      align-items: stretch;
     }
     .battle-side-ui {
       position: static;
@@ -76,7 +74,6 @@
       z-index: 12;
       pointer-events: auto;
       margin-left: auto;
-      order: 2;
     }
     .battle-side-btn {
       width: 72px;
@@ -170,14 +167,6 @@
     .mission-hud.next-goal {
       border-color: rgba(250,204,21,0.22);
       box-shadow: 0 18px 42px rgba(250,204,21,0.12);
-    }
-    .mission-hud.docked,
-    .season-hud.docked {
-      position: static;
-      width: min(100%, 320px);
-      margin: 0;
-      box-shadow: 0 12px 24px rgba(0,0,0,0.22);
-      pointer-events: none;
     }
     .season-hud {
       position: absolute;
@@ -541,25 +530,15 @@
       .controls { border-left: 0; border-top: 1px solid rgba(148,163,184,.12); }
       canvas { height: 560px; }
       .shop-hero { grid-template-columns: 1fr; }
-      .home-hero-grid,
-      .safehouse-grid { grid-template-columns: 1fr; }
       .touch-row { display: flex; }
-      .canvas-hud-row { display: flex; gap: 8px; }
-      .mission-hud.docked,
-      .season-hud.docked {
-        flex: 1 1 calc(50% - 4px);
-        min-width: 0;
-      }
-      .battle-side-ui { width: 100%; justify-content: flex-end; }
+      .canvas-hud-row { display: none; }
     }
     @media (max-width: 560px) {
       .topbar { grid-template-columns: repeat(2, 1fr); }
       .stat .value { font-size: 22px; }
       .overlay-actions.two-up { grid-template-columns: 1fr; }
       .controls { padding: 12px; }
-      .settings-grid,
-      .home-hero-grid,
-      .safehouse-grid { grid-template-columns: 1fr; }
+      .settings-grid { grid-template-columns: 1fr; }
       button { min-height: 46px; }
       .touch-row {
         gap: 6px;
@@ -708,8 +687,6 @@
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('overlay');
-    const canvasWrap = document.querySelector('.canvas-wrap');
-    const canvasHudRow = document.querySelector('.canvas-hud-row');
     const missionHud = document.getElementById('missionHud');
     const missionRewardTag = document.getElementById('missionRewardTag');
     const missionTitle = document.getElementById('missionTitle');
@@ -797,18 +774,13 @@
     let rewardQueue = [];
     let rewardPopup = null;
     let crowdCache = null;
-    let tutorialSeen = localStorage.getItem('zombie-squad-run-tutorial-seen') === 'yes';
-    let onboardingActive = localStorage.getItem('zombie-squad-run-onboarding-active') === 'yes';
-    let tutorialProgress = JSON.parse(localStorage.getItem('zombie-squad-run-tutorial-progress') || '{"laneShots":0,"wallsBroken":0,"shopOpened":false}');
     const impactDecals = [];
     const shellCasings = [];
     const muzzleFlashes = [];
     const MISSIONS = [
-      { label: 'Break 12 walls', target: 12, event: 'walls', rewardCoins: 10, rewardXp: 12, hint: 'Walls hit hard, burn them down early.' },
-      { label: 'Recruit 32 survivors', target: 32, event: 'survivors', rewardCoins: 12, rewardXp: 12, hint: 'Big rescues scale your crowd faster.' },
-      { label: 'Collect 80 coins', target: 80, event: 'coins', rewardCoins: 14, rewardXp: 14, hint: 'Clean runs keep your spend rate healthy.' },
-      { label: 'Push 540 distance', target: 540, event: 'distance', rewardCoins: 16, rewardXp: 16, hint: 'Long pushes juice the pass and your wallet.' },
-      { label: 'Down 2 bosses', target: 2, event: 'bosses', rewardCoins: 20, rewardXp: 18, hint: 'Boss clears now anchor the late mission track.' }
+      { label: 'Break 12 walls', target: 12, event: 'walls' },
+      { label: 'Recruit 32 survivors', target: 32, event: 'survivors' },
+      { label: 'Collect 80 coins', target: 80, event: 'coins' }
     ];
     const PASS_REWARDS = [
       { icon: '🪙', title: '100 coin crate', detail: 'Big coin drop for your next push.', xp: 40, grant: { coins: 100 } },
@@ -816,15 +788,7 @@
       { icon: '❤️', title: 'Bonus revive', detail: 'Start a run with one extra safety heart.', xp: 60, grant: { runRevives: 1 } },
       { icon: '👥', title: 'Squad drop', detail: 'Begin with 2 extra squad members.', xp: 70, grant: { startSquad: 2 } },
       { icon: '🔫', title: 'Power spark', detail: 'Start with +1 firepower.', xp: 80, grant: { startFirepower: 1 } },
-      { icon: '🌟', title: 'Hero crate', detail: 'Coins, avatar coins, and hype all at once.', xp: 90, grant: { coins: 180, avatarCoins: 2 } },
-      { icon: '🎁', title: 'Safehouse supply drop', detail: 'Extra run coins and an avatar coin bundle.', xp: 98, grant: { coins: 120, avatarCoins: 1 } },
-      { icon: '⚡', title: 'Overdrive prep', detail: 'Start stronger with coins and extra firepower.', xp: 108, grant: { coins: 90, startFirepower: 1 } }
-    ];
-    const PASS_UNLOCKS = [
-      { level: 2, title: 'Surplus Bonus', detail: 'Distance coins pay out 1 extra coin per road checkpoint.' },
-      { level: 4, title: 'Avatar Exchange+', detail: 'Avatar trades get cheaper, 20 coins for 1 avatar coin.' },
-      { level: 6, title: 'Safehouse Bundle', detail: 'Shop unlocks a mid-run care package for deeper pushes.' },
-      { level: 8, title: 'Neon District', detail: 'The world gains richer premium skyline accents.' }
+      { icon: '🌟', title: 'Hero crate', detail: 'Coins, avatar coins, and hype all at once.', xp: 90, grant: { coins: 180, avatarCoins: 2 } }
     ];
     bestStat.textContent = best;
     soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
@@ -854,18 +818,10 @@
       localStorage.setItem('zombie-squad-run-gun-price', String(gunPrice));
       localStorage.setItem('zombie-squad-run-squad-price', String(squadPrice));
       localStorage.setItem('zombie-squad-run-revive-price', String(revivePrice));
-      localStorage.setItem('zombie-squad-run-tutorial-seen', tutorialSeen ? 'yes' : 'no');
-      localStorage.setItem('zombie-squad-run-onboarding-active', onboardingActive ? 'yes' : 'no');
-      localStorage.setItem('zombie-squad-run-tutorial-progress', JSON.stringify(tutorialProgress));
     }
 
     function activeMission() { return MISSIONS[missionIndex % MISSIONS.length]; }
     function currentPassReward() { return PASS_REWARDS[(Math.max(1, passLevel) - 1) % PASS_REWARDS.length]; }
-    function unlockedPassBenefits() { return PASS_UNLOCKS.filter(unlock => passLevel >= unlock.level); }
-    function nextPassUnlock() { return PASS_UNLOCKS.find(unlock => passLevel < unlock.level) || null; }
-    function avatarExchangeRate() { return passLevel >= 4 ? 20 : 25; }
-    function carePackageUnlocked() { return passLevel >= 6; }
-    function neonDistrictUnlocked() { return passLevel >= 8; }
     function passXpForLevel(level = passLevel) {
       const reward = PASS_REWARDS[(Math.max(1, level) - 1) % PASS_REWARDS.length];
       return reward.xp + Math.max(0, level - 1) * 4;
@@ -882,50 +838,6 @@
       if (grant.startFirepower) bits.push(`+${grant.startFirepower} starting firepower`);
       return bits.join(', ');
     }
-    function homeStatusSummary() {
-      const mission = activeMission();
-      const missionLeft = Math.max(0, mission.target - missionProgress);
-      const passNeed = Math.max(0, passXpForLevel(passLevel) - passXp);
-      const avatarName = AVATARS.find(a => a.id === selectedAvatar)?.name || 'Default Trooper';
-      const tutorialReady = !tutorialSeen && totalRuns === 0;
-      return {
-        mission,
-        missionLeft,
-        passNeed,
-        avatarName,
-        tutorialReady,
-        paceLabel: best >= 900 ? 'Hero pace' : best >= 540 ? 'Squad captain pace' : best >= 180 ? 'Road scout pace' : 'Fresh recruit pace'
-      };
-    }
-    function currentRewardStashText(grant = {}) {
-      const bits = [];
-      if (grant.coins) bits.push(`${grant.coins} coins to spend`);
-      if (grant.avatarCoins) bits.push(`${grant.avatarCoins} avatar coins for looks`);
-      if (grant.runRevives) bits.push(`${grant.runRevives} extra safety heart next run`);
-      if (grant.startSquad) bits.push(`${grant.startSquad} bonus squad on spawn`);
-      if (grant.startFirepower) bits.push(`${grant.startFirepower} extra firepower at launch`);
-      return bits.join(' • ') || 'Safehouse stash updated';
-    }
-    function tutorialStepInfo() {
-      if (!onboardingActive) return null;
-      if (tutorialProgress.laneShots < 3) return { title: 'Training Tip', body: 'Tap left, center, or right to shoot that lane. Try all three lanes.', progress: `${tutorialProgress.laneShots} / 3 lane taps`, icon: '🎯' };
-      if (tutorialProgress.wallsBroken < 1) return { title: 'Training Tip', body: 'Walls hit your squad if they survive. Focus the wall lane until it breaks.', progress: `${tutorialProgress.wallsBroken} / 1 wall smashed`, icon: '🧱' };
-      if (!tutorialProgress.shopOpened) return { title: 'Training Tip', body: 'Open Money or the shop buttons between pushes. Coins make the next run easier.', progress: 'Open any shop panel once', icon: '🪙' };
-      return { title: 'Training Complete', body: 'Nice. You know the loop now: shoot lanes, save your squad, spend smart, then chase your next prize.', progress: 'Tap to keep running', icon: '🌟', done: true };
-    }
-    function markTutorialProgress(key, amount = 1) {
-      if (!onboardingActive) return;
-      if (key === 'laneShots') tutorialProgress.laneShots = Math.min(3, tutorialProgress.laneShots + amount);
-      if (key === 'wallsBroken') tutorialProgress.wallsBroken = Math.min(1, tutorialProgress.wallsBroken + amount);
-      if (key === 'shopOpened') tutorialProgress.shopOpened = true;
-      const step = tutorialStepInfo();
-      if (step?.done) {
-        tutorialSeen = true;
-        onboardingActive = false;
-        setCombatFeed('Training complete', 1700);
-      }
-      saveMeta();
-    }
     function queueRewardPopup(payload) {
       rewardQueue.push(payload);
       if (!rewardPopup && !missionPopup) showNextRewardPopup();
@@ -939,11 +851,7 @@
         reward: next.reward,
         icon: next.icon || '🎉',
         button: next.button || 'Awesome',
-        kicker: next.kicker || 'Safehouse delivery',
-        stash: next.stash || 'Stash updated for your next run.',
-        accent: next.accent || '#facc15',
-        rect: null,
-        bornAt: performance.now()
+        rect: null
       };
       overlay.innerHTML = '';
       state.paused = true;
@@ -974,10 +882,7 @@
           label: reward.title,
           reward: rewardSummary(reward.grant) || reward.detail,
           icon: reward.icon,
-          button: 'Collect',
-          kicker: `Level ${passLevel} clear`,
-          stash: currentRewardStashText(reward.grant),
-          accent: reward.grant.avatarCoins ? '#c084fc' : reward.grant.runRevives ? '#fb7185' : reward.grant.startFirepower ? '#38bdf8' : reward.grant.startSquad ? '#22c55e' : '#facc15'
+          button: 'Collect'
         });
         passLevel += 1;
       }
@@ -1196,22 +1101,10 @@
     function applyControlsMode() {
       const touchRow = document.querySelector('.touch-row');
       const desktopWebMode = window.matchMedia('(pointer:fine)').matches;
-      const mobileLayout = window.innerWidth <= 920;
       touchRow.style.display = controlsMode === 'buttons' ? 'flex' : '';
       touchRow.style.opacity = controlsMode === 'buttons' ? '1' : '';
       if (minigunBtn) minigunBtn.style.display = desktopWebMode ? 'none' : '';
       if (floatingMinigunBtn) floatingMinigunBtn.style.display = '';
-      if (mobileLayout) {
-        missionHud?.classList.add('docked');
-        seasonHud?.classList.add('docked');
-        if (canvasHudRow && missionHud && missionHud.parentElement !== canvasHudRow) canvasHudRow.prepend(missionHud);
-        if (canvasHudRow && seasonHud && seasonHud.parentElement !== canvasHudRow) canvasHudRow.prepend(seasonHud);
-      } else {
-        missionHud?.classList.remove('docked');
-        seasonHud?.classList.remove('docked');
-        if (canvasWrap && missionHud && missionHud.parentElement !== canvasWrap) canvasWrap.appendChild(missionHud);
-        if (canvasWrap && seasonHud && seasonHud.parentElement !== canvasWrap) canvasWrap.appendChild(seasonHud);
-      }
     }
 
     function controlSummary() {
@@ -1258,8 +1151,6 @@
     ];
 
     function moneyPanelMarkup() {
-      const home = homeStatusSummary();
-      const exchangeRate = avatarExchangeRate();
       return `
         <div class="message settings-page">
           <h2>Squad Shop</h2>
@@ -1273,7 +1164,7 @@
             <div class="settings-card" style="background:linear-gradient(135deg, rgba(59,130,246,.18), rgba(15,23,42,.96));">
               <h4>🔫 Current Loadout</h4>
               <p><strong>${weaponProfile(state.firepower).name}</strong> at firepower level ${state.firepower}.</p>
-              <p class="mini-note">Avatar on deck: <strong>${home.avatarName}</strong>.</p>
+              <p class="mini-note">Next infected husk or upgrade will push you harder.</p>
             </div>
           </div>
           <div class="shop-grid">
@@ -1298,23 +1189,14 @@
                 <button onclick="window.claimSubscribeReward()" ${youtubeSubscribeClaimed ? 'disabled' : ''}>${youtubeSubscribeClaimed ? '1000 Coins Claimed' : 'Claim 1000 Coins'}</button>
               </div>
             </div>
-            <div class="shop-card balance">
-              <h4><span>🎨 Avatar Exchange</span><span class="shop-badge">${exchangeRate} Coins</span></h4>
-              <p>Premium pass training improves your exchange rate. Trade regular coins into avatar unlock fuel.</p>
-              <div class="cta-row">
-                <button class="secondary" onclick="window.openAvatarPanel()">Open Avatar Exchange</button>
-              </div>
-            </div>
-            ${carePackageUnlocked() ? `<div class="shop-card featured"><h4><span>🚁 Safehouse Care Package</span><span class="shop-badge">220 Coins</span></h4><p>Late-pass bundle for longer pushes, +160 coins, +1 revive, and +2 squad.</p><div class="cta-row"><button onclick="window.buyCarePackage()">Buy Care Package</button></div></div>` : ''}
           </div>
-          <p class="mini-note">Channel rewards are one-time bonuses. Subscribe still uses honor-system claiming until real verification exists. Avatar exchange is now <strong>${exchangeRate} coins</strong> per avatar coin.</p>
+          <p class="mini-note">Channel rewards are one-time bonuses. Subscribe still uses honor-system claiming until real verification exists.</p>
           <button class="secondary" onclick="window.closeOverlayAndResume()">Close</button>
         </div>`;
     }
 
     function openMoneyPanel() {
       state.paused = true;
-      markTutorialProgress('shopOpened');
       overlay.innerHTML = moneyPanelMarkup();
     }
 
@@ -1350,11 +1232,10 @@
           <div class="settings-grid">
             <div class="settings-card">
               <h4>Currency Exchange</h4>
-              <p><strong>${avatarExchangeRate()} coins = 1 avatar coin</strong></p>
+              <p><strong>25 coins = 1 avatar coin</strong></p>
               <p>You have <strong>${state.coins}</strong> coins and <strong>${avatarCoins}</strong> avatar coins.</p>
-              <p><strong>${unlockedAvatars.length}</strong> avatars unlocked, next pass unlock is <strong>${nextPassUnlock() ? nextPassUnlock().title : 'maxed out'}</strong>.</p>
               <p class="mini-note">Equipped now: <strong>${avatars.find(a => a.id === selectedAvatar)?.name || 'Default Trooper'}</strong></p>
-              <button class="warn" id="tradeAvatarCoinBtn" style="width:auto;">Trade ${avatarExchangeRate()} Coins For 1 Avatar Coin</button>
+              <button class="warn" id="tradeAvatarCoinBtn" style="width:auto;">Trade 25 Coins For 1 Avatar Coin</button>
             </div>
             <div class="settings-card">
               <h4>Avatar Unlocks</h4>
@@ -1393,9 +1274,8 @@
 
       const tradeAvatarCoinBtn = document.getElementById('tradeAvatarCoinBtn');
       tradeAvatarCoinBtn.addEventListener('click', () => {
-        const exchangeRate = avatarExchangeRate();
-        if (state.coins < exchangeRate) return;
-        state.coins -= exchangeRate;
+        if (state.coins < 25) return;
+        state.coins -= 25;
         bankCoins = state.coins;
         avatarCoins += 1;
         saveMeta();
@@ -1566,12 +1446,11 @@
       const clamped = Math.max(0, Math.min(mission.target, missionProgress));
       const pct = Math.max(0, Math.min(100, (clamped / mission.target) * 100));
       missionTitle.textContent = mission.label;
-      missionRewardTag.textContent = `+${mission.rewardCoins || 10} coins + ${mission.rewardXp || 12} XP`;
+      missionRewardTag.textContent = '+10 coins + 12 XP';
       missionProgressFill.style.width = `${pct}%`;
       missionProgressText.textContent = `${clamped} / ${mission.target}`;
       const remain = Math.max(0, mission.target - clamped);
       missionNextText.textContent = remain === 0 ? 'Reward ready' : `${remain} to mission clear`;
-      missionHud.title = mission.hint || '';
       missionHud.classList.toggle('next-goal', remain <= Math.max(2, Math.ceil(mission.target * 0.2)));
     }
 
@@ -1583,7 +1462,7 @@
       const pct = Math.max(0, Math.min(100, (clamped / need) * 100));
       seasonLevelTag.textContent = `Lv. ${passLevel}`;
       seasonRewardTitle.textContent = reward.title;
-      seasonRewardText.textContent = nextPassUnlock() ? `${reward.detail} Next unlock: ${nextPassUnlock().title}.` : reward.detail;
+      seasonRewardText.textContent = reward.detail;
       seasonProgressFill.style.width = `${pct}%`;
       seasonProgressText.textContent = `${clamped} / ${need} XP`;
       const remain = Math.max(0, need - clamped);
@@ -1602,17 +1481,16 @@
       if (mission.event !== eventName) return;
       missionProgress += amount;
       if (missionProgress >= mission.target) {
-        grantCoins(mission.rewardCoins || 10);
-        addPassXp(mission.rewardXp || 12, 'mission clear on deck');
+        grantCoins(10);
+        addPassXp(12, 'mission clear on deck');
         missionIndex += 1;
         missionProgress = 0;
         missionPopup = {
           title: 'Mission Complete',
           label: mission.label,
-          reward: `+${mission.rewardCoins || 10} coins + ${mission.rewardXp || 12} pass XP`,
+          reward: '10 coins + 12 pass XP',
           button: 'Continue',
-          rect: null,
-          bornAt: performance.now()
+          rect: null
         };
         overlay.innerHTML = '';
         state.paused = true;
@@ -1624,38 +1502,14 @@
     function showTitleScreen() {
       state.paused = true;
       pauseBtn.textContent = 'Resume';
-      const home = homeStatusSummary();
       overlay.classList.add('hero-mode');
       overlay.innerHTML = `
-        <div class="message settings-page">
+        <div class="message hero-card">
           <h1>Zombie Squad Run</h1>
-          <p>Your squad is back at the safehouse. Patch up, spend coins, and get ready for the next road push.</p>
-          <div class="home-hero">
-            <div class="home-hero-grid">
-              <div class="safehouse-banner">
-                <span class="pill" style="background:rgba(59,130,246,.18);color:#bfdbfe;">🏠 Safehouse Ready</span>
-                <h3>${home.paceLabel}</h3>
-                <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best} &nbsp; <strong>Pass Lv.</strong> ${passLevel}</p>
-                <div class="safehouse-grid">
-                  <div class="safehouse-stat"><span class="label">Avatar</span><strong>${home.avatarName}</strong></div>
-                  <div class="safehouse-stat"><span class="label">Next Prize</span><strong>${currentPassReward().title}</strong></div>
-                  <div class="safehouse-stat"><span class="label">Mission</span><strong>${home.missionLeft === 0 ? 'Ready to clear' : `${home.missionLeft} left`}</strong></div>
-                  <div class="safehouse-stat"><span class="label">Pass XP</span><strong>${home.passNeed} to go</strong></div>
-                  <div class="safehouse-stat"><span class="label">Unlock</span><strong>${nextPassUnlock() ? nextPassUnlock().title : 'All unlocked'}</strong></div>
-                </div>
-              </div>
-              <div class="settings-card" style="background:linear-gradient(180deg, rgba(15,23,42,.92), rgba(30,41,59,.98));">
-                <h4>Next Run Plan</h4>
-                <ul class="coach-list">
-                  <li><span class="coach-badge">1</span><div><strong>Shoot the danger lane</strong><span>Tap the lane with the closest wall or zombie first.</span></div></li>
-                  <li><span class="coach-badge">2</span><div><strong>Spend after a tough run</strong><span>More firepower and revives make walls much safer.</span></div></li>
-                  <li><span class="coach-badge">3</span><div><strong>Stack rewards</strong><span>Missions and long runs fill the Premium Pass fastest.</span></div></li>
-                </ul>
-                <p class="mini-note">Build: Beta V1.0. Progression unlocks now expand the safehouse economy, avatar exchange, and world polish.</p>
-              </div>
-            </div>
-            ${home.tutorialReady ? `<div class="settings-card" style="background:linear-gradient(135deg, rgba(34,197,94,.14), rgba(15,23,42,.96));border-color:rgba(34,197,94,.24);"><h4>🌟 Quick Start Training</h4><p>New here? Start with a tiny guide that teaches lanes, walls, and where to spend coins.</p><div class="overlay-actions two-up"><button onclick="window.startOnboardingRun()">Start Training Run</button><button class="secondary" onclick="window.skipOnboarding()">Skip Guide</button></div></div>` : ''}
-          </div>
+          <p>Run with your squad, shoot the right lane, smash walls before impact, and spend coins to upgrade your survival chances.</p>
+          <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best} &nbsp; <strong>Pass Lv.</strong> ${passLevel}</p>
+          <p class="mini-note">Next pass reward: <strong>${currentPassReward().title}</strong>, ${rewardSummary(currentPassReward().grant) || currentPassReward().detail}.</p>
+          <p class="mini-note">Build: Beta V1.0, includes "In the Hall of the Mountain King" background music.</p>
           <div class="overlay-actions two-up">
             <button onclick="window.startZombieRun()">Start Run</button>
             <button class="secondary" onclick="window.openSettingsPanel()">Settings</button>
@@ -2090,10 +1944,7 @@
 
     function update(dt) {
       if (!state.running || state.paused || state.gameOver) return;
-      const prevDistanceBand = Math.floor(state.distance / 180);
       state.distance += dt * (state.speed / 12);
-      const nextDistanceBand = Math.floor(state.distance / 180);
-      if (nextDistanceBand > prevDistanceBand) updateMission('distance', (nextDistanceBand - prevDistanceBand) * 180);
       state.wave = 1 + Math.floor(state.distance / 180);
       state.speed = 186 + state.wave * 7.5;
       state.minigunCharge = Math.min(100, state.minigunCharge + dt * 8);
@@ -2110,7 +1961,7 @@
           playTone(150 + rand(0, 40), 0.05, 'sawtooth', 0.55);
         }
       }
-      const roundCoins = Math.floor(state.distance / 180) * (passLevel >= 2 ? 3 : 2);
+      const roundCoins = Math.floor(state.distance / 180) * 2;
       if (roundCoins > state.distanceCoinsTick) { addCoins(roundCoins - state.distanceCoinsTick); state.distanceCoinsTick = roundCoins; }
 
       const nowAudioMs = performance.now();
@@ -2285,7 +2136,7 @@
       }
       else if (obj.type === 'boss') {
         const squadGain = obj.reward + 3;
-        state.squad += squadGain; addCoins(obj.reward + 6); updateMission('survivors', squadGain); updateMission('bosses', 1); playTone(110, 0.26, 'sawtooth', 2.1); addScreenShake(16, 0.18); bossWave = false;
+        state.squad += squadGain; addCoins(obj.reward + 6); updateMission('survivors', squadGain); playTone(110, 0.26, 'sawtooth', 2.1); addScreenShake(16, 0.18); bossWave = false;
         state.rewardPulseUntil = performance.now() + 1600;
         state.overdriveUntil = Math.max(state.overdriveUntil || 0, performance.now() + 1600);
         setCombatFeed('BOSS SHATTERED', 1800);
@@ -2302,11 +2153,10 @@
         pushDecal(obj.x, obj.y + 12, '#7f1d1d', 16, 3, 4);
       }
       else if (obj.type === 'coin') { addCoins(obj.reward); playTone(1100, 0.08, 'triangle', 1.3); }
-      else if (obj.type === 'wall') { updateMission('walls', 1); markTutorialProgress('wallsBroken'); playTone(180, 0.16, 'square', 1.6); pushDecal(obj.x, obj.y + 26, '#78350f', 22, 2.8, 2); }
+      else if (obj.type === 'wall') { updateMission('walls', 1); playTone(180, 0.16, 'square', 1.6); pushDecal(obj.x, obj.y + 26, '#78350f', 22, 2.8, 2); }
     }
 
     function buildRunSummary() {
-      const home = homeStatusSummary();
       const distance = Math.floor(state.distance);
       const coinsEarned = state.coins;
       const nextMission = activeMission();
@@ -2320,12 +2170,6 @@
           <h2>Run Summary</h2>
           <p><strong>${distance}</strong> distance, <strong>${coinsEarned}</strong> coins banked, wave <strong>${state.wave}</strong>.</p>
           <div class="settings-grid" style="margin-top:14px;">
-            <div class="settings-card" style="background:linear-gradient(135deg, rgba(59,130,246,.18), rgba(15,23,42,.98));">
-              <h4>Safehouse Snapshot</h4>
-              <p><strong>${home.avatarName}</strong> is equipped and waiting.</p>
-              <p>Banked upgrades carry into the next road push.</p>
-              <p class="mini-note">Home mood: ${home.paceLabel}.</p>
-            </div>
             <div class="settings-card">
               <h4>Rewards</h4>
               <p>Run bank: <strong>${coinsEarned} coins</strong></p>
@@ -2342,7 +2186,7 @@
               <h4>Premium Pass</h4>
               <p><strong>${currentPassReward().title}</strong></p>
               <p>${passNeed} XP more for ${rewardSummary(currentPassReward().grant) || currentPassReward().detail}.</p>
-              <p class="mini-note">${nextPassUnlock() ? `Next unlock: ${nextPassUnlock().title}.` : 'All pass unlocks are active.'} Active perks: ${Math.max(1, unlockedPassBenefits().length)}.</p>
+              <p class="mini-note">Missions and long runs feed this bar fast.</p>
             </div>
             <div class="settings-card">
               <h4>Next Run Plan</h4>
@@ -2358,7 +2202,7 @@
               </div>
             </div>
           </div>
-          <p class="mini-note">Tiny steps stack up. Every mission clear moves your next prize closer, and later pass levels unlock stronger economy perks.</p>
+          <p class="mini-note">Tiny steps stack up. Every mission clear moves your next prize closer.</p>
           <div class="overlay-actions two-up">
             <button onclick="window.restartZombieRun()">Play Again</button>
             <button class="secondary" onclick="window.openMoneyPanel()">Spend Coins</button>
@@ -2416,7 +2260,6 @@
     let frameLaneThreats = null;
     let muzzleFlashSpriteCache = new Map();
     let particleBloomSpriteCache = new Map();
-    let objectSpriteCache = new Map();
 
     function drawRoad() {
       ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -2514,17 +2357,6 @@
           ctx.fill();
         }
       }
-      if (neonDistrictUnlocked() && (!lowPowerMobileMode || state.squad < 90)) {
-        ctx.fillStyle = 'rgba(34,211,238,0.08)';
-        for (let i = 0; i < 5; i++) {
-          const stripX = 54 + i * 146 + Math.sin(state.distance * 0.002 + i) * 8;
-          ctx.fillRect(stripX, 164 + (i % 2) * 8, 64, 3);
-          ctx.fillStyle = 'rgba(244,114,182,0.07)';
-          ctx.fillRect(stripX + 10, 176 + (i % 3) * 6, 42, 2);
-          ctx.fillStyle = 'rgba(34,211,238,0.08)';
-        }
-      }
-
       ctx.fillStyle = 'rgba(15,23,42,0.48)';
       for (let i = 0; i < 6; i++) {
         const w = 70 + i * 12;
@@ -3548,8 +3380,13 @@
             ctx.strokeRect(obj.x - 38, obj.y - 42, 76, 92);
           }
           drawZombie(obj.x, obj.y, 1.72 + Math.sin(renderNow * 0.01) * 0.03, 5, 'boss');
-          const bossAura = getObjectSprite('aura', 76, 'rgba(239,68,68,.3)', 'rgba(239,68,68,0)');
-          ctx.drawImage(bossAura, obj.x - bossAura.width / 2, obj.y - 8 - bossAura.height / 2);
+          const bossGlow = ctx.createRadialGradient(obj.x, obj.y - 18, 12, obj.x, obj.y - 10, 74);
+          bossGlow.addColorStop(0, 'rgba(239,68,68,.3)');
+          bossGlow.addColorStop(1, 'rgba(239,68,68,0)');
+          ctx.fillStyle = bossGlow;
+          ctx.beginPath();
+          ctx.arc(obj.x, obj.y - 8, 76, 0, Math.PI * 2);
+          ctx.fill();
           ctx.strokeStyle='#fda4ff'; ctx.lineWidth=5; ctx.strokeRect(obj.x - 46, obj.y - 52, 92, 104);
           ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fillRect(obj.x - 38, obj.y - 34, 76, 3);
           ctx.fillStyle='rgba(15,23,42,.92)'; ctx.fillRect(obj.x - 52, obj.y - 78, 104, 14);
@@ -3562,7 +3399,7 @@
           ctx.fillStyle='#fef3c7'; ctx.font='bold 14px system-ui'; ctx.textAlign='center'; ctx.fillText('LOOT',obj.x,obj.y-30);
         } else if (obj.type === 'wall') {
           drawObjectGroundShadow(obj, 34, 8, 0.32);
-          if (perfTier <= 1) addRimLight(obj.x, obj.y, 76, 'rgba(248,113,113,ALPHA)', 0.14);
+          addRimLight(obj.x, obj.y, 76, 'rgba(248,113,113,ALPHA)', 0.14);
           const currentHp = Math.max(0, Math.ceil(obj.hp));
           const maxHp = Math.max(currentHp, obj.maxHp || currentHp || 1);
           if (currentHp > 0 && currentHp / maxHp > 0.5) {
@@ -3644,9 +3481,18 @@
           }
           ctx.fillStyle='#fff1f2'; ctx.font='bold 22px system-ui'; ctx.textAlign='center'; ctx.fillText(String(currentHp),obj.x,obj.y-38);
         } else if (obj.type === 'coin') {
-          if (perfTier <= 1) addRimLight(obj.x, obj.y, 28, 'rgba(250,204,21,ALPHA)', 0.22);
-          const coinSprite = getObjectSprite('coin', 18);
-          ctx.drawImage(coinSprite, obj.x - coinSprite.width / 2, obj.y - coinSprite.height / 2);
+          addRimLight(obj.x, obj.y, 28, 'rgba(250,204,21,ALPHA)', 0.22);
+          const coinGrad = ctx.createRadialGradient(obj.x - 5, obj.y - 6, 2, obj.x, obj.y, 20);
+          coinGrad.addColorStop(0, '#fef9c3');
+          coinGrad.addColorStop(0.38, '#fde047');
+          coinGrad.addColorStop(0.72, '#f59e0b');
+          coinGrad.addColorStop(1, '#92400e');
+          ctx.fillStyle = coinGrad;
+          ctx.beginPath(); ctx.arc(obj.x,obj.y,18,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle = '#fffbeb'; ctx.lineWidth = 2.2; ctx.stroke();
+          ctx.beginPath(); ctx.arc(obj.x,obj.y,13,0,Math.PI*2); ctx.strokeStyle='rgba(120,53,15,0.45)'; ctx.lineWidth=1.6; ctx.stroke();
+          ctx.fillStyle = 'rgba(255,255,255,0.22)';
+          ctx.beginPath(); ctx.ellipse(obj.x - 5, obj.y - 6, 6, 3.5, -0.35, 0, Math.PI * 2); ctx.fill();
           ctx.fillStyle = '#78350f'; ctx.font='bold 18px system-ui'; ctx.textAlign='center'; ctx.fillText('$',obj.x,obj.y+6);
         }
         if (hitPulse > 0.04 && perfTier <= 1 && obj.type !== 'coin') {
@@ -3748,39 +3594,6 @@
       ctx.beginPath();
       ctx.ellipse(obj.x, obj.y + radiusY * 1.45, radiusX, radiusY, 0, 0, Math.PI * 2);
       ctx.fill();
-    }
-
-    function getObjectSprite(kind, size, colorA = '#ffffff', colorB = '#000000') {
-      const key = `${kind}:${Math.round(size)}:${colorA}:${colorB}`;
-      if (objectSpriteCache.has(key)) return objectSpriteCache.get(key);
-      const offscreen = document.createElement('canvas');
-      const dim = Math.max(48, Math.ceil(size * 2.8));
-      offscreen.width = dim;
-      offscreen.height = dim;
-      const octx = offscreen.getContext('2d');
-      const cx = dim / 2;
-      const cy = dim / 2;
-      if (kind === 'coin') {
-        const coinGrad = octx.createRadialGradient(cx - size * 0.22, cy - size * 0.28, 2, cx, cy, size);
-        coinGrad.addColorStop(0, '#fef9c3');
-        coinGrad.addColorStop(0.38, '#fde047');
-        coinGrad.addColorStop(0.72, '#f59e0b');
-        coinGrad.addColorStop(1, '#92400e');
-        octx.fillStyle = coinGrad;
-        octx.beginPath(); octx.arc(cx, cy, size, 0, Math.PI * 2); octx.fill();
-        octx.strokeStyle = '#fffbeb'; octx.lineWidth = 2.2; octx.stroke();
-        octx.beginPath(); octx.arc(cx, cy, size * 0.72, 0, Math.PI * 2); octx.strokeStyle = 'rgba(120,53,15,0.45)'; octx.lineWidth = 1.6; octx.stroke();
-        octx.fillStyle = 'rgba(255,255,255,0.22)';
-        octx.beginPath(); octx.ellipse(cx - size * 0.28, cy - size * 0.34, size * 0.34, size * 0.2, -0.35, 0, Math.PI * 2); octx.fill();
-      } else if (kind === 'aura') {
-        const glow = octx.createRadialGradient(cx, cy, size * 0.12, cx, cy, size);
-        glow.addColorStop(0, colorA);
-        glow.addColorStop(1, colorB);
-        octx.fillStyle = glow;
-        octx.beginPath(); octx.arc(cx, cy, size, 0, Math.PI * 2); octx.fill();
-      }
-      objectSpriteCache.set(key, offscreen);
-      return offscreen;
     }
 
     function getParticleBloomSprite(size, color) {
@@ -3935,48 +3748,26 @@
       glow.addColorStop(1, 'rgba(250,204,21,0)');
       ctx.fillStyle = glow;
       ctx.fillRect(cardX - 40, cardY - 40, cardW + 80, cardH + 80);
-      const elapsed = performance.now() - (rewardPopup.bornAt || performance.now());
-      const shimmer = 0.55 + Math.sin(elapsed * 0.012) * 0.16;
-      const accent = rewardPopup.accent || '#facc15';
-      const frameGlow = ctx.createRadialGradient(cardX + cardW / 2, cardY + 64, 18, cardX + cardW / 2, cardY + 64, 240);
-      frameGlow.addColorStop(0, `${accent}55`);
-      frameGlow.addColorStop(0.58, 'rgba(255,255,255,0.05)');
-      frameGlow.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = frameGlow;
-      ctx.fillRect(cardX - 44, cardY - 50, cardW + 88, cardH + 96);
-      const panel = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH);
-      panel.addColorStop(0, 'rgba(15,23,42,0.98)');
-      panel.addColorStop(0.68, 'rgba(30,41,59,0.98)');
-      panel.addColorStop(1, 'rgba(30,64,175,0.88)');
-      ctx.fillStyle = panel;
+      ctx.fillStyle = 'rgba(15,23,42,0.97)';
       ctx.beginPath();
       ctx.roundRect(cardX, cardY, cardW, cardH, 26);
       ctx.fill();
-      ctx.fillStyle = `rgba(255,255,255,${0.05 + Math.max(0, shimmer) * 0.07})`;
-      ctx.fillRect(cardX + 18, cardY + 16, cardW - 36, 10);
       ctx.strokeStyle = 'rgba(250,204,21,0.42)';
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.font = '700 12px system-ui';
-      ctx.fillStyle = '#93c5fd';
-      ctx.fillText(rewardPopup.kicker || 'Safehouse delivery', cardX + cardW / 2, cardY + 30);
       ctx.font = '54px system-ui';
-      ctx.fillStyle = '#fff7ed';
-      ctx.fillText(rewardPopup.icon || '🎉', cardX + cardW / 2, cardY + 62);
+      ctx.fillText(rewardPopup.icon || '🎉', cardX + cardW / 2, cardY + 54);
       ctx.font = '900 26px system-ui';
       ctx.fillStyle = '#f8fafc';
-      ctx.fillText(rewardPopup.title, cardX + cardW / 2, cardY + 106);
+      ctx.fillText(rewardPopup.title, cardX + cardW / 2, cardY + 102);
       ctx.font = '800 20px system-ui';
       ctx.fillStyle = '#fde68a';
-      ctx.fillText(rewardPopup.label, cardX + cardW / 2, cardY + 138);
+      ctx.fillText(rewardPopup.label, cardX + cardW / 2, cardY + 136);
       ctx.font = '15px system-ui';
       ctx.fillStyle = '#cbd5e1';
       ctx.fillText(rewardPopup.reward, cardX + cardW / 2, cardY + 168);
-      ctx.font = '700 13px system-ui';
-      ctx.fillStyle = '#bfdbfe';
-      ctx.fillText(rewardPopup.stash || 'Stash updated for your next run.', cardX + cardW / 2, cardY + 192);
       const buttonGrad = ctx.createLinearGradient(buttonX, buttonY, buttonX, buttonY + buttonH);
       buttonGrad.addColorStop(0, '#fde047');
       buttonGrad.addColorStop(1, '#f59e0b');
@@ -4136,7 +3927,6 @@
       const wallThreat = laneThreats.find(threat => threat.obj?.type === 'wall' && threat.danger > 0.48);
       let statusText = controlsMode === 'buttons' ? 'Use lane buttons for quick shots' : 'Tap any lane to fire';
       if (state.combatFeed && state.combatFeedUntil > renderNow) statusText = state.combatFeed;
-      const tutorialStep = tutorialStepInfo();
       if (wallThreat) {
         const wallLane = wallThreat.lane === 0 ? 'LEFT' : wallThreat.lane === 1 ? 'CENTER' : 'RIGHT';
         statusText = `BREAK ${wallLane} WALL`;
@@ -4192,43 +3982,6 @@
         ctx.fillStyle = `rgba(239,68,68,${Math.min(0.12, hitFlash * 0.7)})`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
-      if (tutorialStep && !overlay.innerHTML && !state.gameOver) {
-        const panelW = Math.min(320, canvas.width - 28);
-        const panelH = tutorialStep.done ? 92 : 104;
-        const panelX = canvas.width - panelW - 16;
-        const panelY = canvas.height - panelH - 18;
-        ctx.save();
-        ctx.fillStyle = 'rgba(2,6,23,0.82)';
-        ctx.beginPath();
-        ctx.roundRect(panelX, panelY, panelW, panelH, 18);
-        ctx.fill();
-        ctx.strokeStyle = tutorialStep.done ? 'rgba(250,204,21,0.4)' : 'rgba(56,189,248,0.32)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.fillStyle = tutorialStep.done ? '#fde68a' : '#93c5fd';
-        ctx.font = '700 12px system-ui';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'alphabetic';
-        ctx.fillText(`${tutorialStep.icon} ${tutorialStep.title}`, panelX + 16, panelY + 24);
-        ctx.fillStyle = '#f8fafc';
-        ctx.font = '700 14px system-ui';
-        const words = tutorialStep.body.split(' ');
-        let line = '';
-        let y = panelY + 46;
-        for (const word of words) {
-          const test = `${line}${word} `;
-          if (ctx.measureText(test).width > panelW - 32 && line) {
-            ctx.fillText(line.trim(), panelX + 16, y);
-            line = `${word} `;
-            y += 18;
-          } else line = test;
-        }
-        if (line) ctx.fillText(line.trim(), panelX + 16, y);
-        ctx.fillStyle = '#cbd5e1';
-        ctx.font = '12px system-ui';
-        ctx.fillText(tutorialStep.progress, panelX + 16, panelY + panelH - 14);
-        ctx.restore();
-      }
       if (state.rewardPulseUntil > renderNow) {
         const rewardAlpha = Math.max(0, (state.rewardPulseUntil - renderNow) / 1600);
         const rewardGlow = ctx.createRadialGradient(canvas.width / 2, canvas.height * 0.82, 18, canvas.width / 2, canvas.height * 0.82, canvas.width * 0.44);
@@ -4248,21 +4001,8 @@
       }
     }
 
-    function updatePopupFailSafe(now = performance.now()) {
-      if (missionPopup && now - (missionPopup.bornAt || now) > 2600) {
-        missionPopup = null;
-        state.paused = false;
-        showNextRewardPopup();
-      }
-      if (rewardPopup && now - (rewardPopup.bornAt || now) > 3200) {
-        rewardPopup = null;
-        state.paused = false;
-        showNextRewardPopup();
-      }
-    }
-
     function tick(now) {
-      const dt = Math.min(0.033,(now-state.lastTime)/1000); state.lastTime=now; update(dt); updatePopupFailSafe(now); render(); requestAnimationFrame(tick);
+      const dt = Math.min(0.033,(now-state.lastTime)/1000); state.lastTime=now; update(dt); render(); requestAnimationFrame(tick);
     }
 
     function laneFromX(x) { return x < canvas.width/3 ? 0 : x < canvas.width*2/3 ? 1 : 2; }
@@ -4270,25 +4010,24 @@
       const rect=canvas.getBoundingClientRect();
       const x=((e.clientX-rect.left)/rect.width)*canvas.width;
       const y=((e.clientY-rect.top)/rect.height)*canvas.height;
-      if (missionPopup) {
-        const rectHit = missionPopup.rect && x >= missionPopup.rect.x && x <= missionPopup.rect.x + missionPopup.rect.w && y >= missionPopup.rect.y && y <= missionPopup.rect.y + missionPopup.rect.h;
-        if (rectHit || performance.now() - (missionPopup.bornAt || 0) > 500) {
+      if (missionPopup?.rect) {
+        const { x: bx, y: by, w, h } = missionPopup.rect;
+        if (x >= bx && x <= bx + w && y >= by && y <= by + h) {
           missionPopup = null;
           state.paused = false;
           showNextRewardPopup();
+          return;
         }
-        return;
       }
-      if (rewardPopup) {
-        const rectHit = rewardPopup.rect && x >= rewardPopup.rect.x && x <= rewardPopup.rect.x + rewardPopup.rect.w && y >= rewardPopup.rect.y && y <= rewardPopup.rect.y + rewardPopup.rect.h;
-        if (rectHit || performance.now() - (rewardPopup.bornAt || 0) > 500) {
+      if (rewardPopup?.rect) {
+        const { x: bx, y: by, w, h } = rewardPopup.rect;
+        if (x >= bx && x <= bx + w && y >= by && y <= by + h) {
           rewardPopup = null;
           state.paused = false;
           showNextRewardPopup();
+          return;
         }
-        return;
       }
-      markTutorialProgress('laneShots');
       fireAtLane(laneFromX(x));
     });
     window.addEventListener('keydown', e => {
@@ -4392,18 +4131,6 @@
         </div>`;
       syncHud();
     };
-    window.buyCarePackage = function() {
-      if (!carePackageUnlocked() || state.coins < 220) return;
-      state.coins -= 220;
-      state.revives += 1;
-      state.squad += 2;
-      state.coins += 160;
-      bankCoins = state.coins;
-      triggerUpgradeCelebration('Safehouse care package delivered');
-      saveMeta();
-      syncHud();
-      overlay.innerHTML = moneyPanelMarkup();
-    };
     window.openYoutubeReward = function() {
       if (youtubeVisitClaimed) {
         overlay.innerHTML = moneyPanelMarkup();
@@ -4448,20 +4175,6 @@
           <button onclick="window.openMoneyPanel()">Back To Shop</button>
         </div>`;
       syncHud();
-    };
-    window.startOnboardingRun = function() {
-      tutorialSeen = true;
-      onboardingActive = true;
-      tutorialProgress = { laneShots: 0, wallsBroken: 0, shopOpened: false };
-      saveMeta();
-      window.startZombieRun();
-      setCombatFeed('Training run started', 1700);
-    };
-    window.skipOnboarding = function() {
-      tutorialSeen = true;
-      onboardingActive = false;
-      saveMeta();
-      showTitleScreen();
     };
     window.closeOverlayAndResume = function() {
       overlay.classList.remove('hero-mode');

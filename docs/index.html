@@ -65,6 +65,8 @@
       padding: 8px 10px 10px;
       background: linear-gradient(180deg, rgba(15,23,42,0.96), rgba(2,6,23,0.92));
       border-top: 1px solid rgba(148,163,184,.12);
+      flex-wrap: wrap;
+      align-items: stretch;
     }
     .battle-side-ui {
       position: static;
@@ -74,6 +76,7 @@
       z-index: 12;
       pointer-events: auto;
       margin-left: auto;
+      order: 2;
     }
     .battle-side-btn {
       width: 72px;
@@ -167,6 +170,14 @@
     .mission-hud.next-goal {
       border-color: rgba(250,204,21,0.22);
       box-shadow: 0 18px 42px rgba(250,204,21,0.12);
+    }
+    .mission-hud.docked,
+    .season-hud.docked {
+      position: static;
+      width: min(100%, 320px);
+      margin: 0;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.22);
+      pointer-events: none;
     }
     .season-hud {
       position: absolute;
@@ -533,7 +544,13 @@
       .home-hero-grid,
       .safehouse-grid { grid-template-columns: 1fr; }
       .touch-row { display: flex; }
-      .canvas-hud-row { display: none; }
+      .canvas-hud-row { display: flex; gap: 8px; }
+      .mission-hud.docked,
+      .season-hud.docked {
+        flex: 1 1 calc(50% - 4px);
+        min-width: 0;
+      }
+      .battle-side-ui { width: 100%; justify-content: flex-end; }
     }
     @media (max-width: 560px) {
       .topbar { grid-template-columns: repeat(2, 1fr); }
@@ -691,6 +708,8 @@
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('overlay');
+    const canvasWrap = document.querySelector('.canvas-wrap');
+    const canvasHudRow = document.querySelector('.canvas-hud-row');
     const missionHud = document.getElementById('missionHud');
     const missionRewardTag = document.getElementById('missionRewardTag');
     const missionTitle = document.getElementById('missionTitle');
@@ -1177,10 +1196,22 @@
     function applyControlsMode() {
       const touchRow = document.querySelector('.touch-row');
       const desktopWebMode = window.matchMedia('(pointer:fine)').matches;
+      const mobileLayout = window.innerWidth <= 920;
       touchRow.style.display = controlsMode === 'buttons' ? 'flex' : '';
       touchRow.style.opacity = controlsMode === 'buttons' ? '1' : '';
       if (minigunBtn) minigunBtn.style.display = desktopWebMode ? 'none' : '';
       if (floatingMinigunBtn) floatingMinigunBtn.style.display = '';
+      if (mobileLayout) {
+        missionHud?.classList.add('docked');
+        seasonHud?.classList.add('docked');
+        if (canvasHudRow && missionHud && missionHud.parentElement !== canvasHudRow) canvasHudRow.prepend(missionHud);
+        if (canvasHudRow && seasonHud && seasonHud.parentElement !== canvasHudRow) canvasHudRow.prepend(seasonHud);
+      } else {
+        missionHud?.classList.remove('docked');
+        seasonHud?.classList.remove('docked');
+        if (canvasWrap && missionHud && missionHud.parentElement !== canvasWrap) canvasWrap.appendChild(missionHud);
+        if (canvasWrap && seasonHud && seasonHud.parentElement !== canvasWrap) canvasWrap.appendChild(seasonHud);
+      }
     }
 
     function controlSummary() {

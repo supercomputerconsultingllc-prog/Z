@@ -876,6 +876,27 @@
       };
     }
 
+    function formatSyncTime(ts) {
+      if (!ts) return 'Not synced yet';
+      try { return new Date(ts).toLocaleString(); } catch (_) { return 'Not synced yet'; }
+    }
+
+    function setCloudSyncState(state, message = '') {
+      cloudSyncState = state;
+      cloudSyncMessage = message;
+      localStorage.setItem(storageKey('cloud-sync-state'), state);
+      if (state === 'synced') {
+        cloudLastSavedAt = Date.now();
+        localStorage.setItem(storageKey('cloud-last-saved-at'), String(cloudLastSavedAt));
+      }
+    }
+
+    function cloudSyncSummary() {
+      const stateLabel = cloudSyncState === 'syncing' ? 'Syncing…' : cloudSyncState === 'error' ? 'Sync issue' : cloudSyncState === 'synced' ? 'Synced' : currentAccountEmail ? 'Ready to sync' : 'Guest only';
+      const detail = cloudSyncMessage || (currentAccountEmail ? `Last sync: ${formatSyncTime(cloudLastSavedAt)}` : 'Create or sign in to keep progress across devices.');
+      return { stateLabel, detail };
+    }
+
     let state;
     let audioCtx = null;
     let musicEnabled = getStored('music', 'on') !== 'off';
@@ -911,6 +932,9 @@
     let currentAccountId = localStorage.getItem(CURRENT_ACCOUNT_KEY) || '';
     let currentAccountEmail = localStorage.getItem(storageKey('account-email')) || '';
     let currentAccountPassword = localStorage.getItem(storageKey('account-password')) || '';
+    let cloudLastSavedAt = Number(localStorage.getItem(storageKey('cloud-last-saved-at')) || 0);
+    let cloudSyncState = localStorage.getItem(storageKey('cloud-sync-state')) || 'idle';
+    let cloudSyncMessage = '';
     const mobileSafeMode = window.innerWidth <= 920 || ('ontouchstart' in window);
     const lowPowerMobileMode = mobileSafeMode || window.devicePixelRatio > 2;
     let screenShake = 0;
@@ -1046,15 +1070,18 @@
       }
       currentAccountId = account.id || currentAccountId || currentAccountEmail;
       applyPlayerProfile(profileFromSupabaseRow(account));
+      setCloudSyncState('synced', `Loaded cloud save, ${formatSyncTime(Date.now())}`);
     }
 
     async function saveAccountProfile() {
       if (!currentAccountEmail || !currentAccountPassword) { persistGuestProfile(); return; }
       if (!supabaseClient) { persistGuestProfile(); return; }
+      setCloudSyncState('syncing', 'Saving cloud profile...');
       await supabaseSaveProfile(currentAccountEmail, currentAccountPassword, capturePlayerProfile());
       localStorage.setItem(CURRENT_ACCOUNT_KEY, currentAccountId || currentAccountEmail);
       setStored('account-email', currentAccountEmail);
       setStored('account-password', currentAccountPassword);
+      setCloudSyncState('synced', `Saved cloud profile, ${formatSyncTime(Date.now())}`);
     }
 
     function accountStatusText() {
@@ -1065,11 +1092,13 @@
       state.paused = true;
       pauseGameMusic();
       const signedIn = !!currentAccountEmail;
+      const syncSummary = cloudSyncSummary();
       overlay.innerHTML = `
         <div class="message settings-page">
           <h2>Zombie Mayhem Account</h2>
           <p>${accountStatusText()}</p>
           <p class="mini-note">${cloudSyncEnabled ? 'Cloud save is connected through Supabase.' : 'Cloud save is unavailable, falling back to guest/local progress.'}</p>
+          <p class="mini-note"><strong>Status:</strong> ${syncSummary.stateLabel}. ${syncSummary.detail}</p>
           ${signedIn ? `
             <div class="settings-grid">
               <div class="settings-card">
@@ -1078,10 +1107,12 @@
                 <p><strong>Coins:</strong> ${bankCoins}</p>
                 <p><strong>Pass Level:</strong> ${passLevel}</p>
                 <p><strong>Best Distance:</strong> ${best}</p>
+                <p><strong>Last Sync:</strong> ${formatSyncTime(cloudLastSavedAt)}</p>
               </div>
               <div class="settings-card">
                 <h4>Account Actions</h4>
                 <button id="syncAccountBtn">Sync Now</button>
+                <p class="mini-note">Manual sync is useful after a long session or before switching devices.</p>
                 <button id="signOutAccountBtn" class="secondary">Sign Out</button>
               </div>
             </div>
@@ -1092,6 +1123,7 @@
                 <input id="accountCreateEmail" type="email" placeholder="Email" style="width:100%;margin-bottom:10px;">
                 <input id="accountCreatePassword" type="password" placeholder="Password" style="width:100%;margin-bottom:10px;">
                 <label class="mini-note" style="display:block;margin-bottom:10px;"><input type="checkbox" id="importGuestProgress" checked> Import current guest coins and progression</label>
+                <p class="mini-note">If this is checked, your current guest coins, unlocks, and pass progress become the starting cloud profile.</p>
                 <button id="createAccountBtn">Create Account</button>
               </div>
               <div class="settings-card">
@@ -1099,6 +1131,7 @@
                 <input id="accountSignInEmail" type="email" placeholder="Email" style="width:100%;margin-bottom:10px;">
                 <input id="accountSignInPassword" type="password" placeholder="Password" style="width:100%;margin-bottom:10px;">
                 <button id="signInAccountBtn" class="secondary">Sign In</button>
+                <p class="mini-note">Signing in loads the existing cloud save for that email on this browser.</p>
               </div>
             </div>
           `}
@@ -1116,6 +1149,7 @@
           }
         });
         document.getElementById('signOutAccountBtn')?.addEventListener('click', () => {
+          if (!confirm('Sign out of this cloud account on this browser?')) return;
           currentAccountId = '';
           currentAccountEmail = '';
           currentAccountPassword = '';
@@ -1159,6 +1193,10 @@
         try {
           const account = await supabaseFetchProfile(email);
           if (!account || account.password_hash !== password) return alert('Incorrect email or password.');
+          if (bankCoins > 0 || best > 0 || passLevel > 1) {
+            const ok = confirm('Signing in will load the cloud profile for this account on this browser. Your guest progress will remain local unless you create a new account with import enabled. Continue?');
+            if (!ok) return;
+          }
           currentAccountId = account.id || email;
           currentAccountEmail = email;
           currentAccountPassword = password;
@@ -1193,7 +1231,12 @@
       setStored('music-volume', String(musicVolumeLevel));
       setStored('brightness', String(brightnessLevel));
       setStored('controls', controlsMode);
-      return saveAccountProfile();
+      try {
+        return await saveAccountProfile();
+      } catch (error) {
+        setCloudSyncState('error', error?.message || String(error));
+        throw error;
+      }
     }
 
     function activeMission() { return MISSIONS[missionIndex % MISSIONS.length]; }

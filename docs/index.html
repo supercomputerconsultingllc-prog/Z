@@ -40,45 +40,36 @@
     }
     .topbar {
       display: grid;
-      grid-template-columns: repeat(8, minmax(0, 1fr));
-      gap: 8px;
-      padding: 12px;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 12px;
+      padding: 16px;
       background: rgba(255,255,255,0.03);
     }
     .stat {
       background: var(--panel);
-      border-radius: 14px;
-      padding: 10px 8px;
+      border-radius: 16px;
+      padding: 12px;
       text-align: center;
       box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
-      min-width: 0;
     }
-    .stat .label { display: block; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .stat .value { display: block; font-size: 21px; font-weight: 800; margin-top: 3px; line-height: 1.05; }
+    .stat .label { display: block; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+    .stat .value { display: block; font-size: 24px; font-weight: 800; margin-top: 4px; }
     .content { display: grid; grid-template-columns: 1fr 320px; }
     .canvas-wrap { position: relative; min-height: 680px; background: linear-gradient(180deg, #111827 0%, #0f172a 50%, #1e293b 100%); }
     canvas { width: 100%; height: 680px; display: block; touch-action: manipulation; cursor: crosshair; }
-    .canvas-hud-row {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      padding: 8px 10px 10px;
-      background: linear-gradient(180deg, rgba(15,23,42,0.96), rgba(2,6,23,0.92));
-      border-top: 1px solid rgba(148,163,184,.12);
-    }
     .battle-side-ui {
-      position: static;
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
       display: flex;
       flex-direction: row;
-      gap: 8px;
-      z-index: 12;
-      pointer-events: auto;
-      margin-left: auto;
+      gap: 10px;
+      z-index: 4;
     }
     .battle-side-btn {
-      width: 72px;
-      min-height: 72px;
-      border-radius: 18px;
+      width: 86px;
+      min-height: 86px;
+      border-radius: 22px;
       border: 1px solid rgba(255,255,255,0.12);
       background: linear-gradient(180deg, rgba(239,68,68,.96), rgba(127,29,29,.98));
       color: white;
@@ -87,9 +78,9 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 4px;
-      padding: 8px;
-      font-size: 11px;
+      gap: 6px;
+      padding: 10px;
+      font-size: 13px;
       font-weight: 900;
       transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
       touch-action: manipulation;
@@ -97,10 +88,7 @@
       -webkit-user-select: none;
       pointer-events: auto;
       position: relative;
-      z-index: 13;
-      visibility: visible;
-      opacity: 1;
-      flex: 0 0 auto;
+      z-index: 4;
     }
     .battle-side-btn.ready {
       box-shadow: 0 0 0 2px rgba(254,202,202,.22), 0 0 24px rgba(248,113,113,.55), 0 18px 36px rgba(0,0,0,.32);
@@ -109,150 +97,8 @@
     .battle-side-btn:active {
       transform: scale(.96);
     }
-    .battle-side-btn .big { font-size: 22px; line-height: 1; }
+    .battle-side-btn .big { font-size: 28px; line-height: 1; }
     .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-    .mission-hud {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      z-index: 14;
-      width: min(280px, calc(100% - 32px));
-      padding: 12px 14px;
-      border-radius: 18px;
-      background: linear-gradient(180deg, rgba(15,23,42,0.94), rgba(15,23,42,0.86));
-      border: 1px solid rgba(255,255,255,0.08);
-      box-shadow: 0 18px 36px rgba(0,0,0,0.28);
-      pointer-events: none;
-    }
-    .mission-hud-label {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: #cbd5e1;
-      margin-bottom: 6px;
-    }
-    .mission-hud-title {
-      font-size: 16px;
-      font-weight: 800;
-      color: #f8fafc;
-      line-height: 1.2;
-    }
-    .mission-progress-shell {
-      height: 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.08);
-      overflow: hidden;
-      margin-top: 10px;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
-    }
-    .mission-progress-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #38bdf8, #22c55e, #facc15);
-      transition: width .18s ease;
-    }
-    .mission-hud-foot {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-top: 8px;
-      font-size: 12px;
-      color: #cbd5e1;
-    }
-    .mission-hud.next-goal {
-      border-color: rgba(250,204,21,0.22);
-      box-shadow: 0 18px 42px rgba(250,204,21,0.12);
-    }
-    .season-hud {
-      position: absolute;
-      top: 146px;
-      left: 16px;
-      z-index: 14;
-      width: min(280px, calc(100% - 32px));
-      padding: 12px 14px;
-      border-radius: 18px;
-      background: linear-gradient(180deg, rgba(30,41,59,0.94), rgba(15,23,42,0.88));
-      border: 1px solid rgba(255,255,255,0.08);
-      box-shadow: 0 18px 36px rgba(0,0,0,0.28);
-      pointer-events: none;
-    }
-    .season-hud.hot {
-      border-color: rgba(250,204,21,0.32);
-      box-shadow: 0 18px 42px rgba(250,204,21,0.16);
-    }
-    .season-hud-label,
-    .season-hud-foot {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-    .season-hud-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: #cbd5e1;
-      margin-bottom: 6px;
-    }
-    .season-hud-title {
-      font-size: 16px;
-      font-weight: 800;
-      color: #f8fafc;
-      line-height: 1.2;
-    }
-    .season-hud-sub {
-      margin-top: 4px;
-      font-size: 12px;
-      color: #93c5fd;
-    }
-    .season-progress-shell {
-      height: 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.08);
-      overflow: hidden;
-      margin-top: 10px;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
-    }
-    .season-progress-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #f59e0b, #facc15, #22c55e);
-      transition: width .18s ease;
-    }
-    .season-hud-foot {
-      margin-top: 8px;
-      font-size: 12px;
-      color: #cbd5e1;
-    }
-    .goal-stack {
-      display: grid;
-      gap: 10px;
-      margin-top: 14px;
-    }
-    .goal-card {
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.06);
-      border-radius: 14px;
-      padding: 12px;
-    }
-    .goal-card h4 {
-      margin: 0 0 6px;
-    }
-    .goal-card p {
-      margin: 0;
-    }
-    .overlay.hero-mode {
-      position: fixed;
-      z-index: 30;
-      background: rgba(2, 6, 23, 0.34);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-    }
     .message {
       background: rgba(15, 23, 42, 0.9);
       border: 1px solid rgba(255,255,255,0.08);
@@ -261,18 +107,6 @@
       text-align: center;
       max-width: 520px;
       pointer-events: auto;
-    }
-    .message.hero-card {
-      width: min(440px, calc(100vw - 28px));
-      box-shadow: 0 28px 80px rgba(0,0,0,.42), inset 0 0 0 1px rgba(255,255,255,.04);
-    }
-    .overlay-actions {
-      display: grid;
-      gap: 10px;
-      margin-top: 14px;
-    }
-    .overlay-actions.two-up {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     .message.settings-page {
       width: min(720px, calc(100% - 24px));
@@ -486,43 +320,30 @@
       margin-top: 0;
       flex: 1 1 180px;
     }
-    .touch-row { display: none; gap: 8px; padding: 10px 12px 12px; background: rgba(255,255,255,0.03); border-top: 1px solid rgba(148,163,184,.12); flex-wrap: wrap; align-items: end; }
-    .touch-btn { flex: 1 1 96px; min-height: 48px; font-size: 14px; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease; }
+    .touch-row { display: none; gap: 10px; padding: 0 16px 16px; background: rgba(255,255,255,0.03); flex-wrap: wrap; }
+    .touch-btn { flex: 1 1 120px; min-height: 56px; font-size: 16px; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease; }
     .touch-btn.danger {
       box-shadow: 0 0 0 2px rgba(248,113,113,0.34), 0 0 24px rgba(239,68,68,0.18);
       border-color: rgba(248,113,113,0.7);
       transform: translateY(-1px);
     }
     .touch-btn.special {
-      flex: 0 1 128px;
+      flex: 1 1 140px;
       background: linear-gradient(180deg, rgba(239,68,68,.96), rgba(127,29,29,.98));
       color: white;
       position: relative;
       overflow: hidden;
-      margin-left: auto;
     }
     .touch-btn.utility {
-      flex: 0 1 112px;
+      flex: 1 1 120px;
       background: linear-gradient(180deg, rgba(71,85,105,.96), rgba(30,41,59,.98));
       color: #e2e8f0;
     }
     .touch-btn .tiny-status {
       display: block;
-      margin-top: 3px;
-      font-size: 10px;
+      margin-top: 4px;
+      font-size: 11px;
       opacity: 0.82;
-    }
-    .touch-row .secondary.touch-btn {
-      flex: 1 1 calc(33.333% - 6px);
-      min-width: 0;
-      min-height: 44px;
-      font-size: 13px;
-      padding: 8px 6px;
-    }
-    @media (pointer:fine) {
-      #minigunBtn {
-        display: none !important;
-      }
     }
     @media (max-width: 920px) {
       .topbar { grid-template-columns: repeat(4, 1fr); }
@@ -531,29 +352,13 @@
       canvas { height: 560px; }
       .shop-hero { grid-template-columns: 1fr; }
       .touch-row { display: flex; }
-      .canvas-hud-row { display: none; }
     }
     @media (max-width: 560px) {
       .topbar { grid-template-columns: repeat(2, 1fr); }
       .stat .value { font-size: 22px; }
-      .overlay-actions.two-up { grid-template-columns: 1fr; }
       .controls { padding: 12px; }
       .settings-grid { grid-template-columns: 1fr; }
       button { min-height: 46px; }
-      .touch-row {
-        gap: 6px;
-        padding: 8px 10px 10px;
-      }
-      .touch-row .secondary.touch-btn {
-        font-size: 12px;
-        min-height: 42px;
-      }
-      .touch-btn.special,
-      .touch-btn.utility {
-        flex-basis: calc(50% - 3px);
-        min-height: 46px;
-        font-size: 12px;
-      }
     }
   </style>
 </head>
@@ -573,44 +378,20 @@
     <section class="content">
       <div class="canvas-wrap">
         <canvas id="game" width="800" height="680"></canvas>
-        <div class="mission-hud" id="missionHud">
-          <div class="mission-hud-label"><span>Mission</span><span id="missionRewardTag">+10 coins</span></div>
-          <div class="mission-hud-title" id="missionTitle">Break 12 walls</div>
-          <div class="mission-progress-shell"><div class="mission-progress-fill" id="missionProgressFill"></div></div>
-          <div class="mission-hud-foot"><span id="missionProgressText">0 / 12</span><span id="missionNextText">Keep running</span></div>
-        </div>
-        <div class="season-hud" id="seasonHud">
-          <div class="season-hud-label"><span>Premium Pass</span><span id="seasonLevelTag">Lv. 1</span></div>
-          <div class="season-hud-title" id="seasonRewardTitle">100 coin crate</div>
-          <div class="season-hud-sub" id="seasonRewardText">Finish goals to unlock your next prize.</div>
-          <div class="season-progress-shell"><div class="season-progress-fill" id="seasonProgressFill"></div></div>
-          <div class="season-hud-foot"><span id="seasonProgressText">0 / 40 XP</span><span id="seasonNextText">Mission XP ready</span></div>
-        </div>
-        <div class="overlay" id="overlay"></div>
-      </div>
-      <div class="canvas-hud-row">
         <div class="battle-side-ui">
           <button class="battle-side-btn" id="floatingMinigunBtn" aria-label="Activate minigun" type="button">
             <span class="big">🔥</span>
             <span>Minigun</span>
-            <span class="battle-side-status" id="floatingMinigunStatus" style="font-size:10px;opacity:.82;">Tap ready</span>
+            <span class="battle-side-status" id="floatingMinigunStatus" style="font-size:11px;opacity:.86;">Tap when ready</span>
           </button>
           <button class="battle-side-btn" id="floatingSettingsBtn" aria-label="Open settings" type="button" style="background:linear-gradient(180deg, rgba(71,85,105,.96), rgba(30,41,59,.98));">
             <span class="big">⚙️</span>
             <span>Settings</span>
-            <span style="font-size:10px;opacity:.82;">Audio + view</span>
+            <span style="font-size:11px;opacity:.86;">Brightness + volume</span>
           </button>
         </div>
+        <div class="overlay" id="overlay"></div>
       </div>
-
-      <section class="touch-row">
-        <button class="secondary touch-btn" id="laneLeftBtn">⬅️ Shoot Left</button>
-        <button class="secondary touch-btn" id="laneCenterBtn">🎯 Shoot Center</button>
-        <button class="secondary touch-btn" id="laneRightBtn">➡️ Shoot Right</button>
-        <button class="touch-btn special" id="minigunBtn" aria-label="Activate minigun" type="button">🔥 Minigun<span class="tiny-status battle-side-status">Tap when ready</span></button>
-        <button class="touch-btn utility" id="battleSettingsBtn" aria-label="Open settings" type="button">⚙️ Settings<span class="tiny-status">Brightness, volume, controls</span></button>
-        <button class="touch-btn utility" id="battleYoutubeBtn" aria-label="Open bonus page" type="button">▶️ Bonus<span class="tiny-status">Open channel page</span></button>
-      </section>
 
       <aside class="controls">
         <div class="card">
@@ -681,25 +462,20 @@
       </aside>
     </section>
 
+    <section class="touch-row">
+      <button class="secondary touch-btn" id="laneLeftBtn">⬅️ Shoot Left</button>
+      <button class="secondary touch-btn" id="laneCenterBtn">🎯 Shoot Center</button>
+      <button class="secondary touch-btn" id="laneRightBtn">➡️ Shoot Right</button>
+      <button class="touch-btn special" id="minigunBtn" aria-label="Activate minigun" type="button">🔥 Minigun<span class="tiny-status battle-side-status">Tap when ready</span></button>
+      <button class="touch-btn utility" id="battleSettingsBtn" aria-label="Open settings" type="button">⚙️ Settings<span class="tiny-status">Brightness, volume, controls</span></button>
+      <button class="touch-btn utility" id="battleYoutubeBtn" aria-label="Open bonus page" type="button">▶️ Bonus<span class="tiny-status">Open channel page</span></button>
+    </section>
   </main>
 
   <script>
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('overlay');
-    const missionHud = document.getElementById('missionHud');
-    const missionRewardTag = document.getElementById('missionRewardTag');
-    const missionTitle = document.getElementById('missionTitle');
-    const missionProgressFill = document.getElementById('missionProgressFill');
-    const missionProgressText = document.getElementById('missionProgressText');
-    const missionNextText = document.getElementById('missionNextText');
-    const seasonHud = document.getElementById('seasonHud');
-    const seasonLevelTag = document.getElementById('seasonLevelTag');
-    const seasonRewardTitle = document.getElementById('seasonRewardTitle');
-    const seasonRewardText = document.getElementById('seasonRewardText');
-    const seasonProgressFill = document.getElementById('seasonProgressFill');
-    const seasonProgressText = document.getElementById('seasonProgressText');
-    const seasonNextText = document.getElementById('seasonNextText');
     const squadStat = document.getElementById('squadStat');
     const gunStat = document.getElementById('gunStat');
     const weaponNameStat = document.getElementById('weaponNameStat');
@@ -739,26 +515,18 @@
     let musicEnabled = localStorage.getItem('zombie-squad-run-music') !== 'off';
     let musicTimer = null;
     let musicStep = 0;
-    let musicBus = null;
-    const MUSIC_START_OFFSET = 10;
     let renderNow = performance.now();
-    let lastShotSoundAt = 0;
-    const laneObjectBuckets = [[], [], []];
     let best = Number(localStorage.getItem('zombie-squad-run-best') || 0);
     let bankCoins = 0;
     let avatarCoins = Number(localStorage.getItem('zombie-squad-run-avatar-coins') || 0);
     let selectedAvatar = localStorage.getItem('zombie-squad-run-selected-avatar') || 'default';
     let unlockedAvatars = JSON.parse(localStorage.getItem('zombie-squad-run-unlocked-avatars') || '["default"]');
     let soundOn = localStorage.getItem('zombie-squad-run-sound') !== 'off';
-    let volumeLevel = Number(localStorage.getItem('zombie-squad-run-volume') || 50);
-    let musicVolumeLevel = Number(localStorage.getItem('zombie-squad-run-music-volume') || 100);
+    let volumeLevel = Number(localStorage.getItem('zombie-squad-run-volume') || 140);
     let brightnessLevel = Number(localStorage.getItem('zombie-squad-run-brightness') || 100);
     let controlsMode = localStorage.getItem('zombie-squad-run-controls') || 'tap';
     let missionIndex = Number(localStorage.getItem('zombie-squad-run-mission-index') || 0);
     let missionProgress = Number(localStorage.getItem('zombie-squad-run-mission-progress') || 0);
-    let passLevel = Number(localStorage.getItem('zombie-squad-run-pass-level') || 1);
-    let passXp = Number(localStorage.getItem('zombie-squad-run-pass-xp') || 0);
-    let totalRuns = Number(localStorage.getItem('zombie-squad-run-total-runs') || 0);
     let youtubeVisitClaimed = localStorage.getItem('zombie-squad-run-youtube-visit') === 'claimed';
     let youtubeSubscribeClaimed = localStorage.getItem('zombie-squad-run-youtube-subscribe') === 'claimed';
     let starterPackClaimed = localStorage.getItem('zombie-squad-run-starter-pack') === 'claimed';
@@ -771,8 +539,6 @@
     let hitFlash = 0;
     let bossWave = false;
     let missionPopup = null;
-    let rewardQueue = [];
-    let rewardPopup = null;
     let crowdCache = null;
     const impactDecals = [];
     const shellCasings = [];
@@ -781,14 +547,6 @@
       { label: 'Break 12 walls', target: 12, event: 'walls' },
       { label: 'Recruit 32 survivors', target: 32, event: 'survivors' },
       { label: 'Collect 80 coins', target: 80, event: 'coins' }
-    ];
-    const PASS_REWARDS = [
-      { icon: '🪙', title: '100 coin crate', detail: 'Big coin drop for your next push.', xp: 40, grant: { coins: 100 } },
-      { icon: '🎨', title: '2 avatar coins', detail: 'Save up for rare looks faster.', xp: 50, grant: { avatarCoins: 2 } },
-      { icon: '❤️', title: 'Bonus revive', detail: 'Start a run with one extra safety heart.', xp: 60, grant: { runRevives: 1 } },
-      { icon: '👥', title: 'Squad drop', detail: 'Begin with 2 extra squad members.', xp: 70, grant: { startSquad: 2 } },
-      { icon: '🔫', title: 'Power spark', detail: 'Start with +1 firepower.', xp: 80, grant: { startFirepower: 1 } },
-      { icon: '🌟', title: 'Hero crate', detail: 'Coins, avatar coins, and hype all at once.', xp: 90, grant: { coins: 180, avatarCoins: 2 } }
     ];
     bestStat.textContent = best;
     soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
@@ -804,14 +562,10 @@
       localStorage.setItem('zombie-squad-run-sound', soundOn ? 'on' : 'off');
       localStorage.setItem('zombie-squad-run-music', musicEnabled ? 'on' : 'off');
       localStorage.setItem('zombie-squad-run-volume', String(volumeLevel));
-      localStorage.setItem('zombie-squad-run-music-volume', String(musicVolumeLevel));
       localStorage.setItem('zombie-squad-run-brightness', String(brightnessLevel));
       localStorage.setItem('zombie-squad-run-controls', controlsMode);
       localStorage.setItem('zombie-squad-run-mission-index', String(missionIndex));
       localStorage.setItem('zombie-squad-run-mission-progress', String(missionProgress));
-      localStorage.setItem('zombie-squad-run-pass-level', String(passLevel));
-      localStorage.setItem('zombie-squad-run-pass-xp', String(passXp));
-      localStorage.setItem('zombie-squad-run-total-runs', String(totalRuns));
       localStorage.setItem('zombie-squad-run-youtube-visit', youtubeVisitClaimed ? 'claimed' : 'open');
       localStorage.setItem('zombie-squad-run-youtube-subscribe', youtubeSubscribeClaimed ? 'claimed' : 'open');
       localStorage.setItem('zombie-squad-run-starter-pack', starterPackClaimed ? 'claimed' : 'open');
@@ -821,74 +575,6 @@
     }
 
     function activeMission() { return MISSIONS[missionIndex % MISSIONS.length]; }
-    function currentPassReward() { return PASS_REWARDS[(Math.max(1, passLevel) - 1) % PASS_REWARDS.length]; }
-    function passXpForLevel(level = passLevel) {
-      const reward = PASS_REWARDS[(Math.max(1, level) - 1) % PASS_REWARDS.length];
-      return reward.xp + Math.max(0, level - 1) * 4;
-    }
-    function nextDistanceGoal(distance = Math.floor(state?.distance || 0)) {
-      return Math.max(180, Math.ceil((Math.max(best, distance) + 1) / 180) * 180);
-    }
-    function rewardSummary(grant = {}) {
-      const bits = [];
-      if (grant.coins) bits.push(`+${grant.coins} coins`);
-      if (grant.avatarCoins) bits.push(`+${grant.avatarCoins} avatar coins`);
-      if (grant.runRevives) bits.push(`+${grant.runRevives} starting revive`);
-      if (grant.startSquad) bits.push(`+${grant.startSquad} starting squad`);
-      if (grant.startFirepower) bits.push(`+${grant.startFirepower} starting firepower`);
-      return bits.join(', ');
-    }
-    function queueRewardPopup(payload) {
-      rewardQueue.push(payload);
-      if (!rewardPopup && !missionPopup) showNextRewardPopup();
-    }
-    function showNextRewardPopup() {
-      if (rewardPopup || missionPopup || !rewardQueue.length) return;
-      const next = rewardQueue.shift();
-      rewardPopup = {
-        title: next.title,
-        label: next.label,
-        reward: next.reward,
-        icon: next.icon || '🎉',
-        button: next.button || 'Awesome',
-        rect: null
-      };
-      overlay.innerHTML = '';
-      state.paused = true;
-    }
-    function grantPassReward(reward) {
-      const grant = reward?.grant || {};
-      if (grant.coins) {
-        state.coins += grant.coins;
-        bankCoins = state.coins;
-      }
-      if (grant.avatarCoins) avatarCoins += grant.avatarCoins;
-      if (grant.runRevives) state.revives += grant.runRevives;
-      if (grant.startSquad) state.squad += grant.startSquad;
-      if (grant.startFirepower) state.firepower += grant.startFirepower;
-      saveMeta();
-      syncHud();
-    }
-    function addPassXp(amount, reason = 'Keep the streak alive') {
-      if (!amount) return;
-      passXp += amount;
-      while (passXp >= passXpForLevel(passLevel)) {
-        const threshold = passXpForLevel(passLevel);
-        passXp -= threshold;
-        const reward = currentPassReward();
-        grantPassReward(reward);
-        queueRewardPopup({
-          title: 'Premium Pass Unlocked',
-          label: reward.title,
-          reward: rewardSummary(reward.grant) || reward.detail,
-          icon: reward.icon,
-          button: 'Collect'
-        });
-        passLevel += 1;
-      }
-      saveMeta();
-      syncSeasonHud(reason);
-    }
 
     function ensureAudio() {
       if (audioCtx) return audioCtx;
@@ -896,47 +582,6 @@
       if (!AudioContextClass) return null;
       audioCtx = new AudioContextClass();
       return audioCtx;
-    }
-
-    function ensureMusicAudio() {
-      if (musicBus) return musicBus;
-      const audio = new Audio();
-      const oggSupported = !!audio.canPlayType && audio.canPlayType('audio/ogg; codecs="vorbis"') !== '';
-      audio.src = oggSupported ? './assets/audio/mountain-king.ogg' : './assets/audio/mountain-king.mp3';
-      audio.dataset.fallbackSrc = './assets/audio/mountain-king.mp3';
-      audio.loop = true;
-      audio.preload = 'auto';
-      audio.volume = Math.max(0, Math.min(1, musicVolumeLevel / 100));
-      audio.load();
-      musicBus = audio;
-      return musicBus;
-    }
-
-    function stopMusicAudio(resetTime = false) {
-      if (!musicBus) return;
-      const music = musicBus;
-      const fadeMs = 140;
-      const startVolume = music.volume;
-      const start = performance.now();
-      const tick = () => {
-        const progress = Math.min(1, (performance.now() - start) / fadeMs);
-        music.volume = startVolume * (1 - progress);
-        if (progress < 1) {
-          requestAnimationFrame(tick);
-          return;
-        }
-        music.pause();
-        if (resetTime) {
-          try { music.currentTime = 0; } catch (_) {}
-        }
-        updateMusicVolume();
-      };
-      tick();
-    }
-
-    function updateMusicVolume() {
-      if (!musicBus) return;
-      musicBus.volume = Math.max(0, Math.min(1, musicVolumeLevel / 100));
     }
 
     function playTone(freq, duration = 0.08, type = 'square', gainBoost = 1) {
@@ -949,7 +594,7 @@
       const now = ctxAudio.currentTime;
       osc.type = type;
       osc.frequency.setValueAtTime(freq, now);
-      gain.gain.setValueAtTime((volumeLevel / 100) * 0.06 * gainBoost, now);
+      gain.gain.setValueAtTime((volumeLevel / 100) * 0.08 * gainBoost, now);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
       osc.connect(gain);
       gain.connect(ctxAudio.destination);
@@ -959,10 +604,6 @@
 
     function playShotSound(power = 1) {
       if (!soundOn || volumeLevel <= 0) return;
-      const nowMs = performance.now();
-      const minGap = power >= 10 ? 52 : power >= 7 ? 44 : 34;
-      if (nowMs - lastShotSoundAt < minGap) return;
-      lastShotSoundAt = nowMs;
       const ctxAudio = ensureAudio();
       if (!ctxAudio) return;
       if (ctxAudio.state === 'suspended') ctxAudio.resume();
@@ -973,7 +614,7 @@
       bodyOsc.type = power >= 8 ? 'sawtooth' : 'triangle';
       bodyOsc.frequency.setValueAtTime(210 + power * 12, now);
       bodyOsc.frequency.exponentialRampToValueAtTime(88 + power * 5, now + 0.085);
-      bodyGain.gain.setValueAtTime((volumeLevel / 100) * 0.015 * Math.min(1.45, 0.92 + power * 0.04), now);
+      bodyGain.gain.setValueAtTime((volumeLevel / 100) * 0.03 * Math.min(1.55, 0.95 + power * 0.045), now);
       bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
       bodyOsc.connect(bodyGain);
       bodyGain.connect(ctxAudio.destination);
@@ -984,7 +625,7 @@
       const crackGain = ctxAudio.createGain();
       crackOsc.type = 'square';
       crackOsc.frequency.setValueAtTime(900 + power * 34, now);
-      crackGain.gain.setValueAtTime((volumeLevel / 100) * 0.0065, now);
+      crackGain.gain.setValueAtTime((volumeLevel / 100) * 0.013, now);
       crackGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
       crackOsc.connect(crackGain);
       crackGain.connect(ctxAudio.destination);
@@ -996,7 +637,7 @@
       tailOsc.type = power >= 6 ? 'triangle' : 'sine';
       tailOsc.frequency.setValueAtTime(420 + power * 14, now + 0.01);
       tailOsc.frequency.exponentialRampToValueAtTime(180 + power * 6, now + 0.07);
-      tailGain.gain.setValueAtTime((volumeLevel / 100) * 0.005 * Math.min(1.25, 0.88 + power * 0.025), now + 0.008);
+      tailGain.gain.setValueAtTime((volumeLevel / 100) * 0.01 * Math.min(1.35, 0.9 + power * 0.03), now + 0.008);
       tailGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.075);
       tailOsc.connect(tailGain);
       tailGain.connect(ctxAudio.destination);
@@ -1041,57 +682,117 @@
       raspOsc.stop(now + 0.2);
     }
 
-    function startMusicLoop() {
-      if (!musicEnabled || !soundOn) return;
-      const music = ensureMusicAudio();
-      if (!music) return;
-      const targetVolume = Math.max(0, Math.min(1, musicVolumeLevel / 100));
-      music.volume = 0;
-      const tryPlay = () => {
-        if (music.paused && (!Number.isFinite(music.currentTime) || music.currentTime < MUSIC_START_OFFSET)) {
-          try { music.currentTime = MUSIC_START_OFFSET; } catch (_) {}
-        }
-        const playPromise = music.play();
-        const fadeIn = () => {
-          const fadeMs = 220;
-          const start = performance.now();
-          const tick = () => {
-            const progress = Math.min(1, (performance.now() - start) / fadeMs);
-            music.volume = targetVolume * progress;
-            if (progress < 1) requestAnimationFrame(tick);
-          };
-          tick();
-        };
-        if (playPromise && typeof playPromise.catch === 'function') {
-          playPromise.then(fadeIn).catch(() => {
-            if (music.dataset.fallbackSrc && music.src.indexOf('mountain-king.mp3') === -1) {
-              music.src = music.dataset.fallbackSrc;
-              music.load();
-              const retryPromise = music.play();
-              if (retryPromise && typeof retryPromise.then === 'function') retryPromise.then(fadeIn).catch(() => {});
-            }
-          });
-        } else {
-          fadeIn();
-        }
-      };
-      if (music.readyState >= 2) tryPlay();
-      else {
-        music.addEventListener('canplaythrough', tryPlay, { once: true });
-        music.load();
-      }
+    function playKick(time, gainBoost = 1) {
+      if (!musicEnabled || volumeLevel <= 0) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      const osc = ctxAudio.createOscillator();
+      const gain = ctxAudio.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(140, time);
+      osc.frequency.exponentialRampToValueAtTime(42, time + 0.18);
+      gain.gain.setValueAtTime((volumeLevel / 100) * 0.08 * gainBoost, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.18);
+      osc.connect(gain);
+      gain.connect(ctxAudio.destination);
+      osc.start(time);
+      osc.stop(time + 0.18);
     }
 
-    function stopMusicLoop(resetTime = false) {
-      stopMusicAudio(resetTime);
+    function playNoiseHit(time, duration = 0.08, gainBoost = 0.45) {
+      if (!musicEnabled || volumeLevel <= 0) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      const buffer = ctxAudio.createBuffer(1, ctxAudio.sampleRate * duration, ctxAudio.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+      const source = ctxAudio.createBufferSource();
+      const filter = ctxAudio.createBiquadFilter();
+      const gain = ctxAudio.createGain();
+      source.buffer = buffer;
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(1600, time);
+      gain.gain.setValueAtTime((volumeLevel / 100) * 0.05 * gainBoost, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctxAudio.destination);
+      source.start(time);
+    }
+
+    function playMusicNote(freq, time, duration, type = 'triangle', gainBoost = 0.22) {
+      if (!musicEnabled || volumeLevel <= 0) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      const osc = ctxAudio.createOscillator();
+      const gain = ctxAudio.createGain();
+      const filter = ctxAudio.createBiquadFilter();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, time);
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(type === 'sawtooth' ? 1800 : 1200, time);
+      gain.gain.setValueAtTime((volumeLevel / 100) * 0.028 * gainBoost, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctxAudio.destination);
+      osc.start(time);
+      osc.stop(time + duration);
+    }
+
+    function musicIntensity() {
+      const waveBoost = Math.min(1.8, state ? state.wave / 6 : 0.5);
+      const minigunBoost = state && state.minigunActiveUntil > performance.now() ? 0.9 : 0;
+      return 0.75 + waveBoost + minigunBoost;
+    }
+
+    function scheduleMusicBar() {
+      if (!musicEnabled || !soundOn) return;
+      const ctxAudio = ensureAudio();
+      if (!ctxAudio) return;
+      if (ctxAudio.state === 'suspended') ctxAudio.resume();
+      const now = ctxAudio.currentTime + 0.02;
+      const intensity = musicIntensity();
+      const root = state ? 156 + Math.min(10, state.wave * 0.4) : 156;
+      const stepDur = 0.19;
+      const mountainKingPhrase = [0, 2, 3, 5, 6, 3, 6, 5, 2, 5, 3, 2, 0, 2, 3, -2];
+      const bassOffsets = [0, 0, -5, -5, -6, -6, -5, -5, -7, -7, -5, -5, -8, -8, -7, -7];
+      const accents = [1, 0.18, 0.22, 0.26, 0.62, 0.18, 0.52, 0.34, 0.2, 0.5, 0.28, 0.2, 0.14, 0.18, 0.24, 0.65];
+
+      for (let i = 0; i < 16; i++) {
+        const stepTime = now + i * stepDur;
+        const note = mountainKingPhrase[(musicStep + i) % mountainKingPhrase.length];
+        const bass = bassOffsets[(musicStep + i) % bassOffsets.length];
+        const accent = accents[(musicStep + i) % accents.length];
+        const melodyFreq = root * Math.pow(2, note / 12);
+        const bassFreq = (root * 0.5) * Math.pow(2, bass / 12);
+        playMusicNote(bassFreq, stepTime, stepDur * 0.92, 'sawtooth', 0.6 * intensity);
+        playMusicNote(melodyFreq, stepTime, stepDur * 0.42, 'square', (0.42 + accent * 0.24) * intensity);
+        if (accent > 0.45) playMusicNote(melodyFreq * 2, stepTime, stepDur * 0.16, 'triangle', 0.12 * intensity);
+        if (i % 4 === 0) playKick(stepTime, (1.1 + accent * 0.35) * intensity);
+        if (i % 2 === 1) playNoiseHit(stepTime, 0.035, (0.12 + accent * 0.12) * intensity);
+      }
+      musicStep = (musicStep + 16) % mountainKingPhrase.length;
+    }
+
+    function startMusicLoop() {
+      if (musicTimer || !musicEnabled) return;
+      musicStep = 0;
+      scheduleMusicBar();
+      musicTimer = setInterval(() => {
+        if (!document.hidden && !state?.paused && !state?.gameOver) scheduleMusicBar();
+      }, 3040);
+    }
+
+    function stopMusicLoop() {
+      if (!musicTimer) return;
+      clearInterval(musicTimer);
+      musicTimer = null;
     }
 
     function refreshMusicState() {
-      if (!musicEnabled || !soundOn || document.hidden || state?.paused || state?.gameOver) {
-        stopMusicLoop(false);
-        return;
-      }
-      startMusicLoop();
+      stopMusicLoop();
+      if (musicEnabled && soundOn) startMusicLoop();
     }
 
     function applyDisplaySettings() {
@@ -1100,11 +801,8 @@
 
     function applyControlsMode() {
       const touchRow = document.querySelector('.touch-row');
-      const desktopWebMode = window.matchMedia('(pointer:fine)').matches;
       touchRow.style.display = controlsMode === 'buttons' ? 'flex' : '';
       touchRow.style.opacity = controlsMode === 'buttons' ? '1' : '';
-      if (minigunBtn) minigunBtn.style.display = desktopWebMode ? 'none' : '';
-      if (floatingMinigunBtn) floatingMinigunBtn.style.display = '';
     }
 
     function controlSummary() {
@@ -1154,7 +852,7 @@
       return `
         <div class="message settings-page">
           <h2>Squad Shop</h2>
-          <p>Top up coins, claim channel rewards, and juice the next run. Your premium pass next prize is <strong>${currentPassReward().title}</strong>.</p>
+          <p>Top up coins, claim channel rewards, and juice the next run.</p>
           <div class="settings-grid">
             <div class="settings-card" style="background:linear-gradient(135deg, rgba(245,158,11,.18), rgba(15,23,42,.96));">
               <h4>🪙 Coin Wallet</h4>
@@ -1207,16 +905,6 @@
           <h2>Character Enhancement</h2>
           <p>Use this panel for powerups, costumes, and the gun log.</p>
           <ul class="panel-list">${gunLogItems().map(item => `<li>${item}</li>`).join('')}</ul>
-          <div class="goal-stack">
-            <div class="goal-card">
-              <h4>Next weapon feeling</h4>
-              <p>${weaponProfile(Math.min(12, state.firepower + 1)).feed} is waiting on your next power jump.</p>
-            </div>
-            <div class="goal-card">
-              <h4>Pass prize on deck</h4>
-              <p><strong>${currentPassReward().title}</strong>, ${rewardSummary(currentPassReward().grant) || currentPassReward().detail}.</p>
-            </div>
-          </div>
           <p class="mini-note">Next upgrade unlocks a wider shot spread and stronger wall damage.</p>
           <button onclick="window.closeOverlayAndResume()">Close</button>
         </div>`;
@@ -1311,22 +999,14 @@
             <div class="settings-card">
               <h4>Volume</h4>
               <div class="panel-row">
-                <span>Shooting + SFX</span>
-                <input id="volumeRange" type="range" min="0" max="100" value="${volumeLevel}">
+                <span>Master Audio</span>
+                <input id="volumeRange" type="range" min="0" max="200" value="${volumeLevel}">
                 <strong id="volumeValue">${volumeLevel}%</strong>
               </div>
               <div class="volume-bar-shell">
-                <div class="volume-bar-fill" id="volumeBarFill" style="width:${Math.min(volumeLevel, 100)}%"></div>
+                <div class="volume-bar-fill" id="volumeBarFill" style="width:${Math.min(volumeLevel, 200) / 2}%"></div>
               </div>
-              <div class="panel-row" style="margin-top:14px;">
-                <span>Background Music</span>
-                <input id="musicVolumeRange" type="range" min="0" max="100" value="${musicVolumeLevel}">
-                <strong id="musicVolumeValue">${musicVolumeLevel}%</strong>
-              </div>
-              <div class="volume-bar-shell">
-                <div class="volume-bar-fill" id="musicVolumeBarFill" style="width:${Math.min(musicVolumeLevel, 100)}%"></div>
-              </div>
-              <p class="mini-note">Music is full volume by default, shooting is set to half volume by default.</p>
+              <p class="mini-note">This now controls real game sound. It can go above 100% for extra punch.</p>
               <button id="testAudioBtn" class="warn" style="width:auto;">Test Volume</button>
             </div>
             <div class="settings-card">
@@ -1369,9 +1049,6 @@
       const volumeRange = document.getElementById('volumeRange');
       const volumeValue = document.getElementById('volumeValue');
       const volumeBarFill = document.getElementById('volumeBarFill');
-      const musicVolumeRange = document.getElementById('musicVolumeRange');
-      const musicVolumeValue = document.getElementById('musicVolumeValue');
-      const musicVolumeBarFill = document.getElementById('musicVolumeBarFill');
       const brightnessRange = document.getElementById('brightnessRange');
       const brightnessValue = document.getElementById('brightnessValue');
       const controlsModeBtn = document.getElementById('controlsModeBtn');
@@ -1383,15 +1060,7 @@
       volumeRange.addEventListener('input', () => {
         volumeLevel = Number(volumeRange.value);
         volumeValue.textContent = `${volumeLevel}%`;
-        volumeBarFill.style.width = `${Math.min(volumeLevel, 100)}%`;
-        saveMeta();
-      });
-
-      musicVolumeRange.addEventListener('input', () => {
-        musicVolumeLevel = Number(musicVolumeRange.value);
-        musicVolumeValue.textContent = `${musicVolumeLevel}%`;
-        musicVolumeBarFill.style.width = `${Math.min(musicVolumeLevel, 100)}%`;
-        updateMusicVolume();
+        volumeBarFill.style.width = `${Math.min(volumeLevel, 200) / 2}%`;
         saveMeta();
       });
 
@@ -1426,49 +1095,13 @@
       });
 
       testAudioBtn.addEventListener('click', () => {
-        stopMusicLoop(false);
         playTone(660, 0.08, 'square', 1.6);
         setTimeout(() => playTone(880, 0.1, 'sawtooth', 1.4), 70);
-        const music = ensureMusicAudio();
-        if (music) {
-          updateMusicVolume();
-          try { music.currentTime = MUSIC_START_OFFSET; } catch (_) {}
-          const playPromise = music.play();
-          if (playPromise && typeof playPromise.catch === 'function') playPromise.catch(() => {});
-          setTimeout(() => refreshMusicState(), 1200);
-        }
+        scheduleMusicBar();
       });
     }
 
-    function syncMissionHud() {
-      if (!missionHud) return;
-      const mission = activeMission();
-      const clamped = Math.max(0, Math.min(mission.target, missionProgress));
-      const pct = Math.max(0, Math.min(100, (clamped / mission.target) * 100));
-      missionTitle.textContent = mission.label;
-      missionRewardTag.textContent = '+10 coins + 12 XP';
-      missionProgressFill.style.width = `${pct}%`;
-      missionProgressText.textContent = `${clamped} / ${mission.target}`;
-      const remain = Math.max(0, mission.target - clamped);
-      missionNextText.textContent = remain === 0 ? 'Reward ready' : `${remain} to mission clear`;
-      missionHud.classList.toggle('next-goal', remain <= Math.max(2, Math.ceil(mission.target * 0.2)));
-    }
-
-    function syncSeasonHud(reason = 'Keep the streak alive') {
-      if (!seasonHud) return;
-      const reward = currentPassReward();
-      const need = passXpForLevel(passLevel);
-      const clamped = Math.max(0, Math.min(need, passXp));
-      const pct = Math.max(0, Math.min(100, (clamped / need) * 100));
-      seasonLevelTag.textContent = `Lv. ${passLevel}`;
-      seasonRewardTitle.textContent = reward.title;
-      seasonRewardText.textContent = reward.detail;
-      seasonProgressFill.style.width = `${pct}%`;
-      seasonProgressText.textContent = `${clamped} / ${need} XP`;
-      const remain = Math.max(0, need - clamped);
-      seasonNextText.textContent = remain === 0 ? 'Prize ready' : `${remain} XP left, ${reason}`;
-      seasonHud.classList.toggle('hot', remain <= Math.max(10, Math.ceil(need * 0.2)));
-    }
+    function syncMissionHud() {}
 
     function grantCoins(amount) {
       state.coins += amount;
@@ -1482,13 +1115,12 @@
       missionProgress += amount;
       if (missionProgress >= mission.target) {
         grantCoins(10);
-        addPassXp(12, 'mission clear on deck');
         missionIndex += 1;
         missionProgress = 0;
         missionPopup = {
           title: 'Mission Complete',
           label: mission.label,
-          reward: '10 coins + 12 pass XP',
+          reward: 10,
           button: 'Continue',
           rect: null
         };
@@ -1501,40 +1133,17 @@
 
     function showTitleScreen() {
       state.paused = true;
-      pauseBtn.textContent = 'Resume';
-      overlay.classList.add('hero-mode');
       overlay.innerHTML = `
-        <div class="message hero-card">
+        <div class="message">
           <h1>Zombie Squad Run</h1>
           <p>Run with your squad, shoot the right lane, smash walls before impact, and spend coins to upgrade your survival chances.</p>
-          <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best} &nbsp; <strong>Pass Lv.</strong> ${passLevel}</p>
-          <p class="mini-note">Next pass reward: <strong>${currentPassReward().title}</strong>, ${rewardSummary(currentPassReward().grant) || currentPassReward().detail}.</p>
-          <p class="mini-note">Build: Beta V1.0, includes "In the Hall of the Mountain King" background music.</p>
-          <div class="overlay-actions two-up">
-            <button onclick="window.startZombieRun()">Start Run</button>
-            <button class="secondary" onclick="window.openSettingsPanel()">Settings</button>
-          </div>
-        </div>`;
-    }
-
-    function showPauseOverlay() {
-      state.paused = true;
-      pauseBtn.textContent = 'Resume';
-      overlay.classList.add('hero-mode');
-      overlay.innerHTML = `
-        <div class="message hero-card">
-          <h2>Paused</h2>
-          <p>Take a breather, then jump back in when you're ready.</p>
-          <div class="overlay-actions two-up">
-            <button onclick="window.closeOverlayAndResume()">Unpause</button>
-            <button class="secondary" onclick="window.restartZombieRun()">Restart Run</button>
-          </div>
-          <button class="secondary" onclick="window.showTitleScreen()">Title Screen</button>
+          <p><strong>Coins:</strong> ${bankCoins} &nbsp; <strong>Best Distance:</strong> ${best}</p>
+          <p class="mini-note">Build: Beta V1.0</p>
+          <button onclick="window.startZombieRun()">Start Run</button>
         </div>`;
     }
 
     function applyScenePreset(scene) {
-      overlay.classList.remove('hero-mode');
       overlay.innerHTML = '';
       state.running = true;
       state.gameOver = false;
@@ -1640,24 +1249,17 @@
     const sceneMode = params.get('scene');
 
     function resetGame() {
-      const unlockedRewards = PASS_REWARDS.slice(0, Math.max(0, passLevel - 1));
-      const bonusRevives = unlockedRewards.reduce((sum, reward) => sum + (reward.grant.runRevives || 0), 0);
-      const bonusSquad = unlockedRewards.reduce((sum, reward) => sum + (reward.grant.startSquad || 0), 0);
-      const bonusFirepower = unlockedRewards.reduce((sum, reward) => sum + (reward.grant.startFirepower || 0), 0);
       state = {
-        squad: 8 + bonusSquad, firepower: 1 + bonusFirepower, distance: 0, wave: 1, speed: 190,
+        squad: 8, firepower: 1, distance: 0, wave: 1, speed: 190,
         bullets: [], objects: [], particles: [], spawnTimer: 0, running: true, paused: true, gameOver: false,
-        lastTime: performance.now(), coins: 0, revives: 1 + bonusRevives, usedRevive: false, distanceCoinsTick: 0,
-        minigunCharge: 100, minigunActiveUntil: 0, lastMinigunBurst: 0, bossWarningUntil: 0, nextGroanAt: 0,
-        minigunWindupUntil: 0, overdriveUntil: 0, overdriveFlashUntil: 0, upgradeFlashUntil: 0, rewardPulseUntil: 0,
-        weaponTierPulseUntil: 0, lastWeaponTier: 1, combatFeed: '', combatFeedUntil: 0
+        lastTime: performance.now(), coins: 0, revives: 1, usedRevive: false, distanceCoinsTick: 0,
+        minigunCharge: 100, minigunActiveUntil: 0, lastMinigunBurst: 0, bossWarningUntil: 0, nextGroanAt: 0
       };
       crowdCache = null;
       bankCoins = 0;
       localStorage.setItem('zombie-squad-run-coins', '0');
       syncHud();
       syncMissionHud();
-      syncSeasonHud();
       if (sceneMode) {
         applyScenePreset(sceneMode);
       } else {
@@ -1683,42 +1285,18 @@
       syncShopButtons();
       if (state.distance > best) { best = Math.floor(state.distance); bestStat.textContent = best; saveMeta(); }
       syncMissionHud();
-      syncSeasonHud();
     }
 
     function addCoins(n) { state.coins += n; bankCoins = state.coins; saveMeta(); updateMission('coins', n); }
 
     function weaponProfile(powerLevel) {
-      if (powerLevel <= 2) return { tier: 1, name: 'Rifle', color: '#fde047', core: '#fff8c5', size: 5, trail: '#fef08a', shape: 'round', muzzle: '#fff7ae', ring: '#facc15', damage: 0.92 + Math.max(0, powerLevel - 1) * 0.07, spread: 0, pierce: 0, splash: 0, chain: 0, speed: 0, cadence: 1, impactSize: 1, feed: 'Precision rifle fire' };
-      if (powerLevel <= 4) return { tier: 2, name: 'Pulse', color: '#38bdf8', core: '#e0f2fe', size: 5.5, trail: '#7dd3fc', shape: 'pulse', muzzle: '#a5f3fc', ring: '#38bdf8', damage: 1.02 + (powerLevel - 3) * 0.07, spread: 12, pierce: 0, splash: 0, chain: 0, speed: 20, cadence: 1.06, impactSize: 1.08, feed: 'Pulse bursts online' };
-      if (powerLevel <= 6) return { tier: 3, name: 'Scatter', color: '#22c55e', core: '#dcfce7', size: 5.8, trail: '#86efac', shape: 'scatter', muzzle: '#bbf7d0', ring: '#16a34a', damage: 0.9 + (powerLevel - 5) * 0.07, spread: 26, pierce: 0, splash: 0, chain: 0, speed: 12, cadence: 1.12, impactSize: 1.15, feed: 'Scatter spread unlocked' };
-      if (powerLevel <= 8) return { tier: 4, name: 'Plasma', color: '#a78bfa', core: '#f3e8ff', size: 6.5, trail: '#c4b5fd', shape: 'plasma', muzzle: '#ddd6fe', ring: '#8b5cf6', damage: 1.16 + (powerLevel - 7) * 0.09, spread: 18, pierce: 0, splash: 26 + (powerLevel - 7) * 5, chain: 0, speed: 32, cadence: 1.02, impactSize: 1.32, feed: 'Plasma bloom armed' };
-      if (powerLevel <= 10) return { tier: 5, name: 'Rail', color: '#fb7185', core: '#ffe4e6', size: 6.8, trail: '#fda4af', shape: 'laser', muzzle: '#fecdd3', ring: '#e11d48', damage: 1.34 + (powerLevel - 9) * 0.12, spread: 8, pierce: 2, splash: 0, chain: 0, speed: 120, cadence: 0.96, impactSize: 1.12, feed: 'Rail pierce active' };
-      if (powerLevel <= 11) return { tier: 6, name: 'Storm', color: '#06b6d4', core: '#cffafe', size: 7.4, trail: '#67e8f9', shape: 'arc', muzzle: '#a5f3fc', ring: '#0891b2', damage: 1.7, spread: 16, pierce: 1, splash: 18, chain: 2, speed: 110, cadence: 1.1, impactSize: 1.28, feed: 'Storm chains ready' };
-      return { tier: 7, name: 'Apocalypse Minigun', color: '#f59e0b', core: '#fffbeb', size: 8.2, trail: '#fdba74', shape: 'minigun', muzzle: '#fed7aa', ring: '#ea580c', damage: 2.05, spread: 18, pierce: 2, splash: 22, chain: 1, speed: 150, cadence: 1.16, impactSize: 1.4, feed: 'Hero overdrive loaded' };
-    }
-
-    function setCombatFeed(message, duration = 1100) {
-      state.combatFeed = message;
-      state.combatFeedUntil = performance.now() + duration;
-    }
-
-    function triggerUpgradeCelebration(message) {
-      const now = performance.now();
-      state.upgradeFlashUntil = now + 700;
-      state.rewardPulseUntil = now + 850;
-      setCombatFeed(message, 1500);
-      addScreenShake(7, 0.09);
-    }
-
-    function triggerTierShift(profile) {
-      const now = performance.now();
-      state.weaponTierPulseUntil = now + 1350;
-      state.rewardPulseUntil = now + 1050;
-      setCombatFeed(`${profile.name} online`, 1700);
-      playTone(720, 0.05, 'triangle', 0.7);
-      playTone(960, 0.06, 'triangle', 0.5);
-      addScreenShake(8, 0.1);
+      if (powerLevel <= 2) return { name: 'Rifle', color: '#fde047', core: '#fff8c5', size: 5, trail: '#fef08a', shape: 'round', muzzle: '#fff7ae', ring: '#facc15', damage: 0.92 + Math.max(0, powerLevel - 1) * 0.07, spread: 0, pierce: 0, splash: 0, chain: 0, speed: 0 };
+      if (powerLevel <= 4) return { name: 'Pulse', color: '#38bdf8', core: '#e0f2fe', size: 5.5, trail: '#7dd3fc', shape: 'pulse', muzzle: '#a5f3fc', ring: '#38bdf8', damage: 1.02 + (powerLevel - 3) * 0.07, spread: 12, pierce: 0, splash: 0, chain: 0, speed: 20 };
+      if (powerLevel <= 6) return { name: 'Scatter', color: '#22c55e', core: '#dcfce7', size: 5.8, trail: '#86efac', shape: 'scatter', muzzle: '#bbf7d0', ring: '#16a34a', damage: 0.9 + (powerLevel - 5) * 0.07, spread: 26, pierce: 0, splash: 0, chain: 0, speed: 12 };
+      if (powerLevel <= 8) return { name: 'Plasma', color: '#a78bfa', core: '#f3e8ff', size: 6.5, trail: '#c4b5fd', shape: 'plasma', muzzle: '#ddd6fe', ring: '#8b5cf6', damage: 1.16 + (powerLevel - 7) * 0.09, spread: 18, pierce: 0, splash: 26 + (powerLevel - 7) * 5, chain: 0, speed: 32 };
+      if (powerLevel <= 10) return { name: 'Rail', color: '#fb7185', core: '#ffe4e6', size: 6.8, trail: '#fda4af', shape: 'laser', muzzle: '#fecdd3', ring: '#e11d48', damage: 1.34 + (powerLevel - 9) * 0.12, spread: 12, pierce: 1, splash: 0, chain: 0, speed: 92 };
+      if (powerLevel <= 11) return { name: 'Storm', color: '#06b6d4', core: '#cffafe', size: 7.4, trail: '#67e8f9', shape: 'arc', muzzle: '#a5f3fc', ring: '#0891b2', damage: 1.7, spread: 16, pierce: 1, splash: 18, chain: 1, speed: 110 };
+      return { name: 'Apocalypse Minigun', color: '#f59e0b', core: '#fffbeb', size: 8.2, trail: '#fdba74', shape: 'minigun', muzzle: '#fed7aa', ring: '#ea580c', damage: 2, spread: 22, pierce: 2, splash: 18, chain: 1, speed: 145 };
     }
 
     function applySplashDamage(cx, cy, radius, damage, ring, color) {
@@ -1731,7 +1309,6 @@
         if (dist <= radius) {
           const falloff = Math.max(0.35, 1 - dist / Math.max(radius, 1));
           obj.hp -= damage * falloff;
-          markObjectHit(obj, { style: 'plasma', x: cx });
           state.particles.push({ x: obj.x, y: obj.y, life: 0.16, color: color || '#fff', ring: ring || '#fff', size: 10 + radius * 0.12 });
           if (obj.hp <= 0) handleDestroyed(obj);
         }
@@ -1769,13 +1346,10 @@
       const requestedCount = state.firepower + powerBoost;
       const perfTier = squadPerfTier();
       const crowdSafeMode = true;
+      const bulletCap = perfTier >= 3 ? 1 : perfTier >= 1 ? 2 : mobileSafeMode ? 2 : 3;
+      const bulletCount = Math.max(1, Math.min(requestedCount, bulletCap));
       const effectivePower = state.firepower + powerBoost;
       const profile = weaponProfile(effectivePower);
-      const bulletCap = perfTier >= 3 ? 1 : perfTier >= 1 ? 2 : mobileSafeMode ? 2 : 3;
-      const baseCount = Math.max(1, Math.min(requestedCount, bulletCap));
-      const bulletCount = profile.shape === 'scatter' && perfTier <= 1 ? Math.min(baseCount + 1, mobileSafeMode ? 2 : 3) : baseCount;
-      const cadenceBoost = profile.cadence || 1;
-      const overdriveBoost = state.overdriveUntil > performance.now() ? 1.16 : 1;
       for (let i = 0; i < bulletCount; i++) {
         const spreadBase = bulletCount > 1 ? (i - (bulletCount - 1) / 2) : 0;
         const drift = spreadBase * profile.spread * (crowdSafeMode ? 0.85 : 1);
@@ -1783,8 +1357,8 @@
           lane: laneIndex,
           x: laneX + spreadBase * (crowdSafeMode ? 14 : 10),
           y: 600,
-          speed: (560 + speedBoost + profile.speed) * cadenceBoost,
-          damage: (profile.damage + powerBoost * 0.16) * (requestedCount / bulletCount) * overdriveBoost,
+          speed: 560 + speedBoost + profile.speed,
+          damage: (profile.damage + powerBoost * 0.16) * (requestedCount / bulletCount),
           glow: powerBoost > 0 || effectivePower >= 4,
           style: profile.shape,
           color: profile.color,
@@ -1797,13 +1371,11 @@
           splash: crowdSafeMode ? Math.max(0, profile.splash * 0.8) : profile.splash,
           pierce: profile.pierce,
           chain: crowdSafeMode ? Math.min(profile.chain, 1) : profile.chain,
-          hits: 0,
-          impactScale: profile.impactSize || 1
+          hits: 0
         });
       }
-      const muzzleBoost = state.overdriveUntil > performance.now() ? 1.18 : 1;
-      if (perfTier <= 2) state.particles.push({ x: laneX, y: 602, life: perfTier >= 1 ? 0.075 : 0.09, color: profile.muzzle, ring: perfTier >= 2 ? null : profile.ring, burst: perfTier <= 1 || profile.shape === 'minigun', size: ((14 + effectivePower * 1.5) * muzzleScale * muzzleBoost) * (perfTier >= 1 ? 0.78 : 1) });
-      if (perfTier <= 1) pushMuzzleFlash(laneX + 16, 603, profile.muzzle, profile.shape === 'minigun' ? 0.11 : 0.09, ((12 + effectivePower * 1.7) * muzzleScale * muzzleBoost) * (perfTier >= 1 ? 0.78 : 1));
+      if (perfTier <= 2) state.particles.push({ x: laneX, y: 602, life: perfTier >= 1 ? 0.075 : 0.09, color: profile.muzzle, ring: perfTier >= 2 ? null : profile.ring, burst: perfTier <= 1, size: ((14 + effectivePower * 1.5) * muzzleScale) * (perfTier >= 1 ? 0.78 : 1) });
+      if (perfTier <= 1) pushMuzzleFlash(laneX + 16, 603, profile.muzzle, 0.09, ((12 + effectivePower * 1.7) * muzzleScale) * (perfTier >= 1 ? 0.78 : 1));
       if (perfTier === 0) pushShell(laneX + 6, 606, profile.ring || '#fbbf24');
       trimRuntimeLoad();
     }
@@ -1811,16 +1383,6 @@
     function addScreenShake(amount = 8, flash = 0.08) {
       screenShake = Math.max(screenShake, amount);
       hitFlash = Math.max(hitFlash, flash);
-    }
-
-    function markObjectHit(obj, bullet) {
-      if (!obj) return;
-      const now = performance.now();
-      obj.hitUntil = now + (obj.type === 'boss' ? 180 : obj.type === 'wall' ? 120 : 150);
-      obj.hitFlash = Math.min(1.25, (obj.hitFlash || 0) + (bullet?.style === 'plasma' ? 0.55 : 0.34));
-      const pushBase = obj.type === 'boss' ? 5 : obj.type === 'wall' ? 3 : obj.type === 'runner' ? 7 : 5;
-      obj.hitOffsetX = (obj.hitOffsetX || 0) + ((bullet?.x || obj.x) < obj.x ? 1 : -1) * pushBase;
-      obj.hitOffsetY = (obj.hitOffsetY || 0) + (obj.type === 'wall' ? 0.5 : 1.4);
     }
 
     function squadPerfTier() {
@@ -1911,15 +1473,9 @@
       }
       const nowMs = performance.now();
       state.minigunCharge = 0;
-      state.minigunWindupUntil = nowMs + 260;
-      state.minigunActiveUntil = nowMs + 3200;
-      state.overdriveUntil = nowMs + 3600;
-      state.overdriveFlashUntil = nowMs + 1150;
+      state.minigunActiveUntil = nowMs + 2600;
       state.lastMinigunBurst = nowMs - 120;
-      setCombatFeed('MINIGUN OVERDRIVE', 1900);
       playTone(140, 0.22, 'sawtooth', 2);
-      playTone(220, 0.12, 'square', 1.25);
-      addScreenShake(16, 0.14);
 
       for (const obj of state.objects) {
         if (obj.type === 'zombie' || obj.type === 'wall') {
@@ -1928,17 +1484,12 @@
           if (obj.hp <= 0) handleDestroyed(obj);
         }
       }
-      let objectWrite = 0;
-      for (let i = 0; i < state.objects.length; i++) {
-        const obj = state.objects[i];
-        if (obj.hp > 0 && obj.y < 740) state.objects[objectWrite++] = obj;
-      }
-      state.objects.length = objectWrite;
+      state.objects = state.objects.filter(o => o.hp > 0 && o.y < 740);
 
       for (let lane = 0; lane < LANES.length; lane++) {
-        fireAtLane(lane, 4, 260, { silent: true, noVibrate: true, muzzleScale: 1.4 });
+        fireAtLane(lane, 4, 260, { silent: true, noVibrate: true, muzzleScale: 1.1 });
       }
-      flashMinigunButton('Overdrive');
+      flashMinigunButton('Firing');
       syncHud();
     }
 
@@ -1951,11 +1502,10 @@
       screenShake = Math.max(0, screenShake - dt * 26);
       hitFlash = Math.max(0, hitFlash - dt * 1.8);
       const nowMs = performance.now();
-      if (state.combatFeedUntil && nowMs > state.combatFeedUntil) state.combatFeed = '';
-      if (state.minigunActiveUntil > nowMs && nowMs >= (state.minigunWindupUntil || 0)) {
-        if (nowMs - state.lastMinigunBurst > 76) {
+      if (state.minigunActiveUntil > nowMs) {
+        if (nowMs - state.lastMinigunBurst > 90) {
           for (let lane = 0; lane < LANES.length; lane++) {
-            fireAtLane(lane, 4, 290, { silent: true, noVibrate: true, muzzleScale: 0.86 });
+            fireAtLane(lane, 4, 260, { silent: true, noVibrate: true, muzzleScale: 0.65 });
           }
           state.lastMinigunBurst = nowMs;
           playTone(150 + rand(0, 40), 0.05, 'sawtooth', 0.55);
@@ -1988,42 +1538,23 @@
         const spawnFloor = perfTier >= 2 ? 0.72 : mobileSafeMode ? 0.78 : 0.66;
         state.spawnTimer = Math.max(spawnFloor, 1.22 - state.wave * 0.024 + earlyGrace + (bossWave ? 0.06 : 0));
       }
-      let bulletWrite = 0;
-      for (let i = 0; i < state.bullets.length; i++) {
-        const bullet = state.bullets[i];
+      for (const bullet of state.bullets) {
         bullet.y -= bullet.speed * dt;
         bullet.x += (bullet.drift || 0) * dt;
-        if (bullet.y > -30 && bullet.x > -40 && bullet.x < canvas.width + 40) {
-          state.bullets[bulletWrite++] = bullet;
-        }
       }
-      state.bullets.length = bulletWrite;
-      for (const obj of state.objects) {
-        obj.y += state.speed * (obj.speedFactor || 1) * dt;
-        obj.hitOffsetX = (obj.hitOffsetX || 0) * Math.max(0, 1 - dt * 18);
-        obj.hitOffsetY = (obj.hitOffsetY || 0) * Math.max(0, 1 - dt * 16);
-        obj.hitFlash = (obj.hitFlash || 0) * Math.max(0, 1 - dt * 10);
-      }
-      laneObjectBuckets[0].length = 0;
-      laneObjectBuckets[1].length = 0;
-      laneObjectBuckets[2].length = 0;
-      for (let i = 0; i < state.objects.length; i++) {
-        const obj = state.objects[i];
-        if (obj.hp > 0 && obj.lane != null && laneObjectBuckets[obj.lane]) laneObjectBuckets[obj.lane].push(obj);
-      }
+      state.bullets = state.bullets.filter(b => b.y > -30 && b.x > -40 && b.x < canvas.width + 40);
+      for (const obj of state.objects) obj.y += state.speed * (obj.speedFactor || 1) * dt;
       const collisionStride = state.bullets.length > (mobileSafeMode ? 18 : 36) ? 2 : 1;
       for (let bulletIndex = 0; bulletIndex < state.bullets.length; bulletIndex += collisionStride) {
         const bullet = state.bullets[bulletIndex];
         if (!bullet) continue;
-        const collisionTargets = bullet.lane != null && laneObjectBuckets[bullet.lane] ? laneObjectBuckets[bullet.lane] : state.objects;
-        for (let targetIndex = 0; targetIndex < collisionTargets.length; targetIndex++) {
-          const obj = collisionTargets[targetIndex];
+        for (const obj of state.objects) {
           if (obj.hp <= 0) continue;
+          if (obj.lane != null && bullet.lane != null && obj.lane !== bullet.lane) continue;
           if (Math.abs(bullet.x - obj.x) < obj.size * 0.55 && Math.abs(bullet.y - obj.y) < obj.size * 0.55) {
             obj.hp -= bullet.damage || 1;
-            markObjectHit(obj, bullet);
             addScreenShake(bullet.style === 'minigun' ? 4 : bullet.style === 'plasma' ? 6 : 3, bullet.style === 'plasma' ? 0.08 : 0.04);
-            state.particles.push({ x: obj.x, y: obj.y, life: 0.18, color: bullet.glow ? bullet.color || '#fde68a' : '#f8fafc', ring: bullet.ring || '#ffffff', size: (bullet.radius || 5) * 2.2 * (bullet.impactScale || 1), burst: bullet.style === 'arc' || bullet.style === 'plasma' || bullet.style === 'minigun' });
+            state.particles.push({ x: obj.x, y: obj.y, life: 0.18, color: bullet.glow ? bullet.color || '#fde68a' : '#f8fafc', ring: bullet.ring || '#ffffff', size: (bullet.radius || 5) * 2.2, burst: bullet.style === 'arc' || bullet.style === 'plasma' });
             if (bullet.splash) applySplashDamage(obj.x, obj.y, bullet.splash, (bullet.damage || 1) * 0.55, bullet.ring, bullet.color);
             if (bullet.chain) applyChainDamage(obj, bullet.chain, bullet.damage || 1, bullet.ring, bullet.color);
             bullet.hits = (bullet.hits || 0) + 1;
@@ -2035,51 +1566,22 @@
           }
         }
       }
-      bulletWrite = 0;
-      for (let i = 0; i < state.bullets.length; i++) {
-        const bullet = state.bullets[i];
-        if (bullet.y > -20) state.bullets[bulletWrite++] = bullet;
-      }
-      state.bullets.length = bulletWrite;
+      state.bullets = state.bullets.filter(b => b.y > -20);
+      for (const particle of state.particles) particle.life -= dt;
       const particleCap = mobileSafeMode ? 18 : 28;
-      let particleWrite = 0;
-      for (let i = 0; i < state.particles.length; i++) {
-        const particle = state.particles[i];
-        particle.life -= dt;
-        if (particle.life > 0) state.particles[particleWrite++] = particle;
-      }
-      if (particleWrite > particleCap) {
-        state.particles.copyWithin(0, particleWrite - particleCap, particleWrite);
-        particleWrite = particleCap;
-      }
-      state.particles.length = particleWrite;
-      let decalWrite = 0;
-      for (let i = 0; i < impactDecals.length; i++) {
-        const decal = impactDecals[i];
-        decal.life -= dt;
-        if (decal.life > 0) impactDecals[decalWrite++] = decal;
-      }
-      impactDecals.length = decalWrite;
-
-      let shellWrite = 0;
-      for (let i = 0; i < shellCasings.length; i++) {
-        const shell = shellCasings[i];
+      state.particles = state.particles.filter(p => p.life > 0).slice(-particleCap);
+      for (const decal of impactDecals) decal.life -= dt;
+      while (impactDecals.length && impactDecals[0].life <= 0) impactDecals.shift();
+      for (const shell of shellCasings) {
         shell.life -= dt;
         shell.x += shell.vx * dt;
         shell.y += shell.vy * dt;
         shell.vy += 180 * dt;
         shell.rot += shell.spin * dt;
-        if (shell.life > 0) shellCasings[shellWrite++] = shell;
       }
-      shellCasings.length = shellWrite;
-
-      let flashWrite = 0;
-      for (let i = 0; i < muzzleFlashes.length; i++) {
-        const flash = muzzleFlashes[i];
-        flash.life -= dt;
-        if (flash.life > 0) muzzleFlashes[flashWrite++] = flash;
-      }
-      muzzleFlashes.length = flashWrite;
+      while (shellCasings.length && shellCasings[0].life <= 0) shellCasings.shift();
+      for (const flash of muzzleFlashes) flash.life -= dt;
+      while (muzzleFlashes.length && muzzleFlashes[0].life <= 0) muzzleFlashes.shift();
       for (const obj of state.objects) {
         if (obj.y >= 570) {
           if (obj.type === 'wall' && obj.hp > 0) state.squad -= obj.hp;
@@ -2094,12 +1596,7 @@
           obj.hp = 0;
         }
       }
-      let objectWrite = 0;
-      for (let i = 0; i < state.objects.length; i++) {
-        const obj = state.objects[i];
-        if (obj.hp > 0 && obj.y < 740) state.objects[objectWrite++] = obj;
-      }
-      state.objects.length = objectWrite;
+      state.objects = state.objects.filter(o => o.hp > 0 && o.y < 740);
       if (state.squad <= 0) maybeReviveOrEnd();
       syncHud();
     }
@@ -2137,77 +1634,16 @@
       else if (obj.type === 'boss') {
         const squadGain = obj.reward + 3;
         state.squad += squadGain; addCoins(obj.reward + 6); updateMission('survivors', squadGain); playTone(110, 0.26, 'sawtooth', 2.1); addScreenShake(16, 0.18); bossWave = false;
-        state.rewardPulseUntil = performance.now() + 1600;
-        state.overdriveUntil = Math.max(state.overdriveUntil || 0, performance.now() + 1600);
-        setCombatFeed('BOSS SHATTERED', 1800);
         pushDecal(obj.x, obj.y + 28, '#450a0a', 32, 5.2, 8);
         pushDecal(obj.x - 18, obj.y + 22, '#7f1d1d', 18, 4.1, 4);
         pushDecal(obj.x + 20, obj.y + 26, '#7f1d1d', 18, 4.1, 4);
       }
       else if (obj.type === 'crate') {
-        const previousProfile = weaponProfile(state.firepower);
         state.firepower = Math.min(12, state.firepower + obj.reward); playTone(540, 0.1, 'triangle', 1.2);
-        const upgradedProfile = weaponProfile(state.firepower);
-        triggerUpgradeCelebration(`FIREPOWER UP, ${upgradedProfile.name}`);
-        if (upgradedProfile.tier > previousProfile.tier) triggerTierShift(upgradedProfile);
         pushDecal(obj.x, obj.y + 12, '#7f1d1d', 16, 3, 4);
       }
       else if (obj.type === 'coin') { addCoins(obj.reward); playTone(1100, 0.08, 'triangle', 1.3); }
       else if (obj.type === 'wall') { updateMission('walls', 1); playTone(180, 0.16, 'square', 1.6); pushDecal(obj.x, obj.y + 26, '#78350f', 22, 2.8, 2); }
-    }
-
-    function buildRunSummary() {
-      const distance = Math.floor(state.distance);
-      const coinsEarned = state.coins;
-      const nextMission = activeMission();
-      const nextMissionRemain = Math.max(0, nextMission.target - missionProgress);
-      const distanceGoal = nextDistanceGoal(distance);
-      const distanceGap = Math.max(0, distanceGoal - distance);
-      const passNeed = Math.max(0, passXpForLevel(passLevel) - passXp);
-      const recommended = state.firepower <= state.wave ? 'Boost firepower before the next boss lane.' : state.squad <= 10 ? 'Buy more squad members for safer wall hits.' : state.revives === 0 ? 'Grab a revive so one mistake does not end the run.' : 'You are close, keep chaining survivor rescues.';
-      return `
-        <div class="message hero-card">
-          <h2>Run Summary</h2>
-          <p><strong>${distance}</strong> distance, <strong>${coinsEarned}</strong> coins banked, wave <strong>${state.wave}</strong>.</p>
-          <div class="settings-grid" style="margin-top:14px;">
-            <div class="settings-card">
-              <h4>Rewards</h4>
-              <p>Run bank: <strong>${coinsEarned} coins</strong></p>
-              <p>Best distance: <strong>${best}</strong></p>
-              <p class="mini-note">Mission progress saved for the next run.</p>
-            </div>
-            <div class="settings-card">
-              <h4>Next Goal</h4>
-              <p><strong>${nextMission.label}</strong></p>
-              <p>${nextMissionRemain} more for another 10-coin reward.</p>
-              <p class="mini-note">Distance target: ${distanceGap === 0 ? 'new personal pace unlocked' : `${distanceGap} more to hit ${distanceGoal}`}</p>
-            </div>
-            <div class="settings-card">
-              <h4>Premium Pass</h4>
-              <p><strong>${currentPassReward().title}</strong></p>
-              <p>${passNeed} XP more for ${rewardSummary(currentPassReward().grant) || currentPassReward().detail}.</p>
-              <p class="mini-note">Missions and long runs feed this bar fast.</p>
-            </div>
-            <div class="settings-card">
-              <h4>Next Run Plan</h4>
-              <div class="goal-stack" style="margin-top:0;">
-                <div class="goal-card">
-                  <h4>Fast target</h4>
-                  <p>Reach wave <strong>${state.wave + 1}</strong> and hit <strong>${distanceGoal}</strong> distance.</p>
-                </div>
-                <div class="goal-card">
-                  <h4>Spend smart</h4>
-                  <p>${recommended}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <p class="mini-note">Tiny steps stack up. Every mission clear moves your next prize closer.</p>
-          <div class="overlay-actions two-up">
-            <button onclick="window.restartZombieRun()">Play Again</button>
-            <button class="secondary" onclick="window.openMoneyPanel()">Spend Coins</button>
-          </div>
-        </div>`;
     }
 
     function maybeReviveOrEnd() {
@@ -2227,39 +1663,23 @@
       endGame();
     }
 
-    function awardRunProgress() {
-      const distanceXp = Math.min(18, Math.floor(state.distance / 120));
-      const waveXp = Math.min(12, Math.max(0, state.wave - 1) * 2);
-      const squadXp = state.squad >= 18 ? 4 : 0;
-      const totalXp = distanceXp + waveXp + squadXp + 6;
-      totalRuns += 1;
-      addPassXp(totalXp, 'run summary boost');
-      return totalXp;
-    }
-
     function endGame() {
       state.gameOver = true;
       state.running = false;
-      const runXp = awardRunProgress();
-      rewardPopup = null;
-      rewardQueue = [];
       bankCoins = state.coins; saveMeta();
-      overlay.classList.add('hero-mode');
-      overlay.innerHTML = buildRunSummary().replace('</h2>', `</h2><p class="mini-note">Run bonus: <strong>+${runXp} pass XP</strong>.</p>`);
+      overlay.innerHTML = `
+        <div class="message">
+          <h2>Run Over</h2>
+          <p>Distance: <strong>${Math.floor(state.distance)}</strong> | Coins: <strong>${state.coins}</strong></p>
+          <p>Upgrade firepower, grow your squad, and save your revive for a brutal wall hit.</p>
+          <button onclick="window.mockRewardedReviveOffer()">Mock Rewarded Revive Offer</button>
+          <button onclick="window.restartZombieRun()">Play Again</button>
+        </div>`;
       syncHud();
     }
 
     let roadLayerCache = null;
     let roadLayerCacheKey = '';
-    let sceneOverlayCache = null;
-    let sceneOverlayCacheKey = '';
-    let hudOverlayCache = null;
-    let hudOverlayCacheKey = '';
-    let heatHazeCache = null;
-    let heatHazeCacheKey = '';
-    let frameLaneThreats = null;
-    let muzzleFlashSpriteCache = new Map();
-    let particleBloomSpriteCache = new Map();
 
     function drawRoad() {
       ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -2299,10 +1719,6 @@
         rctx.fillStyle = 'rgba(241,245,249,0.9)';
         rctx.beginPath();
         rctx.arc(canvas.width - 110, 110, 26, 0, Math.PI * 2);
-        rctx.fill();
-        rctx.fillStyle = 'rgba(255,255,255,0.1)';
-        rctx.beginPath();
-        rctx.ellipse(canvas.width - 118, 102, 8, 3, -0.35, 0, Math.PI * 2);
         rctx.fill();
         roadLayerCache = offscreen;
         roadLayerCacheKey = roadCacheKey;
@@ -2373,17 +1789,6 @@
           ctx.fillRect(x + w * 0.56, y + h * 0.42, Math.max(7, w * 0.12), 5 + ((i + 1) % 2) * 2);
         }
         ctx.fillStyle = 'rgba(15,23,42,0.48)';
-      }
-
-      if (!lowPowerMobileMode || state.squad < 70) {
-        ctx.fillStyle = 'rgba(255,255,255,0.035)';
-        ctx.beginPath();
-        ctx.moveTo(0, 210);
-        ctx.lineTo(canvas.width, 178);
-        ctx.lineTo(canvas.width, 192);
-        ctx.lineTo(0, 226);
-        ctx.closePath();
-        ctx.fill();
       }
 
       for (let i=0;i<3;i++) {
@@ -2587,44 +1992,24 @@
 
     function drawDepthFog() {
       if (lowPowerMobileMode && state.squad > 60) return;
-      const cacheKey = `${canvas.width}x${canvas.height}:fog`;
-      if (!sceneOverlayCache || sceneOverlayCacheKey !== cacheKey) {
-        const offscreen = document.createElement('canvas');
-        offscreen.width = canvas.width;
-        offscreen.height = canvas.height;
-        const octx = offscreen.getContext('2d');
-        const fog = octx.createLinearGradient(0, 0, 0, canvas.height);
-        fog.addColorStop(0, 'rgba(148,163,184,0.12)');
-        fog.addColorStop(0.42, 'rgba(30,41,59,0.04)');
-        fog.addColorStop(1, 'rgba(2,6,23,0.22)');
-        octx.fillStyle = fog;
-        octx.fillRect(0, 0, canvas.width, canvas.height);
-        sceneOverlayCache = offscreen;
-        sceneOverlayCacheKey = cacheKey;
-      }
-      ctx.drawImage(sceneOverlayCache, 0, 0);
+      const fog = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      fog.addColorStop(0, 'rgba(148,163,184,0.12)');
+      fog.addColorStop(0.42, 'rgba(30,41,59,0.04)');
+      fog.addColorStop(1, 'rgba(2,6,23,0.22)');
+      ctx.fillStyle = fog;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
     function drawHeatHaze() {
       if (lowPowerMobileMode && state.squad > 45) return;
-      const cacheKey = `${canvas.height}:heat-haze`;
-      if (!heatHazeCache || heatHazeCacheKey !== cacheKey) {
-        const offscreen = document.createElement('canvas');
-        offscreen.width = 84;
-        offscreen.height = 390;
-        const octx = offscreen.getContext('2d');
-        const haze = octx.createLinearGradient(42, 0, 42, 390);
+      for (let i = 0; i < 3; i++) {
+        const laneX = 170 + i * 240;
+        const haze = ctx.createLinearGradient(laneX, 250, laneX, 640);
         haze.addColorStop(0, 'rgba(255,255,255,0)');
         haze.addColorStop(0.45, 'rgba(255,255,255,0.025)');
         haze.addColorStop(1, 'rgba(248,113,113,0.04)');
-        octx.fillStyle = haze;
-        octx.fillRect(0, 0, 84, 390);
-        heatHazeCache = offscreen;
-        heatHazeCacheKey = cacheKey;
-      }
-      for (let i = 0; i < 3; i++) {
-        const laneX = 170 + i * 240;
-        ctx.drawImage(heatHazeCache, laneX - 42 + Math.sin(renderNow * 0.0018 + i) * 4, 250);
+        ctx.fillStyle = haze;
+        ctx.fillRect(laneX - 42 + Math.sin(renderNow * 0.0018 + i) * 4, 250, 84, 390);
       }
     }
 
@@ -2644,53 +2029,38 @@
       ctx.globalAlpha = 1;
     }
 
-    function getMuzzleFlashSprite(size, color) {
-      const key = `${Math.round(size)}:${color}`;
-      if (muzzleFlashSpriteCache.has(key)) return muzzleFlashSpriteCache.get(key);
-      const offscreen = document.createElement('canvas');
-      const dim = Math.max(32, Math.ceil(size * 3));
-      offscreen.width = dim;
-      offscreen.height = dim;
-      const octx = offscreen.getContext('2d');
-      const cx = dim / 2;
-      const cy = dim / 2;
-      const bloom = octx.createRadialGradient(cx, cy, 1, cx, cy, size * 1.35);
-      bloom.addColorStop(0, 'rgba(255,255,255,0.34)');
-      bloom.addColorStop(0.45, color);
-      bloom.addColorStop(1, 'rgba(255,255,255,0)');
-      octx.fillStyle = bloom;
-      octx.beginPath();
-      octx.arc(cx, cy, size * 1.1, 0, Math.PI * 2);
-      octx.fill();
-      octx.fillStyle = color;
-      octx.beginPath();
-      octx.moveTo(cx, cy);
-      octx.lineTo(cx + size * 1.15, cy - size * 0.42);
-      octx.lineTo(cx + size * 1.45, cy);
-      octx.lineTo(cx + size * 1.15, cy + size * 0.42);
-      octx.closePath();
-      octx.fill();
-      octx.fillStyle = 'rgba(255,255,255,0.75)';
-      octx.beginPath();
-      octx.moveTo(cx, cy);
-      octx.lineTo(cx + size * 0.74, cy - size * 0.18);
-      octx.lineTo(cx + size * 0.94, cy);
-      octx.lineTo(cx + size * 0.74, cy + size * 0.18);
-      octx.closePath();
-      octx.fill();
-      muzzleFlashSpriteCache.set(key, offscreen);
-      return offscreen;
-    }
-
     function drawMuzzleFlashes() {
       if (lowPowerMobileMode && state.squad > 55) return;
       for (const flash of muzzleFlashes) {
         const a = Math.max(0, flash.life / flash.maxLife);
-        const pulse = 1 + Math.sin(renderNow * 0.03 + flash.seed) * 0.12;
-        const sprite = getMuzzleFlashSprite(flash.size * pulse, flash.color);
         ctx.save();
         ctx.globalAlpha = a;
-        ctx.drawImage(sprite, flash.x - sprite.width / 2, flash.y - sprite.height / 2);
+        ctx.translate(flash.x, flash.y);
+        const pulse = 1 + Math.sin(renderNow * 0.03 + flash.seed) * 0.12;
+        const bloom = ctx.createRadialGradient(0, 0, 1, 0, 0, flash.size * 1.35);
+        bloom.addColorStop(0, 'rgba(255,255,255,0.34)');
+        bloom.addColorStop(0.45, flash.color);
+        bloom.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = bloom;
+        ctx.beginPath();
+        ctx.arc(0, 0, flash.size * 1.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = flash.color;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(8 * pulse, -flash.size * 0.42);
+        ctx.lineTo(flash.size * 1.15, 0);
+        ctx.lineTo(8 * pulse, flash.size * 0.42);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(flash.size * 0.55, -flash.size * 0.18);
+        ctx.lineTo(flash.size * 0.74, 0);
+        ctx.lineTo(flash.size * 0.55, flash.size * 0.18);
+        ctx.closePath();
+        ctx.fill();
         ctx.restore();
       }
       ctx.globalAlpha = 1;
@@ -2925,11 +2295,6 @@
       ctx.beginPath();
       ctx.ellipse(x - head * 0.28, y - 12.5 * scale, head * 0.22, head * 0.38, -0.5, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-      ctx.lineWidth = Math.max(0.7, 0.9 * scale);
-      ctx.beginPath();
-      ctx.arc(x, y - 10 * scale, head * 0.94, 0, Math.PI * 2);
-      ctx.stroke();
 
       const bodyGrad = ctx.createLinearGradient(x - bodyW / 2, y - 2 * scale, x + bodyW / 2, y + bodyH);
       bodyGrad.addColorStop(0, variant === 'boss' ? '#7c3aed' : variant === 'shield' ? '#94a3b8' : '#4b5563');
@@ -3118,8 +2483,6 @@
       ctx.beginPath();
       ctx.arc(x, y + 1 * scale, 3.2 * scale, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = 'rgba(250,204,21,0.16)';
-      ctx.fillRect(x - 20 * scale, y + 2 * scale, 40 * scale, 4 * scale);
       ctx.strokeStyle = 'rgba(120,53,15,0.42)';
       ctx.lineWidth = 1.2 * scale;
       ctx.strokeRect(x - 20 * scale, y - 6 * scale, 40 * scale, 26 * scale);
@@ -3327,11 +2690,6 @@
     function drawObjects() {
       const perfTier = squadPerfTier();
       for (const obj of state.objects) {
-        const hitPulse = Math.max(0, obj.hitFlash || 0);
-        const hitJoltX = obj.hitOffsetX || 0;
-        const hitJoltY = obj.hitOffsetY || 0;
-        ctx.save();
-        ctx.translate(hitJoltX, hitJoltY);
         if (obj.type === 'zombie') {
           drawObjectGroundShadow(obj, 15, 5.5);
           drawZombie(obj.x, obj.y, 1.04, 1, 'zombie');
@@ -3375,9 +2733,6 @@
             ctx.beginPath();
             ctx.arc(obj.x, obj.y - 10, 92, 0, Math.PI * 2);
             ctx.fill();
-            ctx.strokeStyle = `rgba(244,114,182,${0.24 * bossPulse})`;
-            ctx.lineWidth = 2;
-            ctx.strokeRect(obj.x - 38, obj.y - 42, 76, 92);
           }
           drawZombie(obj.x, obj.y, 1.72 + Math.sin(renderNow * 0.01) * 0.03, 5, 'boss');
           const bossGlow = ctx.createRadialGradient(obj.x, obj.y - 18, 12, obj.x, obj.y - 10, 74);
@@ -3388,7 +2743,6 @@
           ctx.arc(obj.x, obj.y - 8, 76, 0, Math.PI * 2);
           ctx.fill();
           ctx.strokeStyle='#fda4ff'; ctx.lineWidth=5; ctx.strokeRect(obj.x - 46, obj.y - 52, 92, 104);
-          ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fillRect(obj.x - 38, obj.y - 34, 76, 3);
           ctx.fillStyle='rgba(15,23,42,.92)'; ctx.fillRect(obj.x - 52, obj.y - 78, 104, 14);
           ctx.fillStyle='#7f1d1d'; ctx.fillRect(obj.x - 50, obj.y - 76, 100, 10);
           ctx.fillStyle='#ef4444'; ctx.fillRect(obj.x - 50, obj.y - 76, 100 * Math.max(0, obj.hp / (18 + state.wave * 2)), 10);
@@ -3495,92 +2849,71 @@
           ctx.beginPath(); ctx.ellipse(obj.x - 5, obj.y - 6, 6, 3.5, -0.35, 0, Math.PI * 2); ctx.fill();
           ctx.fillStyle = '#78350f'; ctx.font='bold 18px system-ui'; ctx.textAlign='center'; ctx.fillText('$',obj.x,obj.y+6);
         }
-        if (hitPulse > 0.04 && perfTier <= 1 && obj.type !== 'coin') {
-          ctx.globalAlpha = Math.min(0.24, hitPulse * 0.3);
-          ctx.fillStyle = obj.type === 'wall' ? '#fff1f2' : '#ffffff';
-          ctx.beginPath();
-          ctx.arc(obj.x, obj.y, (obj.size || 26) * (obj.type === 'boss' ? 1.05 : 0.8), 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-        }
-        ctx.restore();
       }
     }
 
     function drawBullets() {
       const perfTier = squadPerfTier();
-      const heavyLoad = perfTier >= 2 || (mobileSafeMode && state.bullets.length > 90);
-      const bulletStride = heavyLoad ? (perfTier >= 3 ? 3 : 2) : 1;
-      ctx.lineWidth = 1.4;
-      for (let i = 0; i < state.bullets.length; i += bulletStride) {
-        const bullet = state.bullets[i];
+      const bulletsToDraw = (perfTier >= 2 || (mobileSafeMode && state.bullets.length > 90)) ? state.bullets.filter((_, i) => i % (perfTier >= 3 ? 3 : 2) === 0) : state.bullets;
+      for (const bullet of bulletsToDraw) {
         ctx.save();
-        if (!heavyLoad) {
-          ctx.shadowColor = bullet.trail || bullet.color || '#facc15';
-          ctx.shadowBlur = bullet.glow ? 22 : 12;
-        } else {
-          ctx.shadowBlur = 0;
-        }
+        ctx.shadowColor = bullet.trail || bullet.color || '#facc15';
+        ctx.shadowBlur = perfTier >= 2 ? (bullet.glow ? 10 : 6) : bullet.glow ? 22 : 12;
         ctx.fillStyle = bullet.color || COLORS.bullet;
         ctx.strokeStyle = bullet.core || '#fff';
+        ctx.lineWidth = 1.4;
 
         if (bullet.style === 'laser') {
           ctx.fillRect(bullet.x - 2, bullet.y - 14, 4, 18);
-          if (!heavyLoad) ctx.strokeRect(bullet.x - 1, bullet.y - 10, 2, 10);
+          ctx.strokeRect(bullet.x - 1, bullet.y - 10, 2, 10);
         } else if (bullet.style === 'plasma') {
           ctx.beginPath();
           ctx.arc(bullet.x, bullet.y, bullet.radius || 6, 0, Math.PI * 2);
           ctx.fill();
-          if (!heavyLoad) {
-            ctx.beginPath();
-            ctx.arc(bullet.x, bullet.y, (bullet.radius || 6) * 0.55, 0, Math.PI * 2);
-            ctx.stroke();
-          }
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, (bullet.radius || 6) * 0.55, 0, Math.PI * 2);
+          ctx.stroke();
         } else if (bullet.style === 'pulse') {
           ctx.beginPath();
           ctx.ellipse(bullet.x, bullet.y, (bullet.radius || 5.5) + 2, bullet.radius || 5.5, 0, 0, Math.PI * 2);
           ctx.fill();
-          if (!heavyLoad) {
-            ctx.beginPath();
-            ctx.arc(bullet.x, bullet.y, (bullet.radius || 5.5) + 4, 0, Math.PI * 2);
-            ctx.globalAlpha = 0.22;
-            ctx.stroke();
-            ctx.globalAlpha = 1;
-          }
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, (bullet.radius || 5.5) + 4, 0, Math.PI * 2);
+          ctx.globalAlpha = 0.22;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
         } else if (bullet.style === 'scatter') {
           ctx.save();
           ctx.translate(bullet.x, bullet.y);
           ctx.rotate((bullet.drift || 0) * 0.01);
           ctx.fillRect(-3, -10, 6, 16);
-          if (!heavyLoad) ctx.strokeRect(-1.4, -7, 2.8, 8);
+          ctx.strokeRect(-1.4, -7, 2.8, 8);
           ctx.restore();
         } else if (bullet.style === 'arc') {
           ctx.beginPath();
           ctx.moveTo(bullet.x - 5, bullet.y + 6);
           ctx.quadraticCurveTo(bullet.x + 8, bullet.y, bullet.x - 1, bullet.y - 12);
           ctx.stroke();
-          if (!heavyLoad) {
-            ctx.beginPath();
-            ctx.arc(bullet.x, bullet.y, (bullet.radius || 6) * 0.65, 0, Math.PI * 2);
-            ctx.fill();
-          }
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, (bullet.radius || 6) * 0.65, 0, Math.PI * 2);
+          ctx.fill();
         } else if (bullet.style === 'minigun') {
           ctx.fillRect(bullet.x - 2.5, bullet.y - 12, 5, 14);
-          if (!heavyLoad) ctx.strokeRect(bullet.x - 1.2, bullet.y - 8, 2.4, 8);
+          ctx.strokeRect(bullet.x - 1.2, bullet.y - 8, 2.4, 8);
         } else {
           ctx.beginPath();
           ctx.arc(bullet.x, bullet.y, bullet.radius || 5, 0, Math.PI * 2);
           ctx.fill();
         }
 
-        if (!heavyLoad && perfTier <= 1) {
+        if (perfTier <= 1) {
           ctx.globalAlpha = 0.55;
           ctx.fillStyle = bullet.trail || '#fde68a';
           ctx.fillRect(bullet.x - 1.5, bullet.y + 4, 3, 12);
           ctx.globalAlpha = 0.2;
           ctx.fillRect(bullet.x - 4, bullet.y + 2, 8, 18);
         } else if (perfTier === 2) {
-          ctx.globalAlpha = 0.22;
+          ctx.globalAlpha = 0.28;
           ctx.fillStyle = bullet.trail || '#fde68a';
           ctx.fillRect(bullet.x - 1, bullet.y + 5, 2, 8);
         }
@@ -3596,49 +2929,27 @@
       ctx.fill();
     }
 
-    function getParticleBloomSprite(size, color) {
-      const key = `${Math.round(size)}:${color}`;
-      if (particleBloomSpriteCache.has(key)) return particleBloomSpriteCache.get(key);
-      const radius = Math.max(2, Math.ceil(size));
-      const dim = Math.max(16, radius * 4);
-      const offscreen = document.createElement('canvas');
-      offscreen.width = dim;
-      offscreen.height = dim;
-      const octx = offscreen.getContext('2d');
-      const cx = dim / 2;
-      const cy = dim / 2;
-      const bloom = octx.createRadialGradient(cx, cy, 0.5, cx, cy, radius);
-      bloom.addColorStop(0, 'rgba(255,255,255,0.22)');
-      bloom.addColorStop(0.4, color);
-      bloom.addColorStop(1, 'rgba(255,255,255,0)');
-      octx.fillStyle = bloom;
-      octx.beginPath();
-      octx.arc(cx, cy, radius, 0, Math.PI * 2);
-      octx.fill();
-      particleBloomSpriteCache.set(key, offscreen);
-      return offscreen;
-    }
-
     function drawParticles() {
       const perfTier = squadPerfTier();
-      const particleStride = ((perfTier >= 2 || mobileSafeMode || (lowPowerMobileMode && state.squad > 45)) && state.particles.length > (perfTier >= 2 ? 10 : 20))
-        ? (perfTier >= 3 ? 3 : 2)
-        : 1;
-      for (let i = 0; i < state.particles.length; i += particleStride) {
-        const particle = state.particles[i];
+      const particlesToDraw = (perfTier >= 2 || mobileSafeMode || (lowPowerMobileMode && state.squad > 45)) && state.particles.length > (perfTier >= 2 ? 10 : 20)
+        ? state.particles.filter((_, i) => i % (perfTier >= 3 ? 3 : 2) === 0)
+        : state.particles;
+      for (const particle of particlesToDraw) {
         const alpha = Math.max(0, particle.life / 0.18);
         const size = particle.size || 8;
-        const renderSize = size * particle.life / 0.18;
         ctx.globalAlpha = alpha;
         if (perfTier <= 1) {
-          const sprite = getParticleBloomSprite(renderSize, particle.color);
-          ctx.drawImage(sprite, particle.x - sprite.width / 2, particle.y - sprite.height / 2);
+          const bloom = ctx.createRadialGradient(particle.x, particle.y, 0.5, particle.x, particle.y, Math.max(2, size * particle.life / 0.18));
+          bloom.addColorStop(0, 'rgba(255,255,255,0.22)');
+          bloom.addColorStop(0.4, particle.color);
+          bloom.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = bloom;
         } else {
           ctx.fillStyle = particle.color;
-          ctx.beginPath();
-          ctx.arc(particle.x, particle.y, renderSize, 0, Math.PI * 2);
-          ctx.fill();
         }
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, size * particle.life / 0.18, 0, Math.PI * 2);
+        ctx.fill();
         if (particle.ring) {
           ctx.strokeStyle = particle.ring;
           ctx.lineWidth = 2;
@@ -3674,8 +2985,6 @@
 
       ctx.fillStyle = 'rgba(2,6,23,0.38)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'rgba(255,255,255,0.025)';
-      ctx.fillRect(cardX - 32, cardY - 32, cardW + 64, 2);
       const glow = ctx.createRadialGradient(cardX + cardW / 2, cardY + 30, 20, cardX + cardW / 2, cardY + 60, 220);
       glow.addColorStop(0, 'rgba(250,204,21,0.18)');
       glow.addColorStop(1, 'rgba(250,204,21,0)');
@@ -3689,25 +2998,20 @@
       ctx.beginPath();
       ctx.roundRect(cardX, cardY, cardW, cardH, 26);
       ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.05)';
-      ctx.fillRect(cardX + 18, cardY + 18, cardW - 36, 3);
       ctx.strokeStyle = 'rgba(253,224,71,0.55)';
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      ctx.shadowColor = 'rgba(250,204,21,0.2)';
-      ctx.shadowBlur = 10;
       ctx.fillStyle = '#fde68a';
       ctx.font = 'bold 32px system-ui';
       ctx.textAlign = 'center';
       ctx.fillText(missionPopup.title, cardX + cardW / 2, cardY + 56);
-      ctx.shadowBlur = 0;
       ctx.fillStyle = '#e2e8f0';
       ctx.font = 'bold 22px system-ui';
       ctx.fillText(missionPopup.label, cardX + cardW / 2, cardY + 98);
       ctx.fillStyle = '#fef3c7';
       ctx.font = '18px system-ui';
-      ctx.fillText(`${missionPopup.reward}`, cardX + cardW / 2, cardY + 128);
+      ctx.fillText(`+${missionPopup.reward} coins earned`, cardX + cardW / 2, cardY + 128);
 
       const buttonGrad = ctx.createLinearGradient(buttonX, buttonY, buttonX, buttonY + buttonH);
       buttonGrad.addColorStop(0, '#facc15');
@@ -3724,61 +3028,6 @@
       ctx.fillStyle = '#111827';
       ctx.font = 'bold 24px system-ui';
       ctx.fillText(missionPopup.button, buttonX + buttonW / 2, buttonY + 33);
-      ctx.fillStyle = 'rgba(255,255,255,0.14)';
-      ctx.fillRect(buttonX + 18, buttonY + 38, buttonW - 36, 2);
-    }
-
-    function drawRewardPopup() {
-      if (!rewardPopup) return;
-      const cardW = Math.min(430, canvas.width - 44);
-      const cardH = 244;
-      const cardX = (canvas.width - cardW) / 2;
-      const cardY = canvas.height * 0.18;
-      const buttonW = Math.min(180, cardW - 56);
-      const buttonH = 44;
-      const buttonX = cardX + (cardW - buttonW) / 2;
-      const buttonY = cardY + cardH - 64;
-      rewardPopup.rect = { x: buttonX, y: buttonY, w: buttonW, h: buttonH };
-
-      ctx.save();
-      ctx.fillStyle = 'rgba(2,6,23,0.62)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      const glow = ctx.createRadialGradient(cardX + cardW / 2, cardY + 66, 18, cardX + cardW / 2, cardY + 66, 220);
-      glow.addColorStop(0, 'rgba(250,204,21,0.26)');
-      glow.addColorStop(1, 'rgba(250,204,21,0)');
-      ctx.fillStyle = glow;
-      ctx.fillRect(cardX - 40, cardY - 40, cardW + 80, cardH + 80);
-      ctx.fillStyle = 'rgba(15,23,42,0.97)';
-      ctx.beginPath();
-      ctx.roundRect(cardX, cardY, cardW, cardH, 26);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(250,204,21,0.42)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.font = '54px system-ui';
-      ctx.fillText(rewardPopup.icon || '🎉', cardX + cardW / 2, cardY + 54);
-      ctx.font = '900 26px system-ui';
-      ctx.fillStyle = '#f8fafc';
-      ctx.fillText(rewardPopup.title, cardX + cardW / 2, cardY + 102);
-      ctx.font = '800 20px system-ui';
-      ctx.fillStyle = '#fde68a';
-      ctx.fillText(rewardPopup.label, cardX + cardW / 2, cardY + 136);
-      ctx.font = '15px system-ui';
-      ctx.fillStyle = '#cbd5e1';
-      ctx.fillText(rewardPopup.reward, cardX + cardW / 2, cardY + 168);
-      const buttonGrad = ctx.createLinearGradient(buttonX, buttonY, buttonX, buttonY + buttonH);
-      buttonGrad.addColorStop(0, '#fde047');
-      buttonGrad.addColorStop(1, '#f59e0b');
-      ctx.fillStyle = buttonGrad;
-      ctx.beginPath();
-      ctx.roundRect(buttonX, buttonY, buttonW, buttonH, 999);
-      ctx.fill();
-      ctx.fillStyle = '#111827';
-      ctx.font = '900 18px system-ui';
-      ctx.fillText(rewardPopup.button, buttonX + buttonW / 2, buttonY + buttonH / 2 + 1);
-      ctx.restore();
     }
 
     function getLaneThreats() {
@@ -3797,8 +3046,9 @@
       return threats;
     }
 
-    function updateLaneButtonThreats(threats = frameLaneThreats || getLaneThreats()) {
+    function updateLaneButtonThreats() {
       const laneButtons = [laneLeftBtn, laneCenterBtn, laneRightBtn];
+      const threats = getLaneThreats();
       laneButtons.forEach((btn, index) => {
         if (!btn) return;
         const danger = threats[index]?.danger || 0;
@@ -3806,23 +3056,14 @@
       });
     }
 
-    function drawLaneWarnings(threats = frameLaneThreats || getLaneThreats()) {
+    function drawLaneWarnings() {
+      const threats = getLaneThreats();
       const perfTier = squadPerfTier();
       for (const threat of threats) {
         if (!threat.obj || threat.danger < 0.18) continue;
         const pulse = 0.72 + Math.sin(renderNow * 0.01 + threat.lane * 1.8) * 0.2;
         const alpha = Math.min(0.7, threat.danger * (perfTier >= 2 ? 0.42 : 0.58)) * pulse;
         const color = threat.obj.type === 'boss' ? `rgba(239,68,68,${alpha})` : threat.obj.type === 'wall' ? `rgba(251,146,60,${alpha})` : `rgba(248,113,113,${alpha})`;
-        const glowColor = threat.obj.type === 'boss'
-          ? `rgba(239,68,68,${Math.min(alpha * 0.26, 0.18)})`
-          : threat.obj.type === 'wall'
-            ? `rgba(251,146,60,${Math.min(alpha * 0.24, 0.16)})`
-            : `rgba(248,113,113,${Math.min(alpha * 0.22, 0.14)})`;
-        const laneGlow = ctx.createLinearGradient(threat.x, 180, threat.x, 610);
-        laneGlow.addColorStop(0, glowColor);
-        laneGlow.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = laneGlow;
-        ctx.fillRect(threat.x - 34, 170, 68, 420);
         ctx.fillStyle = color;
         ctx.beginPath();
         ctx.moveTo(threat.x, 542);
@@ -3839,75 +3080,47 @@
       }
     }
 
-    function drawHint(laneThreats = frameLaneThreats || getLaneThreats()) {
-      const cacheKey = `${canvas.width}x${canvas.height}:hud-base`;
-      if (!hudOverlayCache || hudOverlayCacheKey !== cacheKey) {
-        const offscreen = document.createElement('canvas');
-        offscreen.width = canvas.width;
-        offscreen.height = canvas.height;
-        const octx = offscreen.getContext('2d');
-        const titleGlow = octx.createLinearGradient(86, 6, canvas.width - 86, 56);
-        titleGlow.addColorStop(0, 'rgba(59,130,246,.18)');
-        titleGlow.addColorStop(1, 'rgba(236,72,153,.14)');
-        octx.fillStyle = titleGlow; octx.fillRect(82,4,canvas.width - 164,52);
-        octx.fillStyle = 'rgba(255,255,255,0.04)';
-        octx.fillRect(82, 4, canvas.width - 164, 3);
-        const gloss = octx.createLinearGradient(86, 8, 86, 28);
-        gloss.addColorStop(0, 'rgba(255,255,255,0.16)');
-        gloss.addColorStop(1, 'rgba(255,255,255,0)');
-        const titleGrad = octx.createLinearGradient(86, 8, canvas.width - 86, 56);
-        titleGrad.addColorStop(0, 'rgba(15,23,42,.94)');
-        titleGrad.addColorStop(1, 'rgba(30,64,175,.72)');
-        octx.fillStyle = titleGrad; octx.fillRect(86,8,canvas.width - 172,46);
-        octx.fillStyle = gloss; octx.fillRect(90,10,canvas.width - 180,12);
-        octx.fillStyle = 'rgba(255,255,255,0.05)'; octx.fillRect(96, 42, canvas.width - 192, 2);
-        octx.strokeStyle = 'rgba(148,163,184,.22)'; octx.lineWidth = 1.5; octx.strokeRect(86,8,canvas.width - 172,46);
-        octx.shadowColor = 'rgba(96,165,250,0.18)';
-        octx.shadowBlur = 10;
-        octx.fillStyle='#e5e7eb'; octx.font='bold 24px system-ui'; octx.textAlign='center'; octx.fillText('Zombie Squad Run',canvas.width / 2,39);
-        octx.shadowBlur = 0;
-        octx.fillStyle='rgba(251,191,36,0.9)'; octx.font='bold 11px system-ui'; octx.fillText('BETA V1.0', canvas.width / 2, 53);
-        octx.fillStyle='rgba(255,255,255,0.05)'; octx.fillRect(canvas.width / 2 - 48, 56, 96, 1.5);
-        const minigunGlow = octx.createLinearGradient(canvas.width - 176, 20, canvas.width - 30, 84);
-        minigunGlow.addColorStop(0, 'rgba(127,29,29,0.92)');
-        minigunGlow.addColorStop(1, 'rgba(30,41,59,0.88)');
-        octx.fillStyle=minigunGlow; octx.fillRect(canvas.width - 176, 20, 146, 64);
-        octx.fillStyle='rgba(255,255,255,0.04)'; octx.fillRect(canvas.width - 170, 54, 134, 2);
-        octx.fillStyle='rgba(255,255,255,0.12)'; octx.fillRect(canvas.width - 172, 24, 138, 14);
-        octx.strokeStyle = 'rgba(239,68,68,.28)'; octx.strokeRect(canvas.width - 176, 20, 146, 64);
-        octx.fillStyle='#fecaca'; octx.font='bold 14px system-ui'; octx.fillText('MINIGUN', canvas.width - 158, 44);
-        octx.fillStyle='rgba(255,255,255,.12)'; octx.fillRect(canvas.width - 158, 76, 116, 8);
-        hudOverlayCache = offscreen;
-        hudOverlayCacheKey = cacheKey;
-      }
-      ctx.drawImage(hudOverlayCache, 0, 0);
-      const minigunWindup = (state.minigunWindupUntil || 0) > renderNow;
-      const minigunLive = state.minigunActiveUntil > renderNow && !minigunWindup;
-      const overdriveGlow = state.overdriveFlashUntil > renderNow ? 0.55 + Math.sin(renderNow * 0.03) * 0.16 : 0;
-      if (overdriveGlow > 0.02) {
-        const overdriveAura = ctx.createRadialGradient(canvas.width - 103, 54, 12, canvas.width - 103, 54, 78);
-        overdriveAura.addColorStop(0, `rgba(251,191,36,${Math.max(0, overdriveGlow)})`);
-        overdriveAura.addColorStop(0.55, `rgba(239,68,68,${Math.max(0, overdriveGlow * 0.45)})`);
-        overdriveAura.addColorStop(1, 'rgba(239,68,68,0)');
-        ctx.fillStyle = overdriveAura;
-        ctx.fillRect(canvas.width - 192, 0, 182, 124);
-      }
-      ctx.fillStyle=minigunLive ? '#fde68a' : state.minigunCharge >= 100 ? '#fca5a5' : '#fecaca'; ctx.font='bold 14px system-ui'; ctx.fillText(minigunLive ? 'OVERDRIVE' : minigunWindup ? 'SPIN-UP' : 'MINIGUN', canvas.width - 158, 44);
-      ctx.shadowColor = minigunLive ? 'rgba(251,191,36,0.45)' : state.minigunCharge >= 100 ? 'rgba(248,113,113,0.35)' : 'rgba(255,255,255,0.12)';
+    function drawHint() {
+      const titleGlow = ctx.createLinearGradient(86, 6, canvas.width - 86, 56);
+      titleGlow.addColorStop(0, 'rgba(59,130,246,.18)');
+      titleGlow.addColorStop(1, 'rgba(236,72,153,.14)');
+      ctx.fillStyle = titleGlow; ctx.fillRect(82,4,canvas.width - 164,52);
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.fillRect(82, 4, canvas.width - 164, 3);
+      const gloss = ctx.createLinearGradient(86, 8, 86, 28);
+      gloss.addColorStop(0, 'rgba(255,255,255,0.16)');
+      gloss.addColorStop(1, 'rgba(255,255,255,0)');
+      const titleGrad = ctx.createLinearGradient(86, 8, canvas.width - 86, 56);
+      titleGrad.addColorStop(0, 'rgba(15,23,42,.94)');
+      titleGrad.addColorStop(1, 'rgba(30,64,175,.72)');
+      ctx.fillStyle = titleGrad; ctx.fillRect(86,8,canvas.width - 172,46);
+      ctx.fillStyle = gloss; ctx.fillRect(90,10,canvas.width - 180,12);
+      ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fillRect(96, 42, canvas.width - 192, 2);
+      ctx.strokeStyle = 'rgba(148,163,184,.22)'; ctx.lineWidth = 1.5; ctx.strokeRect(86,8,canvas.width - 172,46);
+      ctx.shadowColor = 'rgba(96,165,250,0.18)';
       ctx.shadowBlur = 10;
-      ctx.fillStyle='#fff'; ctx.font='bold 24px system-ui'; ctx.fillText(minigunLive ? 'LIVE' : minigunWindup ? 'ARM' : `${Math.floor(state.minigunCharge)}%`, canvas.width - 158, 68);
+      ctx.fillStyle='#e5e7eb'; ctx.font='bold 24px system-ui'; ctx.textAlign='center'; ctx.fillText('Zombie Squad Run',canvas.width / 2,39);
       ctx.shadowBlur = 0;
-      const minigunBar = minigunLive ? (0.68 + Math.sin(renderNow * 0.025) * 0.18) : minigunWindup ? Math.max(0.18, (state.minigunWindupUntil - renderNow) / 260) : (state.minigunCharge / 100);
-      ctx.fillStyle=minigunLive ? '#facc15' : state.minigunCharge >= 100 ? '#ef4444' : '#f59e0b'; ctx.fillRect(canvas.width - 158, 76, 116 * Math.max(0, Math.min(1, minigunBar)), 8);
-      ctx.fillStyle='rgba(255,255,255,0.12)'; ctx.fillRect(canvas.width - 158, 76, 116 * Math.max(0, Math.min(1, minigunBar)), 2);
+      ctx.fillStyle='rgba(251,191,36,0.9)'; ctx.font='bold 11px system-ui'; ctx.fillText('BETA V1.0', canvas.width / 2, 53);
+      const minigunGlow = ctx.createLinearGradient(canvas.width - 176, 20, canvas.width - 30, 84);
+      minigunGlow.addColorStop(0, 'rgba(127,29,29,0.92)');
+      minigunGlow.addColorStop(1, 'rgba(30,41,59,0.88)');
+      ctx.fillStyle=minigunGlow; ctx.fillRect(canvas.width - 176, 20, 146, 64);
+      ctx.fillStyle='rgba(255,255,255,0.12)'; ctx.fillRect(canvas.width - 172, 24, 138, 14);
+      ctx.strokeStyle = 'rgba(239,68,68,.28)'; ctx.strokeRect(canvas.width - 176, 20, 146, 64);
+      ctx.fillStyle=state.minigunCharge >= 100 ? '#fca5a5' : '#fecaca'; ctx.font='bold 14px system-ui'; ctx.fillText('MINIGUN', canvas.width - 158, 44);
+      ctx.shadowColor = state.minigunCharge >= 100 ? 'rgba(248,113,113,0.35)' : 'rgba(255,255,255,0.12)';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle='#fff'; ctx.font='bold 24px system-ui'; ctx.fillText(`${Math.floor(state.minigunCharge)}%`, canvas.width - 158, 68);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle='rgba(255,255,255,.12)'; ctx.fillRect(canvas.width - 158, 76, 116, 8);
+      ctx.fillStyle=state.minigunCharge >= 100 ? '#ef4444' : '#f59e0b'; ctx.fillRect(canvas.width - 158, 76, 116 * (state.minigunCharge / 100), 8);
 
       if (state.bossWarningUntil > renderNow) {
         const remain = (state.bossWarningUntil - renderNow) / 1000;
         const pulse = 0.74 + Math.sin(renderNow * 0.02) * 0.18;
         ctx.fillStyle = `rgba(127,29,29,${0.72 * pulse})`;
         ctx.fillRect(canvas.width / 2 - 136, 64, 272, 32);
-        ctx.fillStyle = 'rgba(255,255,255,0.06)';
-        ctx.fillRect(canvas.width / 2 - 128, 69, 256, 4);
         ctx.strokeStyle = `rgba(248,113,113,${0.7 * pulse})`;
         ctx.strokeRect(canvas.width / 2 - 136, 64, 272, 32);
         ctx.fillStyle = '#fee2e2';
@@ -3915,22 +3128,11 @@
         ctx.fillText(remain > 0.9 ? 'BOSS WAVE INCOMING' : 'BOSS ENTERING NOW', canvas.width / 2, 86);
       }
 
-      updateLaneButtonThreats(laneThreats);
-      if (!lowPowerMobileMode || state.squad < 90) {
-        ctx.fillStyle = 'rgba(125,211,252,0.05)';
-        ctx.beginPath();
-        ctx.ellipse(canvas.width * 0.24, 118, 76, 22, -0.18, 0, Math.PI * 2);
-        ctx.ellipse(canvas.width * 0.76, 146, 96, 26, 0.12, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      const laneThreats = getLaneThreats();
+      updateLaneButtonThreats();
       const urgentThreat = laneThreats.reduce((best, threat) => threat.danger > best.danger ? threat : best, laneThreats[0]);
-      const wallThreat = laneThreats.find(threat => threat.obj?.type === 'wall' && threat.danger > 0.48);
       let statusText = controlsMode === 'buttons' ? 'Use lane buttons for quick shots' : 'Tap any lane to fire';
-      if (state.combatFeed && state.combatFeedUntil > renderNow) statusText = state.combatFeed;
-      if (wallThreat) {
-        const wallLane = wallThreat.lane === 0 ? 'LEFT' : wallThreat.lane === 1 ? 'CENTER' : 'RIGHT';
-        statusText = `BREAK ${wallLane} WALL`;
-      } else if (urgentThreat?.obj && urgentThreat.danger > 0.58) {
+      if (urgentThreat?.obj && urgentThreat.danger > 0.58) {
         const laneName = urgentThreat.lane === 0 ? 'LEFT' : urgentThreat.lane === 1 ? 'CENTER' : 'RIGHT';
         statusText = `${laneName} ${urgentThreat.obj.type === 'wall' ? 'WALL' : urgentThreat.obj.type.toUpperCase()} CLOSE`;
       } else if (state.minigunCharge >= 100) {
@@ -3956,25 +3158,14 @@
 
     function render() {
       renderNow = performance.now();
-      frameLaneThreats = getLaneThreats();
       ctx.save();
       if (screenShake > 0.1) {
         const dx = (Math.random() - 0.5) * screenShake;
         const dy = (Math.random() - 0.5) * screenShake;
         ctx.translate(dx, dy);
       }
-      drawRoad(); drawHeatHaze(); drawSquad(); drawObjects(); drawLaneWarnings(frameLaneThreats); drawMuzzleFlashes(); drawBullets(); drawShellCasings(); drawParticles(); drawDepthFog(); drawHint(frameLaneThreats);
-      if (state.weaponTierPulseUntil > renderNow) {
-        const tierAlpha = Math.max(0, (state.weaponTierPulseUntil - renderNow) / 1350);
-        const tierGlow = ctx.createRadialGradient(canvas.width / 2, canvas.height * 0.72, 12, canvas.width / 2, canvas.height * 0.72, canvas.width * 0.34);
-        tierGlow.addColorStop(0, `rgba(96,165,250,${tierAlpha * 0.14})`);
-        tierGlow.addColorStop(0.45, `rgba(168,85,247,${tierAlpha * 0.12})`);
-        tierGlow.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = tierGlow;
-        ctx.fillRect(0, canvas.height * 0.36, canvas.width, canvas.height * 0.54);
-      }
+      drawRoad(); drawHeatHaze(); drawSquad(); drawObjects(); drawLaneWarnings(); drawMuzzleFlashes(); drawBullets(); drawShellCasings(); drawParticles(); drawDepthFog(); drawHint();
       if (missionPopup) drawMissionPopup();
-      if (rewardPopup) drawRewardPopup();
       ctx.restore();
       if (hitFlash > 0.01) {
         ctx.fillStyle = `rgba(255,255,255,${Math.min(0.22, hitFlash)})`;
@@ -3982,22 +3173,9 @@
         ctx.fillStyle = `rgba(239,68,68,${Math.min(0.12, hitFlash * 0.7)})`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
-      if (state.rewardPulseUntil > renderNow) {
-        const rewardAlpha = Math.max(0, (state.rewardPulseUntil - renderNow) / 1600);
-        const rewardGlow = ctx.createRadialGradient(canvas.width / 2, canvas.height * 0.82, 18, canvas.width / 2, canvas.height * 0.82, canvas.width * 0.44);
-        rewardGlow.addColorStop(0, `rgba(250,204,21,${rewardAlpha * 0.13})`);
-        rewardGlow.addColorStop(0.6, `rgba(255,255,255,${rewardAlpha * 0.06})`);
-        rewardGlow.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = rewardGlow;
-        ctx.fillRect(0, canvas.height * 0.5, canvas.width, canvas.height * 0.5);
-      }
-      if (state.upgradeFlashUntil > renderNow) {
-        const flashAlpha = Math.max(0, (state.upgradeFlashUntil - renderNow) / 700);
-        ctx.fillStyle = `rgba(125,211,252,${flashAlpha * 0.08})`;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-      }
-      if (state.paused && !state.gameOver && !overlay.innerHTML && !missionPopup && !rewardPopup) {
-        showPauseOverlay();
+      if (state.paused && !state.gameOver && !overlay.innerHTML && !missionPopup) {
+        ctx.fillStyle='rgba(0,0,0,.45)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle='#fff'; ctx.font='bold 42px system-ui'; ctx.textAlign='center'; ctx.fillText('Paused',canvas.width/2,canvas.height/2);
       }
     }
 
@@ -4015,16 +3193,6 @@
         if (x >= bx && x <= bx + w && y >= by && y <= by + h) {
           missionPopup = null;
           state.paused = false;
-          showNextRewardPopup();
-          return;
-        }
-      }
-      if (rewardPopup?.rect) {
-        const { x: bx, y: by, w, h } = rewardPopup.rect;
-        if (x >= bx && x <= bx + w && y >= by && y <= by + h) {
-          rewardPopup = null;
-          state.paused = false;
-          showNextRewardPopup();
           return;
         }
       }
@@ -4034,21 +3202,19 @@
       if (e.key === '1') fireAtLane(0);
       if (e.key === '2') fireAtLane(1);
       if (e.key === '3') fireAtLane(2);
-      if (e.key.toLowerCase() === 'p' && state?.running) {
-        if (state.paused) window.closeOverlayAndResume();
-        else showPauseOverlay();
+      if (e.key.toLowerCase() === 'p' && state?.running && !overlay.innerHTML) {
+        state.paused = !state.paused;
+        pauseBtn.textContent = state.paused ? 'Resume' : 'Pause';
       }
       if (e.key.toLowerCase() === 'r' && state?.running) window.restartZombieRun();
       if (e.key.toLowerCase() === 'm') activateMinigun();
     });
     restartBtn.addEventListener('click', () => window.restartZombieRun());
-    pauseBtn.addEventListener('click', () => {
-      if (state.paused) window.closeOverlayAndResume();
-      else showPauseOverlay();
-    });
+    pauseBtn.addEventListener('click', () => { state.paused=!state.paused; pauseBtn.textContent=state.paused?'Resume':'Pause'; });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden && state?.running && !state?.gameOver) {
-        showPauseOverlay();
+        state.paused = true;
+        pauseBtn.textContent = 'Resume';
       }
     });
     [minigunBtn, floatingMinigunBtn].forEach(btn => {
@@ -4076,12 +3242,8 @@
 
     buyGunBtn.addEventListener('click', () => {
       if (state.coins >= gunPrice) {
-        const previousProfile = weaponProfile(state.firepower);
         state.coins -= gunPrice;
         state.firepower = Math.min(12, state.firepower + 1);
-        const upgradedProfile = weaponProfile(state.firepower);
-        triggerUpgradeCelebration(`UPGRADE, ${upgradedProfile.name}`);
-        if (upgradedProfile.tier > previousProfile.tier) triggerTierShift(upgradedProfile);
         gunPrice += 10;
         bankCoins = state.coins;
         saveMeta();
@@ -4176,24 +3338,8 @@
         </div>`;
       syncHud();
     };
-    window.closeOverlayAndResume = function() {
-      overlay.classList.remove('hero-mode');
-      overlay.innerHTML='';
-      missionPopup = null;
-      rewardPopup = null;
-      state.paused=false;
-      pauseBtn.textContent='Pause';
-      refreshMusicState();
-    };
-    window.startZombieRun = function() {
-      overlay.classList.remove('hero-mode');
-      overlay.innerHTML='';
-      state.paused=false;
-      state.running=true;
-      state.gameOver=false;
-      pauseBtn.textContent='Pause';
-      refreshMusicState();
-    };
+    window.closeOverlayAndResume = function() { overlay.innerHTML=''; missionPopup = null; state.paused=false; };
+    window.startZombieRun = function() { overlay.innerHTML=''; state.paused=false; state.running=true; state.gameOver=false; refreshMusicState(); };
     window.mockRewardedReviveOffer = function() {
       state.coins += 5;
       bankCoins = state.coins;
@@ -4209,12 +3355,10 @@
       refreshMusicState();
       saveMeta();
     });
-    window.showTitleScreen = showTitleScreen;
     titleBtn.addEventListener('click', () => { showTitleScreen(); refreshMusicState(); });
 
     applyDisplaySettings();
     applyControlsMode();
-    window.addEventListener('resize', applyControlsMode);
     resetGame();
     refreshMusicState();
     requestAnimationFrame(tick);

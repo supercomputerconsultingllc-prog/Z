@@ -1758,6 +1758,10 @@
         rctx.beginPath();
         rctx.arc(canvas.width - 110, 110, 26, 0, Math.PI * 2);
         rctx.fill();
+        rctx.fillStyle = 'rgba(255,255,255,0.1)';
+        rctx.beginPath();
+        rctx.ellipse(canvas.width - 118, 102, 8, 3, -0.35, 0, Math.PI * 2);
+        rctx.fill();
         roadLayerCache = offscreen;
         roadLayerCacheKey = roadCacheKey;
       }
@@ -1827,6 +1831,17 @@
           ctx.fillRect(x + w * 0.56, y + h * 0.42, Math.max(7, w * 0.12), 5 + ((i + 1) % 2) * 2);
         }
         ctx.fillStyle = 'rgba(15,23,42,0.48)';
+      }
+
+      if (!lowPowerMobileMode || state.squad < 70) {
+        ctx.fillStyle = 'rgba(255,255,255,0.035)';
+        ctx.beginPath();
+        ctx.moveTo(0, 210);
+        ctx.lineTo(canvas.width, 178);
+        ctx.lineTo(canvas.width, 192);
+        ctx.lineTo(0, 226);
+        ctx.closePath();
+        ctx.fill();
       }
 
       for (let i=0;i<3;i++) {
@@ -2333,6 +2348,11 @@
       ctx.beginPath();
       ctx.ellipse(x - head * 0.28, y - 12.5 * scale, head * 0.22, head * 0.38, -0.5, 0, Math.PI * 2);
       ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = Math.max(0.7, 0.9 * scale);
+      ctx.beginPath();
+      ctx.arc(x, y - 10 * scale, head * 0.94, 0, Math.PI * 2);
+      ctx.stroke();
 
       const bodyGrad = ctx.createLinearGradient(x - bodyW / 2, y - 2 * scale, x + bodyW / 2, y + bodyH);
       bodyGrad.addColorStop(0, variant === 'boss' ? '#7c3aed' : variant === 'shield' ? '#94a3b8' : '#4b5563');
@@ -2521,6 +2541,8 @@
       ctx.beginPath();
       ctx.arc(x, y + 1 * scale, 3.2 * scale, 0, Math.PI * 2);
       ctx.fill();
+      ctx.fillStyle = 'rgba(250,204,21,0.16)';
+      ctx.fillRect(x - 20 * scale, y + 2 * scale, 40 * scale, 4 * scale);
       ctx.strokeStyle = 'rgba(120,53,15,0.42)';
       ctx.lineWidth = 1.2 * scale;
       ctx.strokeRect(x - 20 * scale, y - 6 * scale, 40 * scale, 26 * scale);
@@ -3038,6 +3060,8 @@
       ctx.beginPath();
       ctx.roundRect(cardX, cardY, cardW, cardH, 26);
       ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.fillRect(cardX + 18, cardY + 18, cardW - 36, 3);
       ctx.strokeStyle = 'rgba(253,224,71,0.55)';
       ctx.lineWidth = 2;
       ctx.stroke();
@@ -3142,6 +3166,7 @@
       ctx.fillStyle='#e5e7eb'; ctx.font='bold 24px system-ui'; ctx.textAlign='center'; ctx.fillText('Zombie Squad Run',canvas.width / 2,39);
       ctx.shadowBlur = 0;
       ctx.fillStyle='rgba(251,191,36,0.9)'; ctx.font='bold 11px system-ui'; ctx.fillText('BETA V1.0', canvas.width / 2, 53);
+      ctx.fillStyle='rgba(255,255,255,0.05)'; ctx.fillRect(canvas.width / 2 - 48, 56, 96, 1.5);
       const minigunGlow = ctx.createLinearGradient(canvas.width - 176, 20, canvas.width - 30, 84);
       minigunGlow.addColorStop(0, 'rgba(127,29,29,0.92)');
       minigunGlow.addColorStop(1, 'rgba(30,41,59,0.88)');
@@ -3156,6 +3181,7 @@
       ctx.shadowBlur = 0;
       ctx.fillStyle='rgba(255,255,255,.12)'; ctx.fillRect(canvas.width - 158, 76, 116, 8);
       ctx.fillStyle=state.minigunCharge >= 100 ? '#ef4444' : '#f59e0b'; ctx.fillRect(canvas.width - 158, 76, 116 * (state.minigunCharge / 100), 8);
+      ctx.fillStyle='rgba(255,255,255,0.12)'; ctx.fillRect(canvas.width - 158, 76, 116 * (state.minigunCharge / 100), 2);
 
       if (state.bossWarningUntil > renderNow) {
         const remain = (state.bossWarningUntil - renderNow) / 1000;

@@ -802,6 +802,8 @@
     const CURRENT_ACCOUNT_KEY = `${APP_STORAGE_PREFIX}-current-account`;
     const SUPABASE_URL = 'https://bdvktjweozlvxltgpmnp.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_-ANgYz8qbn07PQ58muxgLQ_zF9PZv_u';
+    const supabaseClient = window.supabase?.createClient ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+    const cloudSyncEnabled = !!supabaseClient;
 
     function storageKey(name) { return `${APP_STORAGE_PREFIX}-${name}`; }
     function legacyKey(name) { return `${LEGACY_STORAGE_PREFIX}-${name}`; }
@@ -941,7 +943,7 @@
     let revivePrice = Number(getStored('revive-price', 15) || 15);
     let currentAccountId = localStorage.getItem(CURRENT_ACCOUNT_KEY) || '';
     let currentAccountEmail = localStorage.getItem(storageKey('account-email')) || '';
-    let currentAccountPasswordHashHash = localStorage.getItem(storageKey('account-password-hash')) || '';
+    let currentAccountPasswordHash = localStorage.getItem(storageKey('account-password')) || '';
     let cloudLastSavedAt = Number(localStorage.getItem(storageKey('cloud-last-saved-at')) || 0);
     let cloudSyncState = localStorage.getItem(storageKey('cloud-sync-state')) || 'idle';
     let cloudSyncMessage = '';

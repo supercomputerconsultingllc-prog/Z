@@ -1,34 +1,27 @@
-import imaplib
 import json
-import smtplib
-import ssl
+import os
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 config = json.loads((ROOT / 'gmail-mail-config.json').read_text())
-secrets = json.loads((ROOT / 'gmail-mail-secrets.json').read_text())
+account = config.get('email', 'SupercomputerConsultingLLC@gmail.com')
 
-email = secrets['email']
-password = secrets['password']
+print(f'Testing Gmail account access through GOG for {account}...')
 
-if password == 'REPLACE_WITH_GOOGLE_APP_PASSWORD_LOCALLY':
-    raise SystemExit('Set the Google app password in mail/gmail-mail-secrets.json before running this test.')
+if not os.environ.get('GOG_KEYRING_PASSWORD'):
+    raise SystemExit('GOG_KEYRING_PASSWORD is not set in the environment.')
 
-print('Testing Gmail IMAP...')
-imap = imaplib.IMAP4_SSL(config['imap']['host'], config['imap']['port'])
-imap.login(email, password)
-status, mailboxes = imap.list()
-print('IMAP login OK')
-print(f'Mailboxes visible: {len(mailboxes or [])}')
-imap.logout()
+search = subprocess.run(
+    ['gog', 'gmail', 'search', 'in:inbox newer_than:7d', '--account', account, '--max', '1'],
+    capture_output=True,
+    text=True,
+)
 
-print('Testing Gmail SMTP...')
-context = ssl.create_default_context()
-with smtplib.SMTP(config['smtp']['host'], config['smtp']['port']) as smtp:
-    smtp.ehlo()
-    smtp.starttls(context=context)
-    smtp.ehlo()
-    smtp.login(email, password)
-    print('SMTP login OK')
+if search.returncode != 0:
+    raise SystemExit(search.stderr.strip() or search.stdout.strip() or 'GOG Gmail search failed.')
 
-print('All Gmail tests passed.')
+print('GOG Gmail search OK')
+print(search.stdout.strip() or '(no recent inbox results)')
+print('\nGmail account access is working through GOG/OAuth.')
+print('Note: this workspace no longer validates Gmail via local IMAP/SMTP app-password secrets.')

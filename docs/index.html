@@ -740,6 +740,7 @@
     let musicTimer = null;
     let musicStep = 0;
     let musicBus = null;
+    const MUSIC_START_OFFSET = 10;
     let renderNow = performance.now();
     let lastShotSoundAt = 0;
     const laneObjectBuckets = [[], [], []];
@@ -1047,6 +1048,9 @@
       const targetVolume = Math.max(0, Math.min(1, musicVolumeLevel / 100));
       music.volume = 0;
       const tryPlay = () => {
+        if (music.paused && (!Number.isFinite(music.currentTime) || music.currentTime < MUSIC_START_OFFSET)) {
+          try { music.currentTime = MUSIC_START_OFFSET; } catch (_) {}
+        }
         const playPromise = music.play();
         const fadeIn = () => {
           const fadeMs = 220;
@@ -1428,7 +1432,7 @@
         const music = ensureMusicAudio();
         if (music) {
           updateMusicVolume();
-          try { music.currentTime = 0; } catch (_) {}
+          try { music.currentTime = MUSIC_START_OFFSET; } catch (_) {}
           const playPromise = music.play();
           if (playPromise && typeof playPromise.catch === 'function') playPromise.catch(() => {});
           setTimeout(() => refreshMusicState(), 1200);

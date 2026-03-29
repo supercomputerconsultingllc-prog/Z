@@ -6,6 +6,7 @@
   <title>Zombie Mayhem</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#0b1220">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --bg: #0b1220;
@@ -799,6 +800,8 @@
     const LEGACY_STORAGE_PREFIX = 'zombie-squad-run';
     const ACCOUNTS_KEY = `${APP_STORAGE_PREFIX}-accounts`;
     const CURRENT_ACCOUNT_KEY = `${APP_STORAGE_PREFIX}-current-account`;
+    const SUPABASE_URL = 'https://bdvktjweozlvxltgpmnp.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_-ANgYz8qbn07PQ58muxgLQ_zF9PZv_u';
 
     function storageKey(name) { return `${APP_STORAGE_PREFIX}-${name}`; }
     function legacyKey(name) { return `${LEGACY_STORAGE_PREFIX}-${name}`; }
@@ -814,17 +817,64 @@
     function removeStored(name) {
       localStorage.removeItem(storageKey(name));
     }
-    function getAccountsStore() {
-      try { return JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '{}') || {}; }
-      catch (_) { return {}; }
-    }
-    function setAccountsStore(store) {
-      localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(store));
-    }
     function normalizeEmail(email = '') { return String(email).trim().toLowerCase(); }
-    function accountIdForEmail(email = '') { return `acct:${normalizeEmail(email)}`; }
-    function encodeSecret(secret = '') { try { return btoa(secret); } catch (_) { return secret; } }
-    function decodeSecret(secret = '') { try { return atob(secret); } catch (_) { return secret; } }
+
+    async function supabaseFetchProfile(email) {
+      if (!supabaseClient) return null;
+      const { data, error } = await supabaseClient.from('player_profiles').select('*').eq('email', normalizeEmail(email)).maybeSingle();
+      if (error) throw error;
+      return data;
+    }
+
+    async function supabaseSaveProfile(email, password, profile) {
+      if (!supabaseClient) return;
+      const row = {
+        id: crypto.randomUUID(),
+        email: normalizeEmail(email),
+        password_hash: password,
+        best: Number(profile.best || 0),
+        bank_coins: Number(profile.bankCoins || 0),
+        avatar_coins: Number(profile.avatarCoins || 0),
+        selected_avatar: profile.selectedAvatar || 'default',
+        unlocked_avatars: profile.unlockedAvatars || ['default'],
+        mission_index: Number(profile.missionIndex || 0),
+        mission_progress: Number(profile.missionProgress || 0),
+        pass_level: Number(profile.passLevel || 1),
+        pass_xp: Number(profile.passXp || 0),
+        total_runs: Number(profile.totalRuns || 0),
+        youtube_visit_claimed: !!profile.youtubeVisitClaimed,
+        youtube_subscribe_claimed: !!profile.youtubeSubscribeClaimed,
+        starter_pack_claimed: !!profile.starterPackClaimed,
+        gun_price: Number(profile.gunPrice || 10),
+        squad_price: Number(profile.squadPrice || 8),
+        revive_price: Number(profile.revivePrice || 15)
+      };
+      const existing = await supabaseFetchProfile(email);
+      if (existing) row.id = existing.id;
+      const { error } = await supabaseClient.from('player_profiles').upsert(row, { onConflict: 'email' });
+      if (error) throw error;
+    }
+
+    function profileFromSupabaseRow(row = {}) {
+      return {
+        best: row.best || 0,
+        bankCoins: row.bank_coins || 0,
+        avatarCoins: row.avatar_coins || 0,
+        selectedAvatar: row.selected_avatar || 'default',
+        unlockedAvatars: Array.isArray(row.unlocked_avatars) ? row.unlocked_avatars : ['default'],
+        missionIndex: row.mission_index || 0,
+        missionProgress: row.mission_progress || 0,
+        passLevel: row.pass_level || 1,
+        passXp: row.pass_xp || 0,
+        totalRuns: row.total_runs || 0,
+        youtubeVisitClaimed: !!row.youtube_visit_claimed,
+        youtubeSubscribeClaimed: !!row.youtube_subscribe_claimed,
+        starterPackClaimed: !!row.starter_pack_claimed,
+        gunPrice: row.gun_price || 10,
+        squadPrice: row.squad_price || 8,
+        revivePrice: row.revive_price || 15
+      };
+    }
 
     let state;
     let audioCtx = null;
@@ -859,7 +909,8 @@
     let squadPrice = Number(getStored('squad-price', 8) || 8);
     let revivePrice = Number(getStored('revive-price', 15) || 15);
     let currentAccountId = localStorage.getItem(CURRENT_ACCOUNT_KEY) || '';
-    let currentAccountEmail = '';
+    let currentAccountEmail = localStorage.getItem(storageKey('account-email')) || '';
+    let currentAccountPassword = localStorage.getItem(storageKey('account-password')) || '';
     const mobileSafeMode = window.innerWidth <= 920 || ('ontouchstart' in window);
     const lowPowerMobileMode = mobileSafeMode || window.devicePixelRatio > 2;
     let screenShake = 0;
@@ -949,63 +1000,56 @@
       currentAccountEmail = '';
     }
 
-    function loadCurrentAccountProfile() {
-      const store = getAccountsStore();
-      const account = currentAccountId ? store[currentAccountId] : null;
-      if (!account) {
+    async function loadCurrentAccountProfile() {
+      if (!currentAccountEmail) {
         currentAccountId = '';
+        currentAccountPassword = '';
         localStorage.removeItem(CURRENT_ACCOUNT_KEY);
+        removeStored('account-email');
+        removeStored('account-password');
         loadGuestProfile();
         return;
       }
-      currentAccountEmail = account.email || '';
-      applyPlayerProfile(account.profile || {});
+      if (!supabaseClient) {
+        loadGuestProfile();
+        return;
+      }
+      const account = await supabaseFetchProfile(currentAccountEmail);
+      if (!account) {
+        currentAccountId = '';
+        currentAccountPassword = '';
+        localStorage.removeItem(CURRENT_ACCOUNT_KEY);
+        removeStored('account-email');
+        removeStored('account-password');
+        loadGuestProfile();
+        return;
+      }
+      currentAccountId = account.id || currentAccountId || currentAccountEmail;
+      applyPlayerProfile(profileFromSupabaseRow(account));
     }
 
-    function persistGuestProfile() {
-      const profile = capturePlayerProfile();
-      setStored('best', String(profile.best));
-      setStored('coins', String(profile.bankCoins));
-      setStored('avatar-coins', String(profile.avatarCoins));
-      setStored('selected-avatar', profile.selectedAvatar);
-      setStored('unlocked-avatars', JSON.stringify(profile.unlockedAvatars));
-      setStored('mission-index', String(profile.missionIndex));
-      setStored('mission-progress', String(profile.missionProgress));
-      setStored('pass-level', String(profile.passLevel));
-      setStored('pass-xp', String(profile.passXp));
-      setStored('total-runs', String(profile.totalRuns));
-      setStored('youtube-visit', profile.youtubeVisitClaimed ? 'claimed' : 'open');
-      setStored('youtube-subscribe', profile.youtubeSubscribeClaimed ? 'claimed' : 'open');
-      setStored('starter-pack', profile.starterPackClaimed ? 'claimed' : 'open');
-      setStored('gun-price', String(profile.gunPrice));
-      setStored('squad-price', String(profile.squadPrice));
-      setStored('revive-price', String(profile.revivePrice));
-    }
-
-    function saveAccountProfile() {
-      if (!currentAccountId) { persistGuestProfile(); return; }
-      const store = getAccountsStore();
-      const account = store[currentAccountId];
-      if (!account) { persistGuestProfile(); return; }
-      account.profile = capturePlayerProfile();
-      account.updatedAt = Date.now();
-      store[currentAccountId] = account;
-      setAccountsStore(store);
-      localStorage.setItem(CURRENT_ACCOUNT_KEY, currentAccountId);
+    async function saveAccountProfile() {
+      if (!currentAccountEmail || !currentAccountPassword) { persistGuestProfile(); return; }
+      if (!supabaseClient) { persistGuestProfile(); return; }
+      await supabaseSaveProfile(currentAccountEmail, currentAccountPassword, capturePlayerProfile());
+      localStorage.setItem(CURRENT_ACCOUNT_KEY, currentAccountId || currentAccountEmail);
+      setStored('account-email', currentAccountEmail);
+      setStored('account-password', currentAccountPassword);
     }
 
     function accountStatusText() {
-      return currentAccountId ? `Signed in as ${currentAccountEmail}` : 'Guest mode, progress stays on this browser unless you create an account.';
+      return currentAccountEmail ? `Signed in as ${currentAccountEmail}` : 'Guest mode, progress stays on this browser unless you create an account.';
     }
 
     function openAccountPanel() {
       state.paused = true;
       pauseGameMusic();
-      const signedIn = !!currentAccountId;
+      const signedIn = !!currentAccountEmail;
       overlay.innerHTML = `
         <div class="message settings-page">
           <h2>Zombie Mayhem Account</h2>
           <p>${accountStatusText()}</p>
+          <p class="mini-note">${cloudSyncEnabled ? 'Cloud save is connected through Supabase.' : 'Cloud save is unavailable, falling back to guest/local progress.'}</p>
           ${signedIn ? `
             <div class="settings-grid">
               <div class="settings-card">
@@ -1017,8 +1061,8 @@
               </div>
               <div class="settings-card">
                 <h4>Account Actions</h4>
+                <button id="syncAccountBtn">Sync Now</button>
                 <button id="signOutAccountBtn" class="secondary">Sign Out</button>
-                <p class="mini-note">Signing out returns you to guest progress stored on this browser.</p>
               </div>
             </div>
           ` : `
@@ -1042,11 +1086,22 @@
         </div>`;
 
       if (signedIn) {
+        document.getElementById('syncAccountBtn')?.addEventListener('click', async () => {
+          try {
+            await saveMeta();
+            alert('Cloud profile synced.');
+            openAccountPanel();
+          } catch (error) {
+            alert(`Sync failed: ${error.message || error}`);
+          }
+        });
         document.getElementById('signOutAccountBtn')?.addEventListener('click', () => {
-          saveMeta();
           currentAccountId = '';
           currentAccountEmail = '';
+          currentAccountPassword = '';
           localStorage.removeItem(CURRENT_ACCOUNT_KEY);
+          removeStored('account-email');
+          removeStored('account-password');
           loadGuestProfile();
           syncHud();
           openAccountPanel();
@@ -1054,67 +1109,65 @@
         return;
       }
 
-      document.getElementById('createAccountBtn')?.addEventListener('click', () => {
+      document.getElementById('createAccountBtn')?.addEventListener('click', async () => {
         const email = normalizeEmail(document.getElementById('accountCreateEmail')?.value || '');
         const password = String(document.getElementById('accountCreatePassword')?.value || '');
         const importGuest = !!document.getElementById('importGuestProgress')?.checked;
-        if (!email || !password) {
-          alert('Enter an email and password.');
-          return;
+        if (!email || !password) return alert('Enter an email and password.');
+        try {
+          const existing = await supabaseFetchProfile(email);
+          if (existing) return alert('That account already exists. Sign in instead.');
+          const profile = importGuest ? capturePlayerProfile() : { best: 0, bankCoins: 0, avatarCoins: 0, selectedAvatar: 'default', unlockedAvatars: ['default'], missionIndex: 0, missionProgress: 0, passLevel: 1, passXp: 0, totalRuns: 0, youtubeVisitClaimed: false, youtubeSubscribeClaimed: false, starterPackClaimed: false, gunPrice: 10, squadPrice: 8, revivePrice: 15 };
+          await supabaseSaveProfile(email, password, profile);
+          currentAccountId = email;
+          currentAccountEmail = email;
+          currentAccountPassword = password;
+          setStored('account-email', email);
+          setStored('account-password', password);
+          localStorage.setItem(CURRENT_ACCOUNT_KEY, email);
+          await loadCurrentAccountProfile();
+          syncHud();
+          openAccountPanel();
+        } catch (error) {
+          alert(`Account creation failed: ${error.message || error}`);
         }
-        const store = getAccountsStore();
-        const id = accountIdForEmail(email);
-        if (store[id]) {
-          alert('That account already exists. Sign in instead.');
-          return;
-        }
-        const guestProfile = capturePlayerProfile();
-        store[id] = {
-          email,
-          secret: encodeSecret(password),
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          profile: importGuest ? guestProfile : {
-            best: 0, bankCoins: 0, avatarCoins: 0, selectedAvatar: 'default', unlockedAvatars: ['default'], missionIndex: 0, missionProgress: 0, passLevel: 1, passXp: 0, totalRuns: 0, youtubeVisitClaimed: false, youtubeSubscribeClaimed: false, starterPackClaimed: false, gunPrice: 10, squadPrice: 8, revivePrice: 15
-          }
-        };
-        setAccountsStore(store);
-        currentAccountId = id;
-        currentAccountEmail = email;
-        localStorage.setItem(CURRENT_ACCOUNT_KEY, id);
-        loadCurrentAccountProfile();
-        saveMeta();
-        syncHud();
-        openAccountPanel();
       });
 
-      document.getElementById('signInAccountBtn')?.addEventListener('click', () => {
+      document.getElementById('signInAccountBtn')?.addEventListener('click', async () => {
         const email = normalizeEmail(document.getElementById('accountSignInEmail')?.value || '');
         const password = String(document.getElementById('accountSignInPassword')?.value || '');
-        const store = getAccountsStore();
-        const id = accountIdForEmail(email);
-        const account = store[id];
-        if (!account || decodeSecret(account.secret || '') !== password) {
-          alert('Incorrect email or password.');
-          return;
+        try {
+          const account = await supabaseFetchProfile(email);
+          if (!account || account.password_hash !== password) return alert('Incorrect email or password.');
+          currentAccountId = account.id || email;
+          currentAccountEmail = email;
+          currentAccountPassword = password;
+          setStored('account-email', email);
+          setStored('account-password', password);
+          localStorage.setItem(CURRENT_ACCOUNT_KEY, currentAccountId);
+          await loadCurrentAccountProfile();
+          syncHud();
+          openAccountPanel();
+        } catch (error) {
+          alert(`Sign in failed: ${error.message || error}`);
         }
-        saveMeta();
-        currentAccountId = id;
-        currentAccountEmail = email;
-        localStorage.setItem(CURRENT_ACCOUNT_KEY, id);
-        loadCurrentAccountProfile();
-        syncHud();
-        openAccountPanel();
       });
     }
 
-    if (currentAccountId) loadCurrentAccountProfile(); else loadGuestProfile();
+    async function initializeProfiles() {
+      if (currentAccountEmail) await loadCurrentAccountProfile();
+      else loadGuestProfile();
+      bestStat.textContent = best;
+      soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
+    }
+
+    initializeProfiles();
     bestStat.textContent = best;
     soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
 
     function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
     function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-    function saveMeta(){
+    async function saveMeta(){
       setStored('sound', soundOn ? 'on' : 'off');
       setStored('music', musicEnabled ? 'on' : 'off');
       setStored('volume', String(volumeLevel));
@@ -1171,7 +1224,7 @@
       if (grant.runRevives) state.revives += grant.runRevives;
       if (grant.startSquad) state.squad += grant.startSquad;
       if (grant.startFirepower) state.firepower += grant.startFirepower;
-      saveMeta();
+      void saveMeta();
       syncHud();
     }
     function addPassXp(amount, reason = 'Keep the streak alive') {
@@ -1191,7 +1244,7 @@
         });
         passLevel += 1;
       }
-      saveMeta();
+      void saveMeta();
       syncSeasonHud(reason);
     }
 
@@ -1616,7 +1669,7 @@
         state.coins -= 25;
         bankCoins = state.coins;
         avatarCoins += 1;
-        saveMeta();
+        void saveMeta();
         syncHud();
         openAvatarPanel();
       });
@@ -1632,7 +1685,7 @@
             unlockedAvatars.push(avatarId);
           }
           selectedAvatar = avatarId;
-          saveMeta();
+          void saveMeta();
           syncHud();
           openAvatarPanel();
         });
@@ -1729,7 +1782,7 @@
         volumeLevel = Number(volumeRange.value);
         volumeValue.textContent = `${volumeLevel}%`;
         volumeBarFill.style.width = `${Math.min(volumeLevel, 100)}%`;
-        saveMeta();
+        void saveMeta();
       });
 
       musicVolumeRange.addEventListener('input', () => {
@@ -1737,14 +1790,14 @@
         musicVolumeValue.textContent = `${musicVolumeLevel}%`;
         musicVolumeBarFill.style.width = `${Math.min(musicVolumeLevel, 100)}%`;
         updateMusicVolume();
-        saveMeta();
+        void saveMeta();
       });
 
       brightnessRange.addEventListener('input', () => {
         brightnessLevel = Number(brightnessRange.value);
         brightnessValue.textContent = `${brightnessLevel}%`;
         applyDisplaySettings();
-        saveMeta();
+        void saveMeta();
       });
 
       controlsModeBtn.addEventListener('click', () => {
@@ -1752,7 +1805,7 @@
         controlsModeBtn.textContent = controlsMode === 'buttons' ? 'Buttons' : 'Tap / Keys';
         controlsHelp.textContent = controlSummary();
         applyControlsMode();
-        saveMeta();
+        void saveMeta();
       });
 
       soundToggleBtn.addEventListener('click', () => {
@@ -1760,14 +1813,14 @@
         soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
         soundToggleBtn.textContent = soundOn ? 'On' : 'Off';
         refreshMusicState();
-        saveMeta();
+        void saveMeta();
       });
 
       musicToggleBtn.addEventListener('click', () => {
         musicEnabled = !musicEnabled;
         musicToggleBtn.textContent = musicEnabled ? 'On' : 'Off';
         refreshMusicState();
-        saveMeta();
+        void saveMeta();
       });
 
       openAccountBtn?.addEventListener('click', openAccountPanel);
@@ -1820,7 +1873,7 @@
     function grantCoins(amount) {
       state.coins += amount;
       bankCoins = state.coins;
-      saveMeta();
+      void saveMeta();
     }
 
     function updateMission(eventName, amount = 1) {
@@ -1843,7 +1896,7 @@
         state.paused = true;
         pauseGameMusic();
       }
-      saveMeta();
+      void saveMeta();
       syncMissionHud();
     }
 
@@ -2032,12 +2085,12 @@
       avatarCoinStat.textContent = avatarCoins;
       reviveStat.textContent = state.revives;
       syncShopButtons();
-      if (state.distance > best) { best = Math.floor(state.distance); bestStat.textContent = best; saveMeta(); }
+      if (state.distance > best) { best = Math.floor(state.distance); bestStat.textContent = best; void saveMeta(); }
       syncMissionHud();
       syncSeasonHud();
     }
 
-    function addCoins(n) { state.coins += n; bankCoins = state.coins; saveMeta(); updateMission('coins', n); }
+    function addCoins(n) { state.coins += n; bankCoins = state.coins; void saveMeta(); updateMission('coins', n); }
 
     function weaponProfile(powerLevel) {
       if (powerLevel <= 2) return { tier: 1, name: 'Rifle', color: '#fde047', core: '#fff8c5', size: 5, trail: '#fef08a', shape: 'round', muzzle: '#fff7ae', ring: '#facc15', damage: 0.92 + Math.max(0, powerLevel - 1) * 0.07, spread: 0, pierce: 0, splash: 0, chain: 0, speed: 0, cadence: 1, impactSize: 1, feed: 'Precision rifle fire' };
@@ -2631,7 +2684,7 @@
       const runXp = awardRunProgress();
       rewardPopup = null;
       rewardQueue = [];
-      bankCoins = state.coins; saveMeta();
+      bankCoins = state.coins; void saveMeta();
       overlay.classList.add('hero-mode');
       overlay.innerHTML = buildRunSummary().replace('</h2>', `</h2><p class="mini-note">Run bonus: <strong>+${runXp} pass XP</strong>.</p>`);
       syncHud();
@@ -4502,7 +4555,7 @@
         if (upgradedProfile.tier > previousProfile.tier) triggerTierShift(upgradedProfile);
         gunPrice += 10;
         bankCoins = state.coins;
-        saveMeta();
+        void saveMeta();
         syncHud();
       }
     });
@@ -4513,7 +4566,7 @@
         updateMission('survivors', 2);
         squadPrice += 12;
         bankCoins = state.coins;
-        saveMeta();
+        void saveMeta();
         syncHud();
       }
     });
@@ -4523,7 +4576,7 @@
         state.revives += 1;
         revivePrice += 10;
         bankCoins = state.coins;
-        saveMeta();
+        void saveMeta();
         syncHud();
       }
     });
@@ -4540,7 +4593,7 @@
       }
       addCoins(100);
       starterPackClaimed = true;
-      saveMeta();
+      void saveMeta();
       overlay.innerHTML = `
         <div class="message">
           <h2>Starter Pack Added</h2>
@@ -4556,7 +4609,7 @@
       }
       addCoins(100);
       youtubeVisitClaimed = true;
-      saveMeta();
+      void saveMeta();
       syncHud();
 
       const opened = window.open(YOUTUBE_CHANNEL_URL, '_blank', 'noopener,noreferrer');
@@ -4584,7 +4637,7 @@
       }
       addCoins(1000);
       youtubeSubscribeClaimed = true;
-      saveMeta();
+      void saveMeta();
       overlay.innerHTML = `
         <div class="message">
           <h2>Subscription Reward Claimed</h2>
@@ -4615,17 +4668,17 @@
     window.mockRewardedReviveOffer = function() {
       state.coins += 5;
       bankCoins = state.coins;
-      saveMeta();
+      void saveMeta();
       resetGame();
     };
-    window.restartZombieRun = function() { bankCoins = state.coins; saveMeta(); resetGame(); pauseBtn.textContent='Pause'; musicShouldResumeAfterPause = true; resumeGameMusic(false); };
+    window.restartZombieRun = function() { bankCoins = state.coins; void saveMeta(); resetGame(); pauseBtn.textContent='Pause'; musicShouldResumeAfterPause = true; resumeGameMusic(false); };
 
     soundBtn.addEventListener('click', () => {
       soundOn = !soundOn;
       soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
       if (soundOn) playTone(720, 0.08, 'triangle', 1.3);
       refreshMusicState();
-      saveMeta();
+      void saveMeta();
     });
     window.showTitleScreen = showTitleScreen;
     titleBtn.addEventListener('click', () => { showTitleScreen(); refreshMusicState(); });

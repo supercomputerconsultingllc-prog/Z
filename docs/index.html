@@ -368,6 +368,11 @@
       font-size: 11px;
       opacity: 0.82;
     }
+    @media (pointer:fine) {
+      #minigunBtn {
+        display: none !important;
+      }
+    }
     @media (max-width: 920px) {
       .topbar { grid-template-columns: repeat(4, 1fr); }
       .content { grid-template-columns: 1fr; }
@@ -901,8 +906,11 @@
 
     function applyControlsMode() {
       const touchRow = document.querySelector('.touch-row');
+      const desktopWebMode = window.matchMedia('(pointer:fine)').matches;
       touchRow.style.display = controlsMode === 'buttons' ? 'flex' : '';
       touchRow.style.opacity = controlsMode === 'buttons' ? '1' : '';
+      if (minigunBtn) minigunBtn.style.display = desktopWebMode ? 'none' : '';
+      if (floatingMinigunBtn) floatingMinigunBtn.style.display = '';
     }
 
     function controlSummary() {
@@ -3592,6 +3600,7 @@
 
     applyDisplaySettings();
     applyControlsMode();
+    window.addEventListener('resize', applyControlsMode);
     resetGame();
     refreshMusicState();
     requestAnimationFrame(tick);

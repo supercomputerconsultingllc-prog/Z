@@ -1672,7 +1672,7 @@
 
     const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@ColtRT-e5n2h';
     const COINBASE_WALLET_ADDRESS = '0x48b64F69968400BbFd6315c33712B5AF1E05583d';
-    const COINBASE_WALLET_URL = getStored('coinbase-wallet-url', `https://commerce.coinbase.com/pay/${COINBASE_WALLET_ADDRESS}`) || `https://commerce.coinbase.com/pay/${COINBASE_WALLET_ADDRESS}`;
+    const COINBASE_CHECKOUT_URL = getStored('coinbase-checkout-url', '') || '';
     const COIN_PACKS = [
       { id: 'pack100', coins: 100, price: '$2.99' },
       { id: 'pack500', coins: 500, price: '$5.99' },
@@ -1708,7 +1708,7 @@
     ];
 
     function moneyPanelMarkup() {
-      const walletReady = !!COINBASE_WALLET_URL;
+      const checkoutReady = !!COINBASE_CHECKOUT_URL;
       return `
         <div class="message settings-page">
           <h2>Squad Shop</h2>
@@ -1735,7 +1735,7 @@
                     <h4>${pack.coins.toLocaleString()} Coins</h4>
                     <p>${pack.price}</p>
                     <div class="cta-row" style="margin-top:10px;">
-                      <button class="warn" onclick="window.openCoinPurchase('${pack.id}')">${walletReady ? `Open Checkout for ${pack.price}` : 'Checkout Link Pending'}</button>
+                      <button class="warn" onclick="window.openCoinPurchase('${pack.id}')">${checkoutReady ? `Open Checkout for ${pack.price}` : 'Checkout Not Configured'}</button>
                     </div>
                   </div>`).join('')}
               </div>
@@ -1763,7 +1763,7 @@
               </div>
             </div>
           </div>
-          <p class="mini-note">Current BTC/Base reference address: <code>${COINBASE_WALLET_ADDRESS}</code>. Replace the placeholder destination with a real hosted checkout link before going live. You can override the destination with localStorage key <code>zombie-mayhem-coinbase-wallet-url</code> while testing.</p>
+          <p class="mini-note">Current BTC/Base reference address: <code>${COINBASE_WALLET_ADDRESS}</code>. Do not use a fake Coinbase Commerce URL. Only enable checkout after you have a real hosted provider link or a live backend checkout function. Local override key: <code>zombie-mayhem-coinbase-checkout-url</code>.</p>
           <button class="secondary" onclick="window.closeOverlayAndResume()">Close</button>
         </div>`;
     }
@@ -4855,24 +4855,34 @@
     window.openCoinPurchase = function(packId) {
       const pack = COIN_PACKS.find(item => item.id === packId);
       if (!pack) return;
-      if (!COINBASE_WALLET_URL) {
+      if (!COINBASE_CHECKOUT_URL) {
         overlay.innerHTML = `
-          <div class="message">
-            <h2>Checkout Link Needed</h2>
-            <p>The store UI is ready, but the real hosted checkout link is not configured yet.</p>
-            <p class="mini-note">Do not go live with a raw manual-payment link. Replace it with a provider checkout URL that can be verified server-side.</p>
-            <button onclick="window.openMoneyPanel()">Back To Shop</button>
+          <div class="message settings-page">
+            <h2>Checkout Not Configured Yet</h2>
+            <p>The broken Coinbase Commerce placeholder has been disabled.</p>
+            <p class="mini-note">To enable paid packs safely, connect a real hosted checkout link or deploy the verified backend checkout flow first. Coins should only be added after server-side payment confirmation.</p>
+            <div class="goal-stack">
+              <div class="goal-card">
+                <h4>Current BTC/Base reference</h4>
+                <p><code>${COINBASE_WALLET_ADDRESS}</code></p>
+              </div>
+              <div class="goal-card">
+                <h4>Recommended next step</h4>
+                <p>Deploy the Supabase payment functions and replace this placeholder with a real provider checkout URL.</p>
+              </div>
+            </div>
+            <button class="secondary" onclick="window.openMoneyPanel()">Back To Shop</button>
           </div>`;
         return;
       }
-      const opened = window.open(COINBASE_WALLET_URL, '_blank', 'noopener,noreferrer');
+      const opened = window.open(COINBASE_CHECKOUT_URL, '_blank', 'noopener,noreferrer');
       overlay.innerHTML = `
         <div class="message settings-page">
           <h2>Checkout Opened</h2>
           <p>Complete checkout for <strong>${pack.coins.toLocaleString()} coins</strong> at <strong>${pack.price}</strong>.</p>
           <p class="mini-note">Coins should be added automatically to the signed-in game account only after verified payment confirmation through the backend.</p>
           <div class="overlay-actions two-up">
-            ${opened ? '' : `<button class="warn" onclick="window.location.href='${COINBASE_WALLET_URL}'">Open Checkout</button>`}
+            ${opened ? '' : `<button class="warn" onclick="window.location.href='${COINBASE_CHECKOUT_URL}'">Open Checkout</button>`}
             <button class="secondary" onclick="window.openMoneyPanel()">Back To Shop</button>
           </div>
         </div>`;

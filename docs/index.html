@@ -1671,8 +1671,7 @@
     }
 
     const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@ColtRT-e5n2h';
-    const COINBASE_WALLET_ADDRESS = '0x48b64F69968400BbFd6315c33712B5AF1E05583d';
-    const COINBASE_CHECKOUT_URL = getStored('coinbase-checkout-url', '') || '';
+    const CREATE_CHECKOUT_URL = `${SUPABASE_URL}/functions/v1/create-stripe-checkout`;
     const COIN_PACKS = [
       { id: 'pack100', coins: 100, price: '$2.99' },
       { id: 'pack500', coins: 500, price: '$5.99' },
@@ -1708,7 +1707,7 @@
     ];
 
     function moneyPanelMarkup() {
-      const checkoutReady = !!COINBASE_CHECKOUT_URL;
+
       return `
         <div class="message settings-page">
           <h2>Squad Shop</h2>
@@ -1727,19 +1726,20 @@
           </div>
           <div class="shop-grid">
             <div class="shop-card featured">
-              <h4><span>💳 BTC Coin Packs</span><span class="shop-badge">Checkout Link</span></h4>
-              <p>Open checkout for a coin pack. After verified payment, coins should be added to the signed-in game account automatically, not claimed manually in the browser.</p>
+              <h4><span>💳 BTC Coin Packs</span><span class="shop-badge">Stripe Checkout</span></h4>
+              <p>Open checkout for a coin pack. After verified payment, coins are added automatically to the signed-in game account.</p>
+              <p class="mini-note" id="shop-status">Coins are added automatically after verified Stripe payment confirmation.</p>
               <div class="goal-stack" style="margin-top:10px;">
                 ${COIN_PACKS.map(pack => `
                   <div class="goal-card">
                     <h4>${pack.coins.toLocaleString()} Coins</h4>
                     <p>${pack.price}</p>
                     <div class="cta-row" style="margin-top:10px;">
-                      <button class="warn" onclick="window.openCoinPurchase('${pack.id}')">${checkoutReady ? `Open Checkout for ${pack.price}` : 'Checkout Not Configured'}</button>
+                      <button class="warn" onclick="window.openCoinPurchase('${pack.id}')">Open Checkout for ${pack.price}</button>
                     </div>
                   </div>`).join('')}
               </div>
-              <p class="mini-note">Manual coin grants for paid packs have been removed. Payment must be verified server-side before coins are added automatically to the player profile.</p>
+              <p class="mini-note">Paid coin packs now use Stripe Checkout. Coins are only added after verified server-side payment confirmation.</p>
             </div>
             <div class="shop-card">
               <h4><span>🔥 Featured Starter Pack</span><span class="shop-badge">100 Coins</span></h4>
@@ -1763,7 +1763,7 @@
               </div>
             </div>
           </div>
-          <p class="mini-note">Current BTC/Base reference address: <code>${COINBASE_WALLET_ADDRESS}</code>. Do not use a fake Coinbase Commerce URL. Only enable checkout after you have a real hosted provider link or a live backend checkout function. Local override key: <code>zombie-mayhem-coinbase-checkout-url</code>.</p>
+
           <button class="secondary" onclick="window.closeOverlayAndResume()">Close</button>
         </div>`;
     }
@@ -4852,40 +4852,76 @@
         </div>`;
       syncHud();
     };
-    window.openCoinPurchase = function(packId) {
+    function setShopStatus(message) {
+      const statusEl = document.getElementById('shop-status');
+      if (statusEl) statusEl.textContent = message;
+    }
+
+    async function createStripeCheckout(packId, email, password) {
+      const response = await fetch(CREATE_CHECKOUT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ packId, email, password })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error || result?.detail || `Checkout failed with status ${response.status}`);
+      }
+      return result;
+    }
+
+    window.openCoinPurchase = async function(packId) {
       const pack = COIN_PACKS.find(item => item.id === packId);
       if (!pack) return;
-      if (!COINBASE_CHECKOUT_URL) {
+
+      if (!currentAccountEmail || !currentAccountPasswordHash) {
         overlay.innerHTML = `
           <div class="message settings-page">
-            <h2>Checkout Not Configured Yet</h2>
-            <p>The broken Coinbase Commerce placeholder has been disabled.</p>
-            <p class="mini-note">To enable paid packs safely, connect a real hosted checkout link or deploy the verified backend checkout flow first. Coins should only be added after server-side payment confirmation.</p>
-            <div class="goal-stack">
-              <div class="goal-card">
-                <h4>Current BTC/Base reference</h4>
-                <p><code>${COINBASE_WALLET_ADDRESS}</code></p>
-              </div>
-              <div class="goal-card">
-                <h4>Recommended next step</h4>
-                <p>Deploy the Supabase payment functions and replace this placeholder with a real provider checkout URL.</p>
-              </div>
+            <h2>Sign In Required</h2>
+            <p>You need to sign in to a Zombie Mayhem account before buying paid coin packs.</p>
+            <p class="mini-note">Coins are delivered to the signed-in account only after verified Stripe payment confirmation.</p>
+            <div class="overlay-actions two-up">
+              <button class="warn" onclick="window.openAccountPanel()">Open Account</button>
+              <button class="secondary" onclick="window.openMoneyPanel()">Back To Shop</button>
             </div>
-            <button class="secondary" onclick="window.openMoneyPanel()">Back To Shop</button>
           </div>`;
+        setShopStatus('Sign in to buy paid coin packs.');
         return;
       }
-      const opened = window.open(COINBASE_CHECKOUT_URL, '_blank', 'noopener,noreferrer');
+
       overlay.innerHTML = `
         <div class="message settings-page">
-          <h2>Checkout Opened</h2>
-          <p>Complete checkout for <strong>${pack.coins.toLocaleString()} coins</strong> at <strong>${pack.price}</strong>.</p>
-          <p class="mini-note">Coins should be added automatically to the signed-in game account only after verified payment confirmation through the backend.</p>
-          <div class="overlay-actions two-up">
-            ${opened ? '' : `<button class="warn" onclick="window.location.href='${COINBASE_CHECKOUT_URL}'">Open Checkout</button>`}
-            <button class="secondary" onclick="window.openMoneyPanel()">Back To Shop</button>
-          </div>
+          <h2>Opening Checkout</h2>
+          <p>Preparing Stripe checkout for <strong>${pack.coins.toLocaleString()} coins</strong> at <strong>${pack.price}</strong>.</p>
+          <p class="mini-note">Please wait. Do not close this window until checkout opens.</p>
+          <button class="secondary" onclick="window.openMoneyPanel()">Back To Shop</button>
         </div>`;
+      setShopStatus(`Preparing checkout for ${pack.price}...`);
+
+      try {
+        const result = await createStripeCheckout(pack.id, currentAccountEmail, currentAccountPasswordHash);
+        setShopStatus(`Redirecting to Stripe for ${pack.price}...`);
+        if (result?.checkoutUrl) {
+          window.location.href = result.checkoutUrl;
+          return;
+        }
+        throw new Error('Checkout URL was not returned.');
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        setShopStatus(`Checkout failed: ${message}`);
+        overlay.innerHTML = `
+          <div class="message settings-page">
+            <h2>Checkout Error</h2>
+            <p>Unable to start Stripe checkout for <strong>${pack.coins.toLocaleString()} coins</strong> at <strong>${pack.price}</strong>.</p>
+            <p class="mini-note">${message}</p>
+            <div class="overlay-actions two-up">
+              <button class="warn" onclick="window.openCoinPurchase('${pack.id}')">Try Again</button>
+              <button class="secondary" onclick="window.openMoneyPanel()">Back To Shop</button>
+            </div>
+          </div>`;
+      }
     };
     window.closeOverlayAndResume = function() {
       overlay.classList.remove('hero-mode');

@@ -89,7 +89,15 @@ serve(async (req) => {
       storedSecret === submittedHash || storedSecret === rawPassword;
 
     if (!secretMatches) {
-      return json({ error: "Incorrect email or password" }, 401);
+      return json({
+        error: "Incorrect email or password",
+        debug: {
+          normalizedEmail,
+          storedSecret,
+          rawPassword,
+          submittedHash
+        }
+      }, 401);
     }
 
     const { data: order, error: orderError } = await admin

@@ -1093,6 +1093,9 @@
     function applyPlayerProfile(profile = {}) {
       best = Number(profile.best || 0);
       bankCoins = Number(profile.bankCoins || 0);
+      if (typeof state === 'object' && state) {
+        state.coins = bankCoins;
+      }
       avatarCoins = Number(profile.avatarCoins || 0);
       selectedAvatar = profile.selectedAvatar || 'default';
       unlockedAvatars = Array.isArray(profile.unlockedAvatars) && profile.unlockedAvatars.length ? [...new Set(profile.unlockedAvatars)] : ['default'];

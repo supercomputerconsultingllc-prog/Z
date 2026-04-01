@@ -2335,6 +2335,35 @@
       syncSeasonHud();
     }
 
+    function setMainCoinWallet(value) {
+
+
+      const normalized = Math.max(0, Number(value || 0));
+
+
+      bankCoins = normalized;
+
+
+      if (typeof state === 'object' && state) state.coins = normalized;
+
+
+      return normalized;
+
+
+    }
+
+
+
+    function getMainCoinWallet() {
+
+
+      return Math.max(0, Number(bankCoins || 0));
+
+
+    }
+
+
+
     function addCoins(n) { state.coins += n; bankCoins = state.coins; void saveMeta(); updateMission('coins', n); }
 
     function weaponProfile(powerLevel) {

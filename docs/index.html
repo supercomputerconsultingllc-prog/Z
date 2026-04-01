@@ -1311,12 +1311,67 @@
       });
     }
 
+    async function refreshAccountProfileAfterPurchase() {
+      if (!currentAccountEmail) return false;
+      try {
+        await loadCurrentAccountProfile();
+        bestStat.textContent = best;
+        soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
+        syncHud();
+        return true;
+      } catch (error) {
+        setCloudSyncState('error', error?.message || String(error));
+        return false;
+      }
+    }
+
+    async function handleCheckoutReturn() {
+      const params = new URLSearchParams(window.location.search);
+      const checkoutState = params.get('checkout');
+      const orderId = params.get('order_id');
+
+      if (!checkoutState) return;
+
+      state.paused = true;
+      pauseGameMusic();
+
+      if (checkoutState === 'success') {
+        setCloudSyncState('syncing', 'Refreshing purchased coins...');
+
+        let refreshed = false;
+        for (let i = 0; i < 5; i += 1) {
+          await new Promise(resolve => setTimeout(resolve, i === 0 ? 1200 : 1000));
+          refreshed = await refreshAccountProfileAfterPurchase();
+          if (refreshed) break;
+        }
+
+        overlay.innerHTML = `
+          <div class="message settings-page">
+            <h2>Purchase Complete</h2>
+            <p>Your payment completed successfully${orderId ? ` for order <code>${orderId}</code>` : ''}.</p>
+            <p class="mini-note">${refreshed ? 'Your account was refreshed and the purchased coins should now be visible.' : 'Payment completed, but the account refresh did not finish automatically. Use Cloud Sync once if the new balance is not visible yet.'}</p>
+            <button class="secondary" onclick="window.closeOverlayAndResume()">Continue</button>
+          </div>`;
+      } else if (checkoutState === 'cancelled') {
+        overlay.innerHTML = `
+          <div class="message settings-page">
+            <h2>Checkout Cancelled</h2>
+            <p>Your purchase was cancelled before payment completed.</p>
+            <button class="secondary" onclick="window.closeOverlayAndResume()">Back To Game</button>
+          </div>`;
+      }
+
+      const cleanUrl = `${window.location.pathname}${window.location.hash || ''}`;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+
     async function initializeProfiles() {
       if (currentAccountEmail) await loadCurrentAccountProfile();
       else loadGuestProfile();
       bestStat.textContent = best;
       soundBtn.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
       syncHud();
+      await handleCheckoutReturn();
     }
 
     initializeProfiles();

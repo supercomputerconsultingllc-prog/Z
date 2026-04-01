@@ -1435,8 +1435,7 @@
     function grantPassReward(reward) {
       const grant = reward?.grant || {};
       if (grant.coins) {
-        state.coins += grant.coins;
-        bankCoins = state.coins;
+        setMainCoinWallet(getMainCoinWallet() + grant.coins);
       }
       if (grant.avatarCoins) avatarCoins += grant.avatarCoins;
       if (grant.runRevives) state.revives += grant.runRevives;
@@ -1908,8 +1907,7 @@
       const tradeAvatarCoinBtn = document.getElementById('tradeAvatarCoinBtn');
       tradeAvatarCoinBtn.addEventListener('click', () => {
         if (state.coins < 25) return;
-        state.coins -= 25;
-        bankCoins = state.coins;
+        setMainCoinWallet(getMainCoinWallet() - 25);
         avatarCoins += 1;
         void saveMeta();
         syncHud();
@@ -2113,8 +2111,7 @@
     }
 
     function grantCoins(amount) {
-      state.coins += amount;
-      bankCoins = state.coins;
+      setMainCoinWallet(getMainCoinWallet() + amount);
       void saveMeta();
     }
 
@@ -2360,19 +2357,6 @@
       return Math.max(0, Number(bankCoins || 0));
 
 
-    }
-
-
-
-    function getMainCoinWallet() {
-      return Math.max(0, Number(bankCoins || 0));
-    }
-
-    function setMainCoinWallet(value) {
-      const normalized = Math.max(0, Number(value || 0));
-      bankCoins = normalized;
-      state.coins = normalized;
-      return normalized;
     }
 
     function addCoins(n) {
@@ -2976,7 +2960,7 @@
       const runXp = awardRunProgress();
       rewardPopup = null;
       rewardQueue = [];
-      bankCoins = state.coins; void saveMeta();
+      setMainCoinWallet(getMainCoinWallet()); void saveMeta();
       overlay.classList.add('hero-mode');
       overlay.innerHTML = buildRunSummary().replace('</h2>', `</h2><p class="mini-note">Run bonus: <strong>+${runXp} pass XP</strong>.</p>`);
       syncHud();
@@ -5041,12 +5025,11 @@
       resumeGameMusic(true);
     };
     window.mockRewardedReviveOffer = function() {
-      state.coins += 5;
-      bankCoins = state.coins;
+      setMainCoinWallet(getMainCoinWallet() + 5);
       void saveMeta();
       resetGame();
     };
-    window.restartZombieRun = function() { bankCoins = state.coins; void saveMeta(); resetGame(); pauseBtn.textContent='Pause'; musicShouldResumeAfterPause = true; resumeGameMusic(false); };
+    window.restartZombieRun = function() { setMainCoinWallet(getMainCoinWallet()); void saveMeta(); resetGame(); pauseBtn.textContent='Pause'; musicShouldResumeAfterPause = true; resumeGameMusic(false); };
 
     soundBtn.addEventListener('click', () => {
       soundOn = !soundOn;

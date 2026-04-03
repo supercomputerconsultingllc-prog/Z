@@ -49,6 +49,7 @@ def main():
     has_gap = any(report[k] for k in [
         'missingFromWorkspaceCatalog',
         'missingFromWorkspaceFiles',
+        'missingFromClawhubInstallSet',
     ])
     raise SystemExit(1 if has_gap else 0)
 

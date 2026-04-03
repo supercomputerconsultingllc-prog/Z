@@ -16,7 +16,7 @@ A persistent catalog of what this assistant can do in this OpenClaw workspace.
 - `web_fetch` - fetch readable page content from URLs
 
 ### Scheduling and reminders
-- `cron` - create, update, remove, and run scheduled jobs/reminders
+- scheduled jobs and reminders can be handled through OpenClaw scheduling surfaces when available
 
 ### Sessions and delegation
 - `sessions_list` - inspect recent/active sessions

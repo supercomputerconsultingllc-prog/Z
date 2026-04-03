@@ -60,3 +60,4 @@ These are useful but may require credentials, external installs, or explicit use
 5. Automatic capability audit
    - compare configured tools/skills with catalog
    - flag omissions after environment changes
+   - fail when expected global skills are missing from the installed ClawHub set

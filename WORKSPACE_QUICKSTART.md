@@ -27,6 +27,7 @@ Minimal command reference for refreshing the main generated views in this worksp
 ```bash
 python3 /home/ai/.openclaw/workspace/scripts/self_check.py
 python3 /home/ai/.openclaw/workspace/scripts/generate_status_report.py
+openclaw doctor --non-interactive
 ```
 
 ## One bounded improvement pass

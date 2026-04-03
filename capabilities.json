@@ -7,7 +7,6 @@
     "process",
     "web_search",
     "web_fetch",
-    "cron",
     "sessions_list",
     "sessions_history",
     "sessions_send",

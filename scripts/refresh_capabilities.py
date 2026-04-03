@@ -8,7 +8,7 @@ OUT = WORKSPACE / 'capabilities.json'
 
 STATIC_TOOLS = [
     'read', 'write', 'edit', 'exec', 'process',
-    'web_search', 'web_fetch', 'cron',
+    'web_search', 'web_fetch',
     'sessions_list', 'sessions_history', 'sessions_send',
     'sessions_spawn', 'sessions_yield', 'subagents',
     'memory_search', 'memory_get', 'session_status'

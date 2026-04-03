@@ -9,8 +9,8 @@ Use these as quick patterns when asking the assistant to do work.
 - "Prepare a follow-up email sequence for warm leads, max 3 touches."
 
 ## Scheduling and reminders
-- "Remind me tomorrow at 9 AM to call Alex about the proposal."
-- "Set a recurring reminder every Monday at 8 AM to review pipeline."
+- "Remind me tomorrow at 9 AM to call Alex about the proposal, if scheduling is available here."
+- "Set a recurring reminder every Monday at 8 AM to review pipeline, if this surface supports it."
 
 ## Research
 - "Search the web for current GPU colocation pricing and summarize the findings."

@@ -77,7 +77,7 @@ These are available to use even if not copied into `workspace/skills`.
 
 ## Practical examples
 - "Draft a reply to this email."
-- "Schedule a reminder for tomorrow at 9 AM."
+- "Schedule a reminder for tomorrow at 9 AM, if scheduling is available here."
 - "Search the web for current pricing."
 - "Summarize this PDF from the inbox into a report."
 - "Spawn a coding sub-agent to investigate this bug."

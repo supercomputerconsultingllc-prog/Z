@@ -1368,6 +1368,7 @@
     }
 
     async function initializeProfiles() {
+      stripeAvailable = await isStripeReachable();
       if (currentAccountEmail) await loadCurrentAccountProfile();
       else loadGuestProfile();
       bestStat.textContent = best;
@@ -1728,6 +1729,7 @@
 
     const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@ColtRT-e5n2h';
     const CREATE_CHECKOUT_URL = `${SUPABASE_URL}/functions/v1/create-stripe-checkout`;
+    let stripeAvailable = true;
     const COIN_PACKS = [
       { id: 'pack100', coins: 100, price: '$2.99' },
       { id: 'pack500', coins: 500, price: '$5.99' },
@@ -4955,9 +4957,39 @@
       return result;
     }
 
+    async function isStripeReachable() {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 2000);
+
+        await fetch('https://checkout.stripe.com', {
+          method: 'HEAD',
+          mode: 'no-cors',
+          signal: controller.signal
+        });
+
+        clearTimeout(timeout);
+        return true;
+      } catch (error) {
+        return false;
+      }
+    }
+
     window.openCoinPurchase = async function(packId) {
       const pack = COIN_PACKS.find(item => item.id === packId);
       if (!pack) return;
+
+      if (!stripeAvailable) {
+        overlay.innerHTML = `
+          <div class="message settings-page">
+            <h2>Shop Unavailable</h2>
+            <p>This device or network blocks secure checkout services.</p>
+            <p class="mini-note">Try a personal device or non-school-managed network to purchase coins.</p>
+            <button class="secondary" onclick="window.closeOverlayAndResume()">OK</button>
+          </div>`;
+        setShopStatus('Purchases are unavailable on this device or network.');
+        return;
+      }
 
       if (!currentAccountEmail || !currentAccountPasswordHash) {
         overlay.innerHTML = `

@@ -35,14 +35,6 @@ function normalizeEmail(value: string) {
   return String(value || "").trim().toLowerCase();
 }
 
-async function sha256Hex(value: string) {
-  const bytes = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -55,13 +47,33 @@ serve(async (req) => {
   try {
     const { packId, email, password } = await req.json();
 
-    const normalizedEmail = normalizeEmail(email);
-    const rawPassword = String(password || "");
-    const pack = PACKS[String(packId || "")];
+    const { packId } = await req.json();
+const pack = PACKS[String(packId || "")];
 
-    if (!normalizedEmail || !rawPassword) {
-      return json({ error: "Missing email or password" }, 400);
-    }
+const authHeader = req.headers.get("Authorization") || "";
+const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+
+if (!token) {
+  return json({ error: "Missing bearer token" }, 401);
+}
+
+const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+const userClient = createClient(supabaseUrl, anonKey, {
+  global: {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  },
+});
+
+const { data: userData, error: userError } = await userClient.auth.getUser();
+
+if (userError || !userData?.user) {
+  return json({ error: "Unauthorized", detail: userError?.message || "Invalid user session" }, 401);
+}
+
+const userId = userData.user.id;
+const userEmail = normalizeEmail(userData.user.email || "");
 
     if (!pack) {
       return json({ error: "Invalid packId" }, 400);
@@ -70,22 +82,18 @@ serve(async (req) => {
     const admin = createClient(supabaseUrl, serviceRoleKey);
 
     const { data: profile, error: profileError } = await admin
-      .from("player_profiles")
-      .select("id,email,password_hash")
-      .eq("email", normalizedEmail)
-      .maybeSingle();
+  .from("player_profiles")
+  .select("id,email,user_id")
+  .eq("user_id", userId)
+  .maybeSingle();
 
-    if (profileError) {
-      return json({ error: "Failed to look up player profile", detail: profileError.message }, 500);
-    }
+if (profileError) {
+  return json({ error: "Failed to look up player profile", detail: profileError.message }, 500);
+}
 
-    if (!profile) {
-      return json({ error: "Account not found" }, 404);
-    }
-
-    const submittedHash = await sha256Hex(rawPassword);
-    const storedSecret = String(profile.password_hash || "");
-    const secretMatches = storedSecret === submittedHash;
+if (!profile) {
+  return json({ error: "Linked player profile not found" }, 404);
+}
 
     if (!secretMatches) {
       return json({
@@ -97,7 +105,7 @@ serve(async (req) => {
       .from("purchase_orders")
       .insert({
         player_profile_id: profile.id,
-        player_email: profile.email,
+        player_email: profile.email || userEmail,
         pack_id: packId,
         coin_amount: pack.coinAmount,
         usd_price: pack.usdPrice,

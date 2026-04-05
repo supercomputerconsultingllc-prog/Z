@@ -1,4 +1,4 @@
-project_id = "REPLACE_WITH_SUPABASE_PROJECT_ID"
+project_id = "bdvktjweozlvxltgpmnp"
 
 [api]
 enabled = true
@@ -35,8 +35,6 @@ enable_signup = true
 enabled = true
 policy = "per_worker"
 inspector_port = 8083
-
-auth_hook_uri = ""
 
 [functions.create-checkout]
 verify_jwt = true

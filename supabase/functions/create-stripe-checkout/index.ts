@@ -85,18 +85,11 @@ serve(async (req) => {
 
     const submittedHash = await sha256Hex(rawPassword);
     const storedSecret = String(profile.password_hash || "");
-    const secretMatches =
-      storedSecret === submittedHash || storedSecret === rawPassword;
+    const secretMatches = storedSecret === submittedHash;
 
     if (!secretMatches) {
       return json({
         error: "Incorrect email or password",
-        debug: {
-          normalizedEmail,
-          storedSecret,
-          rawPassword,
-          submittedHash
-        }
       }, 401);
     }
 

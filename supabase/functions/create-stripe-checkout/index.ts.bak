@@ -1,0 +1,160 @@
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@16.5.0?target=denonext";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+  apiVersion: "2024-06-20",
+});
+
+const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const appBaseUrl = Deno.env.get("APP_BASE_URL") || "";
+
+const PACKS: Record<string, { coinAmount: number; usdPrice: number }> = {
+  pack100: { coinAmount: 100, usdPrice: 2.99 },
+  pack500: { coinAmount: 500, usdPrice: 5.99 },
+  pack1000: { coinAmount: 1000, usdPrice: 9.99 },
+  pack10000: { coinAmount: 10000, usdPrice: 19.99 },
+};
+
+serve(async (req) => {
+  if (req.method !== "POST") {
+    return new Response("Method not allowed", { status: 405 });
+  }
+
+  try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY") || "", {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const {
+      data: { user },
+      error: userError,
+    } = await userClient.auth.getUser();
+
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized user" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const { packId } = await req.json();
+    const pack = PACKS[packId];
+
+    if (!pack) {
+      return new Response(JSON.stringify({ error: "Invalid packId" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const admin = createClient(supabaseUrl, serviceRoleKey);
+
+    const { data: profile, error: profileError } = await admin
+      .from("player_profiles")
+      .select("id,email")
+      .eq("user_id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return new Response(JSON.stringify({ error: "Player profile not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: order, error: orderError } = await admin
+      .from("purchase_orders")
+      .insert({
+        player_profile_id: profile.id,
+        player_email: profile.email,
+        pack_id: packId,
+        coin_amount: pack.coinAmount,
+        usd_price: pack.usdPrice,
+        provider: "stripe",
+        status: "pending",
+      })
+      .select()
+      .single();
+
+    if (orderError || !order) {
+      return new Response(JSON.stringify({ error: "Failed to create purchase order" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      success_url: `${appBaseUrl}/?checkout=success&order_id=${order.id}`,
+      cancel_url: `${appBaseUrl}/?checkout=cancelled&order_id=${order.id}`,
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `${pack.coinAmount} Coins`,
+              description: `Zombie Mayhem coin pack: ${pack.coinAmount}`,
+            },
+            unit_amount: Math.round(pack.usdPrice * 100),
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        order_id: order.id,
+        player_profile_id: profile.id,
+        pack_id: packId,
+        coin_amount: String(pack.coinAmount),
+      },
+    });
+
+    const { error: updateError } = await admin
+      .from("purchase_orders")
+      .update({
+        provider_checkout_id: session.id,
+        provider_checkout_url: session.url,
+        status: "checkout_created",
+      })
+      .eq("id", order.id);
+
+    if (updateError) {
+      return new Response(JSON.stringify({ error: "Failed to store checkout session" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        orderId: order.id,
+        checkoutUrl: session.url,
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  } catch (err) {
+    return new Response(
+      JSON.stringify({
+        error: "Unhandled create-stripe-checkout error",
+        detail: err instanceof Error ? err.message : String(err),
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
+});

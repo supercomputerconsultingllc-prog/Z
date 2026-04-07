@@ -845,9 +845,6 @@
     const SUPABASE_ANON_KEY = 'sb_publishable_-ANgYz8qbn07PQ58muxgLQ_zF9PZv_u';
     const supabaseClient = window.supabase?.createClient ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
     const cloudSyncEnabled = !!supabaseClient;
-let currentSupabaseSession = null;
-let currentSupabaseUser = null;
-let authMode = 'legacy';
 
     function storageKey(name) { return `${APP_STORAGE_PREFIX}-${name}`; }
     function legacyKey(name) { return `${LEGACY_STORAGE_PREFIX}-${name}`; }
@@ -869,60 +866,6 @@ let authMode = 'legacy';
       const digest = await crypto.subtle.digest('SHA-256', data);
       return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
     }
-async function supabaseSignUp(email, password) {
-  if (!supabaseClient?.auth) throw new Error('Supabase Auth is not available.');
-  const normalized = normalizeEmail(email);
-  const { data, error } = await supabaseClient.auth.signUp({
-    email: normalized,
-    password
-  });
-  if (error) throw error;
-  currentSupabaseSession = data.session || null;
-  currentSupabaseUser = data.user || null;
-  if (currentSupabaseUser) authMode = 'supabase';
-  return data;
-}
-
-async function supabaseSignIn(email, password) {
-  if (!supabaseClient?.auth) throw new Error('Supabase Auth is not available.');
-  const normalized = normalizeEmail(email);
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email: normalized,
-    password
-  });
-  if (error) throw error;
-  currentSupabaseSession = data.session || null;
-  currentSupabaseUser = data.user || null;
-  if (currentSupabaseUser) authMode = 'supabase';
-  return data;
-}
-
-async function supabaseSignOutAuth() {
-  if (!supabaseClient?.auth) return;
-  const { error } = await supabaseClient.auth.signOut();
-  if (error) throw error;
-  currentSupabaseSession = null;
-  currentSupabaseUser = null;
-  if (authMode === 'supabase') authMode = 'legacy';
-}
-
-async function refreshSupabaseAuthState() {
-  if (!supabaseClient?.auth) return null;
-
-  const { data, error } = await supabaseClient.auth.getSession();
-  if (error) {
-    console.warn('Supabase getSession failed', error);
-    currentSupabaseSession = null;
-    currentSupabaseUser = null;
-    if (authMode === 'supabase') authMode = 'legacy';
-    return null;
-  }
-
-  currentSupabaseSession = data.session || null;
-  currentSupabaseUser = data.session?.user || null;
-  authMode = currentSupabaseUser ? 'supabase' : 'legacy';
-  return currentSupabaseSession;
-}
 
     function isLegacyPlainSecret(stored = '') {
       return !!stored && !/^[a-f0-9]{64}$/i.test(stored);
@@ -936,93 +879,34 @@ async function refreshSupabaseAuthState() {
       return data;
     }
 
-async function linkSupabaseUserToProfile() {
-  if (!supabaseClient || !currentSupabaseUser?.id || !currentSupabaseUser?.email) {
-    return null;
-  }
-
-  const normalizedEmail = normalizeEmail(currentSupabaseUser.email);
-
-  const { data: existingByUserId, error: existingByUserError } = await supabaseClient
-    .from('player_profiles')
-    .select('*')
-    .eq('user_id', currentSupabaseUser.id)
-    .maybeSingle();
-
-  if (existingByUserError) {
-    console.warn('Failed checking profile by user_id', existingByUserError);
-    return null;
-  }
-
-  if (existingByUserId) {
-    return existingByUserId;
-  }
-
-  const { data: existingByEmail, error: existingByEmailError } = await supabaseClient
-    .from('player_profiles')
-    .select('*')
-    .eq('email', normalizedEmail)
-    .maybeSingle();
-
-  if (existingByEmailError) {
-    console.warn('Failed checking profile by email', existingByEmailError);
-    return null;
-  }
-
-  if (!existingByEmail) {
-    return null;
-  }
-
-  const { data: linkedProfile, error: linkError } = await supabaseClient
-    .from('player_profiles')
-    .update({
-      user_id: currentSupabaseUser.id,
-      auth_migrated: true
-    })
-    .eq('id', existingByEmail.id)
-    .is('user_id', null)
-    .select()
-    .maybeSingle();
-
-  if (linkError) {
-    console.warn('Failed linking Supabase user to legacy profile', linkError);
-    return null;
-  }
-
-  return linkedProfile || existingByEmail;
-}
-
     async function supabaseSaveProfile(email, password, profile) {
-  if (!supabaseClient) return;
-  if (!currentSupabaseSession?.access_token) {
-    throw new Error('No authenticated Supabase session available.');
-  }
-
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/upsert-player-profile`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${currentSupabaseSession.access_token}`
-    },
-    body: JSON.stringify({
-      passwordHash: password,
-      profile
-    })
-  });
-
-  let result = null;
-  try {
-    result = await response.json();
-  } catch (_) {
-    result = null;
-  }
-
-  if (!response.ok) {
-    throw new Error(result?.error || `Profile save failed with status ${response.status}`);
-  }
-
-  return result?.profile || null;
-}
+      if (!supabaseClient) return;
+      const row = {
+        id: crypto.randomUUID(),
+        email: normalizeEmail(email),
+        password_hash: password,
+        best: Number(profile.best || 0),
+        bank_coins: Number(profile.bankCoins || 0),
+        avatar_coins: Number(profile.avatarCoins || 0),
+        selected_avatar: profile.selectedAvatar || 'default',
+        unlocked_avatars: profile.unlockedAvatars || ['default'],
+        mission_index: Number(profile.missionIndex || 0),
+        mission_progress: Number(profile.missionProgress || 0),
+        pass_level: Number(profile.passLevel || 1),
+        pass_xp: Number(profile.passXp || 0),
+        total_runs: Number(profile.totalRuns || 0),
+        youtube_visit_claimed: !!profile.youtubeVisitClaimed,
+        youtube_subscribe_claimed: !!profile.youtubeSubscribeClaimed,
+        starter_pack_claimed: !!profile.starterPackClaimed,
+        gun_price: Number(profile.gunPrice || 10),
+        squad_price: Number(profile.squadPrice || 8),
+        revive_price: Number(profile.revivePrice || 15)
+      };
+      const existing = await supabaseFetchProfile(email);
+      if (existing) row.id = existing.id;
+      const { error } = await supabaseClient.from('player_profiles').upsert(row, { onConflict: 'email' });
+      if (error) throw error;
+    }
 
     function profileFromSupabaseRow(row = {}) {
       return {
@@ -1361,74 +1245,72 @@ async function linkSupabaseUserToProfile() {
             alert(`Sync failed: ${error.message || error}`);
           }
         });
+        document.getElementById('signOutAccountBtn')?.addEventListener('click', () => {
+          if (!confirm('Sign out of this cloud account on this browser?')) return;
+          currentAccountId = '';
+          currentAccountEmail = '';
+          currentAccountPasswordHash = '';
+          localStorage.removeItem(CURRENT_ACCOUNT_KEY);
+          removeStored('account-email');
+          removeStored('account-password');
+          loadGuestProfile();
+          syncHud();
+          openAccountPanel();
+        });
+        return;
+      }
 
-
-document.getElementById('createAccountBtn')?.addEventListener('click', async () => {
-  try {
-    const email = normalizeEmail(document.getElementById('accountCreateEmail')?.value || '');
-    const password = String(document.getElementById('accountCreatePassword')?.value || '');
-
-    if (!email || !password) return alert('Enter an email and password.');
-
-    const importGuest = !!document.getElementById('importGuestProgress')?.checked;
-    const profile = importGuest ? snapshotCurrentProfile() : defaultProfile();
-
-    await supabaseSignUp(email, password);
-
-    if (!currentSupabaseSession?.access_token || !currentSupabaseUser?.id) {
-      alert('Account created. Check your email to confirm your account, then sign in.');
-      renderOverlay(renderShopPanel());
-      return;
-    }
-
-    const passwordHash = await hashSecret(password);
-    await supabaseSaveProfile(email, passwordHash, profile);
-    currentAccountEmail = normalizeEmail(email);
-    currentAccountPasswordHash = password;
-    setStored('account-email', email);
-    setStored('account-password', password);
-    localStorage.setItem(CURRENT_ACCOUNT_KEY, email);
-    await loadCurrentAccountProfile();
-    syncHud();
-    openAccountPanel();
-  } catch (error) {
-    alert(`Account creation failed: ${error.message || error}`);
-  }
+      document.getElementById('createAccountBtn')?.addEventListener('click', async () => {
+        const email = normalizeEmail(document.getElementById('accountCreateEmail')?.value || '');
+        const password = String(document.getElementById('accountCreatePassword')?.value || '');
+        const importGuest = !!document.getElementById('importGuestProgress')?.checked;
+        if (!email || !password) return alert('Enter an email and password.');
+        try {
+          const existing = await supabaseFetchProfile(email);
+          if (existing) return alert('That account already exists. Sign in instead.');
+          const passwordHash = await hashSecret(password);
+          const profile = importGuest ? capturePlayerProfile() : { best: 0, bankCoins: 0, avatarCoins: 0, selectedAvatar: 'default', unlockedAvatars: ['default'], missionIndex: 0, missionProgress: 0, passLevel: 1, passXp: 0, totalRuns: 0, youtubeVisitClaimed: false, youtubeSubscribeClaimed: false, starterPackClaimed: false, gunPrice: 10, squadPrice: 8, revivePrice: 15 };
+          await supabaseSaveProfile(email, passwordHash, profile);
+          currentAccountId = email;
+          currentAccountEmail = email;
+          currentAccountPasswordHash = password;
+          setStored('account-email', email);
+          setStored('account-password', password);
+          localStorage.setItem(CURRENT_ACCOUNT_KEY, email);
+          await loadCurrentAccountProfile();
+          syncHud();
+          openAccountPanel();
+        } catch (error) {
+          alert(`Account creation failed: ${error.message || error}`);
+        }
       });
 
       document.getElementById('signInAccountBtn')?.addEventListener('click', async () => {
-  try {
-    const email = normalizeEmail(document.getElementById('accountSignInEmail')?.value || '');
-    const password = String(document.getElementById('accountSignInPassword')?.value || '');
-
-    if (!email || !password) return alert('Enter an email and password.');
-
-    await supabaseSignIn(email, password);
-
-    const passwordHash = await hashSecret(password);
-    const stored = await supabaseFetchProfile(email);
-
-    if (!stored) {
-      throw new Error('Account not found.');
-    }
-
-    if (String(stored.password_hash || '') !== String(passwordHash)) {
-      throw new Error('Incorrect email or password.');
-    }
-
-    currentAccountEmail = normalizeEmail(email);
-    currentAccountPasswordHash = password;
-    currentAccountId = stored.id || currentAccountId || currentAccountEmail;
-    setStored('account-email', email);
-    setStored('account-password', password);
-    localStorage.setItem(CURRENT_ACCOUNT_KEY, currentAccountId);
-    await loadCurrentAccountProfile();
-    syncHud();
-    openAccountPanel();
-  } catch (error) {
-    alert(`Sign in failed: ${error.message || error}`);
-  }
-});
+        const email = normalizeEmail(document.getElementById('accountSignInEmail')?.value || '');
+        const password = String(document.getElementById('accountSignInPassword')?.value || '');
+        try {
+          const account = await supabaseFetchProfile(email);
+          const passwordHash = await hashSecret(password);
+          const storedSecret = account?.password_hash || '';
+          const secretMatches = account && (storedSecret === passwordHash || (isLegacyPlainSecret(storedSecret) && storedSecret === password));
+          if (!secretMatches) return alert('Incorrect email or password.');
+          if (bankCoins > 0 || best > 0 || passLevel > 1) {
+            const ok = confirm('Signing in will load the cloud profile for this account on this browser. Your guest progress will remain local unless you create a new account with import enabled. Continue?');
+            if (!ok) return;
+          }
+          currentAccountId = account.id || email;
+          currentAccountEmail = email;
+          currentAccountPasswordHash = password;
+          setStored('account-email', email);
+          setStored('account-password', password);
+          localStorage.setItem(CURRENT_ACCOUNT_KEY, currentAccountId);
+          await loadCurrentAccountProfile();
+          syncHud();
+          openAccountPanel();
+        } catch (error) {
+          alert(`Sign in failed: ${error.message || error}`);
+        }
+      });
     }
 
     async function refreshAccountProfileAfterPurchase() {
@@ -1494,18 +1376,8 @@ document.getElementById('createAccountBtn')?.addEventListener('click', async () 
       syncHud();
       await handleCheckoutReturn();
     }
-if (supabaseClient?.auth) {
-  supabaseClient.auth.onAuthStateChange((event, session) => {
-    currentSupabaseSession = session || null;
-    currentSupabaseUser = session?.user || null;
-    authMode = currentSupabaseUser ? 'supabase' : 'legacy';
-  });
-}
 
-refreshSupabaseAuthState().then(() => linkSupabaseUserToProfile()).catch((err) => {
-  console.warn('Supabase auth/profile bridge failed', err);
-});
-initializeProfiles();
+    initializeProfiles();
 
     function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
     function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
@@ -5070,34 +4942,8 @@ initializeProfiles();
       if (statusEl) statusEl.textContent = message;
     }
 
-    async function createStripeCheckout(packId) {
-  const accessToken = currentSupabaseSession?.access_token;
-  if (!accessToken) {
-    throw new Error('You must be signed in before starting checkout.');
-  }
-
-  const response = await fetch(CREATE_CHECKOUT_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken}`
-    },
-    body: JSON.stringify({ packId })
-  });
-
-  let result = null;
-  try {
-    result = await response.json();
-  } catch (_) {
-    result = null;
-  }
-
-  if (!response.ok) {
-    throw new Error(result?.error || `Checkout failed with status ${response.status}`);
-  }
-
-  return result;
-}
+    async function createStripeCheckout(packId, email, password) {
+      const response = await fetch(CREATE_CHECKOUT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -5145,7 +4991,7 @@ initializeProfiles();
         return;
       }
 
-      if (!currentSupabaseSession?.access_token || !currentSupabaseUser?.id) {
+      if (!currentAccountEmail || !currentAccountPasswordHash) {
         overlay.innerHTML = `
           <div class="message settings-page">
             <h2>Sign In Required</h2>
@@ -5170,7 +5016,7 @@ initializeProfiles();
       setShopStatus(`Preparing checkout for ${pack.price}...`);
 
       try {
-        const result = await createStripeCheckout(pack.id);
+        const result = await createStripeCheckout(pack.id, currentAccountEmail, currentAccountPasswordHash);
         setShopStatus(`Redirecting to Stripe for ${pack.price}...`);
         if (result?.checkoutUrl) {
           window.location.href = result.checkoutUrl;

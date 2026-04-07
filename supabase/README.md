@@ -17,8 +17,8 @@ This Supabase-ready schema is for storing:
 ## Next implementation steps
 
 1. Create a Supabase project
-2. Run `zombie-mayhem-schema.sql`
-3. Add an auth/save API layer or edge functions
+2. Run the schema and migration files in this folder in timestamp order
+3. Deploy the required auth/save API layer or edge functions
 4. Update `docs/index.html` to call the real API instead of browser-local account storage
 5. Migrate existing local accounts into remote profiles on sign-in
 

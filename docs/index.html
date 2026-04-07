@@ -2979,6 +2979,9 @@
     let frameLaneThreats = null;
     let muzzleFlashSpriteCache = new Map();
     let particleBloomSpriteCache = new Map();
+    let squadBackdropCache = null;
+    let squadBackdropCacheKey = '';
+    let compactSoldierSpriteCache = new Map();
 
     function drawRoad() {
       ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -3910,6 +3913,78 @@
       return { canvas: offscreen, scaleDown };
     }
 
+    function getCompactSoldierSprite(color, scale, variant = 0) {
+      const key = `${color}:${Math.round(scale * 1000)}:${variant}`;
+      if (compactSoldierSpriteCache.has(key)) return compactSoldierSpriteCache.get(key);
+      const width = Math.max(12, Math.ceil(28 * scale));
+      const height = Math.max(18, Math.ceil(40 * scale));
+      const offscreen = document.createElement('canvas');
+      offscreen.width = width;
+      offscreen.height = height;
+      const octx = offscreen.getContext('2d');
+      const cx = width / 2;
+      const bodyW = Math.max(3, 12 * scale);
+      const bodyH = Math.max(6, 22 * scale);
+      const head = Math.max(2.2, 6 * scale);
+      const shadowY = height - Math.max(3, 5 * scale);
+      octx.fillStyle = 'rgba(15,23,42,0.3)';
+      octx.beginPath();
+      octx.ellipse(cx, shadowY, Math.max(4, 8 * scale), Math.max(1.5, 2.8 * scale), 0, 0, Math.PI * 2);
+      octx.fill();
+      const miniGrad = octx.createLinearGradient(cx - bodyW / 2, shadowY - bodyH - head, cx + bodyW / 2, shadowY);
+      miniGrad.addColorStop(0, '#dbeafe');
+      miniGrad.addColorStop(0.45, color);
+      miniGrad.addColorStop(1, '#1e3a8a');
+      octx.fillStyle = miniGrad;
+      octx.beginPath();
+      octx.roundRect(cx - bodyW / 2, shadowY - bodyH - head * 0.2, bodyW, bodyH, Math.max(1, 2 * scale));
+      octx.fill();
+      octx.fillStyle = 'rgba(255,255,255,0.16)';
+      octx.fillRect(cx - bodyW * 0.22, shadowY - bodyH * 0.72, Math.max(1, bodyW * 0.14), bodyH * 0.56);
+      const headGrad = octx.createRadialGradient(cx - head * 0.3, shadowY - bodyH - head * 0.8, 0.2, cx, shadowY - bodyH - head * 0.55, head * 1.08);
+      headGrad.addColorStop(0, '#fff7ed');
+      headGrad.addColorStop(1, variant % 4 === 0 ? '#d6a36a' : variant % 4 === 1 ? '#c68642' : variant % 4 === 2 ? '#e0ac69' : '#8d5524');
+      octx.fillStyle = headGrad;
+      octx.beginPath();
+      octx.arc(cx, shadowY - bodyH - head * 0.55, head, 0, Math.PI * 2);
+      octx.fill();
+      compactSoldierSpriteCache.set(key, offscreen);
+      return offscreen;
+    }
+
+    function getSquadBackdrop(centerX, crowdRadiusX, crowdRadiusY, perfCrowd, armyMode) {
+      const cacheKey = `${canvas.width}x${canvas.height}:${Math.round(crowdRadiusX)}:${Math.round(crowdRadiusY)}:${perfCrowd ? 1 : 0}:${armyMode ? 1 : 0}`;
+      if (squadBackdropCache && squadBackdropCacheKey === cacheKey) return squadBackdropCache;
+      const offscreen = document.createElement('canvas');
+      offscreen.width = canvas.width;
+      offscreen.height = canvas.height;
+      const octx = offscreen.getContext('2d');
+      const crowdGlow = octx.createRadialGradient(centerX, 592, 30, centerX, 592, crowdRadiusX + 35);
+      crowdGlow.addColorStop(0, armyMode ? 'rgba(96,165,250,0.26)' : 'rgba(96,165,250,0.18)');
+      crowdGlow.addColorStop(1, 'rgba(96,165,250,0)');
+      octx.fillStyle = crowdGlow;
+      octx.beginPath();
+      octx.ellipse(centerX, 594, crowdRadiusX + 10, crowdRadiusY + 14, 0, 0, Math.PI * 2);
+      octx.fill();
+      const crowdEdgeLight = octx.createLinearGradient(centerX - crowdRadiusX, 540, centerX + crowdRadiusX, 635);
+      crowdEdgeLight.addColorStop(0, 'rgba(255,255,255,0.03)');
+      crowdEdgeLight.addColorStop(0.48, 'rgba(191,219,254,0.14)');
+      crowdEdgeLight.addColorStop(1, 'rgba(255,255,255,0.02)');
+      octx.fillStyle = crowdEdgeLight;
+      octx.beginPath();
+      octx.ellipse(centerX, 602, crowdRadiusX * 0.96, crowdRadiusY * 0.74, 0, 0, Math.PI * 2);
+      octx.fill();
+      if (perfCrowd) {
+        octx.fillStyle = 'rgba(37,99,235,0.22)';
+        octx.beginPath();
+        octx.ellipse(centerX, 604, crowdRadiusX * 0.94, crowdRadiusY * 0.82, 0, 0, Math.PI * 2);
+        octx.fill();
+      }
+      squadBackdropCache = offscreen;
+      squadBackdropCacheKey = cacheKey;
+      return offscreen;
+    }
+
     function drawSquad() {
       const total = Math.max(0, state.squad);
       if (!total) return;
@@ -3960,26 +4035,12 @@
         visibleSoldiers = crowdLayoutCache;
       }
 
-      const crowdGlow = ctx.createRadialGradient(centerX, 592, 30, centerX, 592, crowdRadiusX + 35);
-      crowdGlow.addColorStop(0, armyMode ? 'rgba(96,165,250,0.26)' : 'rgba(96,165,250,0.18)');
-      crowdGlow.addColorStop(1, 'rgba(96,165,250,0)');
-      ctx.fillStyle = crowdGlow;
-      ctx.beginPath();
-      ctx.ellipse(centerX, 594 + (armyMode ? Math.sin(marchPhase) * 3 : 0), crowdRadiusX + 10, crowdRadiusY + 14, 0, 0, Math.PI * 2);
-      ctx.fill();
-      const crowdEdgeLight = ctx.createLinearGradient(centerX - crowdRadiusX, 540, centerX + crowdRadiusX, 635);
-      crowdEdgeLight.addColorStop(0, 'rgba(255,255,255,0.03)');
-      crowdEdgeLight.addColorStop(0.48, 'rgba(191,219,254,0.14)');
-      crowdEdgeLight.addColorStop(1, 'rgba(255,255,255,0.02)');
-      ctx.fillStyle = crowdEdgeLight;
-      ctx.beginPath();
-      ctx.ellipse(centerX, 602, crowdRadiusX * 0.96, crowdRadiusY * 0.74, 0, 0, Math.PI * 2);
-      ctx.fill();
-      if (perfCrowd) {
-        ctx.fillStyle = 'rgba(37,99,235,0.22)';
-        ctx.beginPath();
-        ctx.ellipse(centerX, 604, crowdRadiusX * 0.94, crowdRadiusY * 0.82, 0, 0, Math.PI * 2);
-        ctx.fill();
+      const backdrop = getSquadBackdrop(centerX, crowdRadiusX, crowdRadiusY, perfCrowd, armyMode);
+      if (armyMode) {
+        const swayY = Math.sin(marchPhase) * 3;
+        ctx.drawImage(backdrop, 0, swayY);
+      } else {
+        ctx.drawImage(backdrop, 0, 0);
       }
 
       const driftAmplitudeX = compactArmyMode ? 0.9 : 1.8;
@@ -3990,8 +4051,14 @@
         const drift = Math.sin((soldier.index * 0.35) + marchPhase);
         const driftX = drift * driftAmplitudeX;
         const driftY = armyMode ? Math.cos((soldier.index * 0.21) + marchPhase) * driftAmplitudeY : 0;
-        if (dotArmyMode) drawTinySoldier(soldier.x + driftX, soldier.y + driftY, tint, soldier.scale, soldier.index, true);
-        else drawPerson(soldier.x + driftX, soldier.y + driftY, tint, soldier.scale, soldier.index);
+        if (dotArmyMode) {
+          drawTinySoldier(soldier.x + driftX, soldier.y + driftY, tint, soldier.scale, soldier.index, true);
+        } else if (compactArmyMode) {
+          const sprite = getCompactSoldierSprite(tint, soldier.scale, soldier.index);
+          ctx.drawImage(sprite, soldier.x + driftX - sprite.width / 2, soldier.y + driftY - sprite.height + Math.max(2, sprite.height * 0.12));
+        } else {
+          drawPerson(soldier.x + driftX, soldier.y + driftY, tint, soldier.scale, soldier.index);
+        }
       }
       const bannerGradient = ctx.createLinearGradient(0, 0, 220, 0);
       bannerGradient.addColorStop(0, 'rgba(15,23,42,.96)');

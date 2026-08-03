@@ -1,5 +1,15 @@
 {
+  "name": "zombie-mayhem",
+  "private": true,
+  "version": "1.2.0",
+  "type": "module",
+  "scripts": {
+    "validate": "node scripts/validate-game.mjs"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.101.1"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

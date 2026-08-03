@@ -1,0 +1,53 @@
+name: Validate Zombie Mayhem
+
+on:
+  push:
+    branches:
+      - main
+      - release/v1.2-preserved
+      - v2.0-development
+      - release/v2.0
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'playwright.config.mjs'
+      - 'package.json'
+      - '.github/workflows/validate-game.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Validate game integrity
+        run: npm run validate
+
+      - name: Run desktop and mobile smoke tests
+        run: npm run test:browser
+
+      - name: Upload browser test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          if-no-files-found: ignore

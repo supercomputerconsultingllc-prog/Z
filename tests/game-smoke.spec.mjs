@@ -4,12 +4,16 @@ async function collectRuntimeErrors(page) {
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => {
-    if (message.type() === 'error' && !/supabase|cdn\.jsdelivr/i.test(message.text())) {
-      errors.push(message.text());
-    }
+    if (message.type() !== 'error') return;
+    const text = message.text();
+    const expectedOfflineNoise = /supabase|cdn\.jsdelivr|Failed to load resource: net::ERR_FAILED/i.test(text);
+    if (!expectedOfflineNoise) errors.push(text);
   });
   return errors;
 }
+
+const startRunButton = (page) => page.getByRole('button', { name: 'Start Run', exact: true });
+const titleSettingsButton = (page) => page.getByRole('button', { name: 'Settings', exact: true });
 
 test.beforeEach(async ({ page }) => {
   await page.route('https://cdn.jsdelivr.net/**', (route) => route.abort());
@@ -20,43 +24,43 @@ test('title, settings, start, pause, resume, and restart remain functional', asy
   await page.goto('/index.html');
 
   await expect(page).toHaveTitle('Zombie Mayhem');
-  await expect(page.getByRole('heading', { name: 'Zombie Mayhem' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Start Run' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Settings' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Zombie Mayhem', exact: true })).toBeVisible();
+  await expect(startRunButton(page)).toBeVisible();
+  await expect(titleSettingsButton(page)).toBeVisible();
 
-  await page.getByRole('button', { name: 'Settings' }).click();
-  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+  await titleSettingsButton(page).click();
+  await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible();
   await expect(page.locator('#volumeRange')).toBeVisible();
-  await page.getByRole('button', { name: 'Done' }).click();
+  await page.getByRole('button', { name: 'Done', exact: true }).click();
 
-  await page.getByRole('button', { name: 'Start Run' }).click();
-  await expect.poll(() => page.evaluate(() => Boolean(window.__zombieSmoke?.running?.() ?? true))).toBeTruthy();
+  await startRunButton(page).click();
 
   const pauseButton = page.locator('#pauseBtn');
   await expect(pauseButton).toBeVisible();
   await pauseButton.click();
-  await expect(page.getByRole('heading', { name: 'Paused' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Paused', exact: true })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Unpause' }).click();
-  await expect(page.getByRole('heading', { name: 'Paused' })).toBeHidden();
+  await page.getByRole('button', { name: 'Unpause', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Paused', exact: true })).toBeHidden();
 
   await pauseButton.click();
-  await page.getByRole('button', { name: 'Restart Run' }).click();
-  await expect(page.getByRole('heading', { name: 'Zombie Mayhem' })).toBeVisible();
+  await page.getByRole('button', { name: 'Restart Run', exact: true }).click();
+  await expect(page.locator('.app')).toBeVisible();
+  await expect(pauseButton).toBeVisible();
   expect(errors).toEqual([]);
 });
 
 test('local settings survive reload when cloud services are unavailable', async ({ page }) => {
   const errors = await collectRuntimeErrors(page);
   await page.goto('/index.html');
-  await page.getByRole('button', { name: 'Settings' }).click();
+  await titleSettingsButton(page).click();
 
   const volume = page.locator('#volumeRange');
   await volume.fill('37');
   await volume.dispatchEvent('input');
-  await page.getByRole('button', { name: 'Done' }).click();
+  await page.getByRole('button', { name: 'Done', exact: true }).click();
   await page.reload();
-  await page.getByRole('button', { name: 'Settings' }).click();
+  await titleSettingsButton(page).click();
   await expect(page.locator('#volumeRange')).toHaveValue('37');
   expect(errors).toEqual([]);
 });

@@ -36,6 +36,24 @@ export const ENEMIES = {
   boss: { name: 'Mutant Overlord', hp: 1550, armor: 75, speed: 31, damage: 6, reward: 420, size: 76, color: '#d53f8c', weight: 0, boss: true }
 };
 
+// The game builds each runtime enemy with `...base` for behavioral traits.
+// Keep numerical base stats readable but non-enumerable so that spread cannot
+// overwrite the wave-, elite-, daily-, and mode-scaled runtime values.
+const COMPUTED_ENEMY_FIELDS = ['name', 'hp', 'armor', 'speed', 'damage', 'reward', 'size', 'color', 'weight'];
+for (const enemy of Object.values(ENEMIES)) {
+  for (const field of COMPUTED_ENEMY_FIELDS) {
+    if (!Object.prototype.hasOwnProperty.call(enemy, field)) continue;
+    Object.defineProperty(enemy, field, {
+      value: enemy[field],
+      writable: false,
+      configurable: false,
+      enumerable: false
+    });
+  }
+  Object.freeze(enemy);
+}
+Object.freeze(ENEMIES);
+
 export const MISSION_TEMPLATES = [
   { type: 'kills', title: 'Clear the road', text: 'Defeat {target} infected.', target: 20, reward: 100 },
   { type: 'distance', title: 'Push forward', text: 'Travel {target} meters.', target: 550, reward: 120 },

@@ -1,7 +1,7 @@
 {
   "name": "zombie-mayhem",
   "private": true,
-  "version": "1.2.0",
+  "version": "2.0.0-alpha.1",
   "type": "module",
   "scripts": {
     "validate": "node scripts/validate-game.mjs",

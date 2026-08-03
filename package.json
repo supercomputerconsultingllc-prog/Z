@@ -4,10 +4,17 @@
   "version": "1.2.0",
   "type": "module",
   "scripts": {
-    "validate": "node scripts/validate-game.mjs"
+    "validate": "node scripts/validate-game.mjs",
+    "test:browser": "playwright test",
+    "test:browser:desktop": "playwright test --project=desktop-chromium",
+    "test:browser:mobile": "playwright test --project=mobile-chromium",
+    "test": "npm run validate && npm run test:browser"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.101.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.2"
   },
   "engines": {
     "node": ">=20"
